@@ -1,0 +1,121 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faUser, 
+  faBell, 
+  faLock, 
+  faPalette 
+} from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '../../../contexts/useAuth';
+
+function AccountView() {
+  const { currentUser } = useAuth();
+
+  return (
+    <div className="account-view">
+      <section className="section">
+        <div className="section-header">
+          <h2>ACCOUNT SETTINGS</h2>
+        </div>
+
+        <div className="account-content" style={{ marginTop: '30px' }}>
+          {/* Profile Section */}
+          <div className="settings-section" style={{ 
+            background: 'white', 
+            padding: '30px', 
+            borderRadius: '8px', 
+            marginBottom: '20px',
+            border: '1px solid #e0e0e0'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+              <FontAwesomeIcon icon={faUser} style={{ marginRight: '10px', color: '#cfff04' }} />
+              <h3>Profile Information</h3>
+            </div>
+            <div style={{ marginLeft: '30px' }}>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontWeight: '600', marginBottom: '5px' }}>Email</label>
+                <p style={{ color: '#666' }}>{currentUser?.email || 'Not set'}</p>
+              </div>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontWeight: '600', marginBottom: '5px' }}>Display Name</label>
+                <p style={{ color: '#666' }}>{currentUser?.displayName || 'Not set'}</p>
+              </div>
+              <button className="secondary-btn">Edit Profile</button>
+            </div>
+          </div>
+
+          {/* Notifications Section */}
+          <div className="settings-section" style={{ 
+            background: 'white', 
+            padding: '30px', 
+            borderRadius: '8px', 
+            marginBottom: '20px',
+            border: '1px solid #e0e0e0'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+              <FontAwesomeIcon icon={faBell} style={{ marginRight: '10px', color: '#cfff04' }} />
+              <h3>Notifications</h3>
+            </div>
+            <div style={{ marginLeft: '30px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                <input type="checkbox" defaultChecked style={{ marginRight: '10px' }} />
+                <span>Email notifications</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                <input type="checkbox" defaultChecked style={{ marginRight: '10px' }} />
+                <span>Push notifications</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+                <input type="checkbox" style={{ marginRight: '10px' }} />
+                <span>Weekly digest</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Security Section */}
+          <div className="settings-section" style={{ 
+            background: 'white', 
+            padding: '30px', 
+            borderRadius: '8px', 
+            marginBottom: '20px',
+            border: '1px solid #e0e0e0'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+              <FontAwesomeIcon icon={faLock} style={{ marginRight: '10px', color: '#cfff04' }} />
+              <h3>Security</h3>
+            </div>
+            <div style={{ marginLeft: '30px' }}>
+              <button className="secondary-btn" style={{ marginBottom: '10px' }}>Change Password</button>
+              <br />
+              <button className="secondary-btn">Enable Two-Factor Authentication</button>
+            </div>
+          </div>
+
+          {/* Preferences Section */}
+          <div className="settings-section" style={{ 
+            background: 'white', 
+            padding: '30px', 
+            borderRadius: '8px', 
+            border: '1px solid #e0e0e0'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+              <FontAwesomeIcon icon={faPalette} style={{ marginRight: '10px', color: '#cfff04' }} />
+              <h3>Preferences</h3>
+            </div>
+            <div style={{ marginLeft: '30px' }}>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontWeight: '600', marginBottom: '5px' }}>Theme</label>
+                <select style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
+                  <option>Light</option>
+                  <option>Dark</option>
+                  <option>Auto</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export default AccountView;
