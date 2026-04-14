@@ -1,17 +1,26 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faVideo, faFilter } from '@fortawesome/free-solid-svg-icons';
+import { faVideo, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { useState } from 'react';
 
 function VideosView() {
+  const [searchQuery, setSearchQuery] = useState('');
+
   return (
     <div className="videos-view">
       <section className="section">
         <div className="section-header">
-          <h2>MY VIDEOS</h2>
+          <h2>VIDEOS</h2>
           <div className="header-actions">
-            <button className="filter-btn">
-              <FontAwesomeIcon icon={faFilter} />
-              <span>Filter</span>
-            </button>
+            <div className="search-box">
+              <FontAwesomeIcon icon={faSearch} className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search videos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+            </div>
           </div>
         </div>
 

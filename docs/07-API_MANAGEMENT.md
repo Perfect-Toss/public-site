@@ -32,7 +32,7 @@ When your API changes, regenerate the types:
 npm run generate:api
 ```
 
-This fetches the latest OpenAPI spec from `https://dev-api.perfect-toss.com/swagger/v1/swagger.json`
+This fetches the latest OpenAPI spec from `https://dev-api.perfect-toss.com/swagger/v1-internal/swagger.json`
 
 ### 2. Using the API Client
 

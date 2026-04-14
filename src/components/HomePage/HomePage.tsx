@@ -2,14 +2,6 @@ import { useState, useEffect } from 'react';
 import { NavLink, Routes, Route, useNavigate } from 'react-router-dom';
 import './HomePage.css';
 import { logout } from '../../firebase/auth';
-import { 
-  // fetchOrganizations, 
-  // fetchPendingReviews, 
-  // fetchTrendingContent,
-  Organization,
-  PendingReview,
-  TrendingContent
-} from '../../api/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faHome,
@@ -19,17 +11,19 @@ import {
   faRightFromBracket,
   faUserShield
 } from '@fortawesome/free-solid-svg-icons';
-import HomeView from './views/HomeView';
+import HomeView, { type PendingReview, type TrendingContent } from './views/HomeView';
 import VideosView from './views/VideosView';
 import OrganizationsView from './views/OrganizationsView';
 import AdminView from './views/AdminView';
 import AccountView from './views/AccountView';
+import type { Entity } from '../../api/api';
+import { fetchEntities } from '../../api/api';
 
 function HomePage() {
   const navigate = useNavigate();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([]);
-  const [trendingContent, setTrendingContent] = useState<TrendingContent[]>([]);
+  const [organizations, setOrganizations] = useState<Entity[]>([]);
+  const [pendingReviews] = useState<PendingReview[]>([]);
+  const [trendingContent] = useState<TrendingContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -65,14 +59,15 @@ function HomePage() {
       setLoading(true);
       setError(null);
 
-      // // Fetch all data in parallel
-      // const [orgsData, reviewsData, trendingData] = await Promise.all([
-      //   fetchOrganizations(),
+      // Fetch entities (organizations)
+      const orgsData = await fetchEntities();
+      setOrganizations(orgsData);
+
+      // TODO: Fetch pending reviews and trending content when endpoints are available
+      // const [reviewsData, trendingData] = await Promise.all([
       //   fetchPendingReviews(),
       //   fetchTrendingContent(),
       // ]);
-
-      // setOrganizations(orgsData);
       // setPendingReviews(reviewsData);
       // setTrendingContent(trendingData);
     } catch (err) {
@@ -116,19 +111,19 @@ function HomePage() {
           </NavLink>
 
           <NavLink 
-            to="/videos"
-            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-          >
-            <span className="nav-icon"><FontAwesomeIcon icon={faVideo} /></span>
-            <span>VIDEOS</span>
-          </NavLink>
-
-          <NavLink 
             to="/organizations"
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
           >
             <span className="nav-icon"><FontAwesomeIcon icon={faBuilding} /></span>
             <span>ORGANIZATIONS</span>
+          </NavLink>
+
+          <NavLink 
+            to="/videos"
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+          >
+            <span className="nav-icon"><FontAwesomeIcon icon={faVideo} /></span>
+            <span>VIDEOS</span>
           </NavLink>
 
           {isAdmin && (

@@ -13,6 +13,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Authenticates a user and returns an access token. */
         post: {
             parameters: {
                 query?: never;
@@ -20,6 +21,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
+            /** @description The login credentials. */
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["LoginInfo"];
@@ -43,7 +45,308 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/eventlogs": {
+    "/api/v1/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all root-level entities (entities without a parent). */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new entity. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The entity creation request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateEntityRequest"];
+                    "text/json": components["schemas"]["CreateEntityRequest"];
+                    "application/*+json": components["schemas"]["CreateEntityRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EntityGenericResponse"];
+                        "application/json": components["schemas"]["EntityGenericResponse"];
+                        "text/json": components["schemas"]["EntityGenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all entities in the system. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/id/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a specific entity by its identifier. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the entity. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EntityGenericResponse"];
+                        "application/json": components["schemas"]["EntityGenericResponse"];
+                        "text/json": components["schemas"]["EntityGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/type/{entityType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all entities of a specific type. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The type of entities to retrieve. */
+                    entityType: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/parent/{parentEntityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all child entities of a specific parent entity. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the parent entity. */
+                    parentEntityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Updates an existing entity. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the entity to update. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The entity update request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateEntityRequest"];
+                    "text/json": components["schemas"]["UpdateEntityRequest"];
+                    "application/*+json": components["schemas"]["UpdateEntityRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EntityGenericResponse"];
+                        "application/json": components["schemas"]["EntityGenericResponse"];
+                        "text/json": components["schemas"]["EntityGenericResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes an entity. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the entity to delete. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/{entityId}/users/{userId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -52,6 +355,106 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Adds a user to an entity with specified roles. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the entity. */
+                    entityId: string;
+                    /** @description The unique identifier of the user to add. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            /** @description The request containing roles to assign. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AddUserToEntityRequest"];
+                    "text/json": components["schemas"]["AddUserToEntityRequest"];
+                    "application/*+json": components["schemas"]["AddUserToEntityRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        /** Removes a user from an entity. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the entity. */
+                    entityId: string;
+                    /** @description The unique identifier of the user to remove. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eventlogs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all event logs in the system. Requires admin authorization. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new event log entry. */
         post: {
             parameters: {
                 query?: never;
@@ -59,6 +462,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
+            /** @description The event log creation request. */
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["CreateEventLogDto"];
@@ -95,6 +499,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Creates multiple event log entries in a single batch operation. */
         post: {
             parameters: {
                 query?: never;
@@ -102,6 +507,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
+            /** @description The batch event logs creation request. */
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["CreateEventLogsDto"];
@@ -129,6 +535,129 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/eventlogs/user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all event logs for a specific user. Requires admin authorization. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the user. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eventlogs/entity/{entityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all event logs for a specific entity. Requires admin authorization. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the entity. */
+                    entityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eventlogs/type/{eventType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all event logs of a specific type. Requires admin authorization. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The type of events to retrieve. */
+                    eventType: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/eventlogs/user/{userId}/last": {
         parameters: {
             query?: never;
@@ -136,11 +665,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Gets the timestamp of the last event log for a specific user. */
         get: {
             parameters: {
                 query?: never;
                 header?: never;
                 path: {
+                    /** @description The unique identifier of the user. */
                     userId: string;
                 };
                 cookie?: never;
@@ -175,6 +706,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Gets information about the API version and current user. */
         get: {
             parameters: {
                 query?: never;
@@ -212,6 +744,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Health check endpoint to verify the API is responding. */
         get: {
             parameters: {
                 query?: never;
@@ -249,8 +782,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Gets all users in the system. Requires admin authorization. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
         put?: never;
+        /** Creates a new user account. This endpoint allows anonymous access. */
         post: {
             parameters: {
                 query?: never;
@@ -258,6 +814,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
+            /** @description The user creation request. */
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["CreateUserDto"];
@@ -279,9 +836,32 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
+        /** Removes inactive or invalid users from the system. Requires super user authorization. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
+        /** Updates an existing user's profile information. */
         patch: {
             parameters: {
                 query?: never;
@@ -289,6 +869,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
+            /** @description The user update request. */
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["UpdateUserDto"];
@@ -312,6 +893,85 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/v1/users/serviceaccounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all service accounts. Requires admin authorization. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a specific user by their identifier. Requires admin authorization. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the user. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserGenericResponse"];
+                        "application/json": components["schemas"]["UserGenericResponse"];
+                        "text/json": components["schemas"]["UserGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/current": {
         parameters: {
             query?: never;
@@ -319,6 +979,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Gets the current authenticated user's profile. */
         get: {
             parameters: {
                 query?: never;
@@ -356,10 +1017,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Records a user's acceptance of terms and conditions. This endpoint allows anonymous access. */
         get: {
             parameters: {
                 query?: {
+                    /** @description The user's email address. */
                     email?: string;
+                    /** @description Whether the terms were accepted (default: true). */
                     accepted?: boolean;
                 };
                 header?: never;
@@ -385,44 +1049,250 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/serviceaccount": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates a new service account. Requires admin authorization. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The service account creation request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateUserDto"];
+                    "text/json": components["schemas"]["CreateUserDto"];
+                    "application/*+json": components["schemas"]["CreateUserDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserGenericResponse"];
+                        "application/json": components["schemas"]["UserGenericResponse"];
+                        "text/json": components["schemas"]["UserGenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/athletes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates multiple athlete accounts in a batch operation. Requires admin authorization. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The batch athlete creation request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateAthletesDto"];
+                    "text/json": components["schemas"]["CreateAthletesDto"];
+                    "application/*+json": components["schemas"]["CreateAthletesDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/coaches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates multiple coach accounts in a batch operation. Requires admin authorization. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The batch coach creation request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateCoachesDto"];
+                    "text/json": components["schemas"]["CreateCoachesDto"];
+                    "application/*+json": components["schemas"]["CreateCoachesDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/users/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Synchronizes users with an external system. Requires super user authorization. */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Request model for adding a user to an entity with specified roles. */
         AddUserToEntityRequest: {
+            /** @description Gets the roles to assign to the user for the entity. */
             roles: components["schemas"]["Roles"][] | null;
         };
+        /** @description Request model for creating multiple athletes in a batch. */
         CreateAthletesDto: {
+            /** @description Gets the list of athletes to create. */
             athletes?: components["schemas"]["CreateUserDto"][] | null;
         };
+        /** @description Request model for creating multiple coaches in a batch. */
         CreateCoachesDto: {
+            /** @description Gets the list of coaches to create. */
             coaches?: components["schemas"]["CreateUserDto"][] | null;
         };
+        /** @description Request model for creating a new entity. */
         CreateEntityRequest: {
+            /** @description Gets the name of the entity. */
             name: string | null;
+            /** @description Gets the optional description of the entity. */
             description?: string | null;
+            /** @description Gets the optional type of the entity. */
             entityType?: string | null;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Gets the optional parent entity identifier.
+             */
             parentEntityId?: string | null;
         };
+        /** @description Data transfer object for creating a new event log entry. */
         CreateEventLogDto: {
+            /** @description Gets the type of the event (maximum 100 characters). */
             eventType: string | null;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Gets the timestamp when the event occurred.
+             */
             timestamp: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Gets the unique identifier of the user associated with this event.
+             */
             userId: string;
+            /** @description Gets optional event data as a JSON string (maximum 4000 characters). */
             eventData?: string | null;
+            /** @description Gets the optional source of the event (maximum 100 characters). */
             source?: string | null;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Gets the optional entity identifier associated with this event.
+             */
             entityId?: string | null;
+            /** @description Gets the optional session identifier (maximum 100 characters). */
             sessionId?: string | null;
         };
+        /** @description Request model for creating multiple event log entries in a batch. */
         CreateEventLogsDto: {
+            /** @description Gets the list of event logs to create. */
             eventLogs?: components["schemas"]["CreateEventLogDto"][] | null;
         };
+        /** @description Data transfer object for creating a new user. */
         CreateUserDto: {
+            /** @description Gets the first name of the user. */
             firstName?: string | null;
+            /** @description Gets the last name of the user. */
             lastName?: string | null;
+            /** @description Gets the email address of the user. */
             email?: string | null;
         };
         DateTimeOffsetNullableGenericResponse: {
@@ -507,15 +1377,25 @@ export interface components {
             message?: string | null;
             errors?: string[] | null;
         };
+        /** @description Represents user login credentials. */
         LoginInfo: {
+            /** @description Gets or sets the username (email) for authentication. */
             username: string | null;
+            /** @description Gets or sets the password for authentication. */
             password: string | null;
         };
+        /** @description Response model containing metadata about the API and current user. */
         MetaResponse: {
+            /** @description The API version. */
             version?: string | null;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description The timestamp when the API was last updated.
+             */
             lastUpdated?: string;
+            /** @description The current user's identifier. */
             userId?: string | null;
+            /** @description The current user's email address. */
             email?: string | null;
         };
         MetaResponseGenericResponse: {
@@ -532,24 +1412,47 @@ export interface components {
             errors?: string[] | null;
             data?: string | null;
         };
+        /** @description Request model for updating an existing entity. */
         UpdateEntityRequest: {
+            /** @description Gets the updated name of the entity. */
             name: string | null;
+            /** @description Gets the updated description of the entity. */
             description?: string | null;
+            /** @description Gets the updated type of the entity. */
             entityType?: string | null;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Gets the updated parent entity identifier.
+             */
             parentEntityId?: string | null;
         };
+        /** @description Data transfer object for updating an existing user. */
         UpdateUserDto: {
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Gets the unique identifier of the user to update.
+             */
             id?: string;
+            /** @description Gets the updated first name of the user. */
             firstName?: string | null;
+            /** @description Gets the updated last name of the user. */
             lastName?: string | null;
-            /** Format: int32 */
+            /**
+             * Format: int32
+             * @description Gets or sets the height of the user in inches.
+             */
             heightInInches?: number | null;
+            /** @description Gets or sets the color preference in hexadecimal format. */
             colorHex?: string | null;
-            /** Format: date */
+            /**
+             * Format: date
+             * @description Gets or sets the birthdate of the user.
+             */
             birthdate?: string | null;
-            /** Format: byte */
+            /**
+             * Format: byte
+             * @description Gets or sets the thumbnail image data for the user.
+             */
             thumbnailImage?: string | null;
         };
         User: {

@@ -1,13 +1,8 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faCircle } from '@fortawesome/free-solid-svg-icons';
+import type { Entity } from '../../../api/api';
 
-interface Organization {
-  id: string;
-  name: string;
-  logo?: string;
-}
-
-interface PendingReview {
+export interface PendingReview {
   id: string;
   club: string;
   date: string;
@@ -17,13 +12,13 @@ interface PendingReview {
   status: string;
 }
 
-interface TrendingContent {
+export interface TrendingContent {
   id: string;
   title: string;
 }
 
 interface HomeViewProps {
-  organizations: Organization[];
+  organizations: Entity[];
   pendingReviews: PendingReview[];
   trendingContent: TrendingContent[];
   loading: boolean;
@@ -65,9 +60,10 @@ function HomeView({ organizations, pendingReviews, trendingContent, loading, err
                 organizations.map(org => (
                   <div key={org.id} className="organization-card">
                     <div className="org-logo">
-                      {org.logo || <FontAwesomeIcon icon={faCircle} />}
+                      <FontAwesomeIcon icon={faCircle} />
                     </div>
                     <h3 className="org-name">{org.name}</h3>
+                    {org.description && <p className="org-description">{org.description}</p>}
                   </div>
                 ))
               ) : (
