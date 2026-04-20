@@ -1,14 +1,53 @@
+import { useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUser, 
   faBell, 
   faLock, 
-  faPalette 
+  faPalette,
+  faCamera 
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../../contexts/useAuth';
 
 function AccountView() {
   const { currentUser } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string>(currentUser?.photoURL || '');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+
+      // Create a preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarUrl(reader.result as string);
+
+        
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const getInitials = (email: string | null | undefined) => {
+    if (!email) return '?';
+    return email.charAt(0).toUpperCase();
+  };
 
   return (
     <div className="account-view">
@@ -31,6 +70,95 @@ function AccountView() {
               <h3>Profile Information</h3>
             </div>
             <div style={{ marginLeft: '30px' }}>
+              {/* Avatar Section */}
+              <div style={{ marginBottom: '25px' }}>
+                <label style={{ display: 'block', fontWeight: '600', marginBottom: '10px' }}>Profile Picture</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div 
+                    onClick={handleAvatarClick}
+                    style={{ 
+                      position: 'relative',
+                      width: '100px', 
+                      height: '100px', 
+                      borderRadius: '50%', 
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      border: '3px solid #e0e0e0',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#cfff04';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#e0e0e0';
+                    }}
+                  >
+                    {avatarUrl ? (
+                      <img 
+                        src={avatarUrl} 
+                        alt="Profile" 
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: 'cover' 
+                        }} 
+                      />
+                    ) : (
+                      <div style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        backgroundColor: '#cfff04',
+                        fontSize: '36px',
+                        fontWeight: '700',
+                        color: '#1a1f24'
+                      }}>
+                        {getInitials(currentUser?.email)}
+                      </div>
+                    )}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: 'rgba(0, 0, 0, 0.6)',
+                      color: 'white',
+                      padding: '8px',
+                      textAlign: 'center',
+                      fontSize: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '5px'
+                    }}>
+                      <FontAwesomeIcon icon={faCamera} />
+                      <span>Change</span>
+                    </div>
+                  </div>
+                  <input 
+                    ref={fileInputRef}
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
+                  <div>
+                    <button 
+                      className="secondary-btn" 
+                      onClick={handleAvatarClick}
+                      style={{ marginBottom: '8px', display: 'block' }}
+                    >
+                      Upload Photo
+                    </button>
+                    <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>
+                      JPG, PNG or GIF. Max size 5MB.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', fontWeight: '600', marginBottom: '5px' }}>Email</label>
                 <p style={{ color: '#666' }}>{currentUser?.email || 'Not set'}</p>
