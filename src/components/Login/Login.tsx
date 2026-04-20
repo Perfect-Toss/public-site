@@ -25,13 +25,45 @@ function Login() {
       
       // First check if this is a magic link callback
       if (checkIsSignInWithEmailLink()) {
-        const { user, error: authError } = await completeMagicLinkSignIn();
+        console.log('Detected magic link sign-in');
         
-        if (authError) {
-          setError(authError);
-          console.error('Magic Link Error:', authError);
-        } else if (user) {
-          console.log('Successfully signed in with magic link:', user);
+        // Check if we have the email in localStorage
+        const savedEmail = window.localStorage.getItem('emailForSignIn');
+        console.log('Saved email from localStorage:', savedEmail);
+        
+        if (!savedEmail) {
+          // If no email in localStorage, prompt the user
+          const userEmail = window.prompt('Please confirm your email address to complete sign-in:');
+          if (userEmail) {
+            const { user, error: authError } = await completeMagicLinkSignIn(userEmail);
+            
+            if (authError) {
+              setError(authError);
+              console.error('Magic Link Error:', authError);
+              setLoading(false);
+            } else if (user) {
+              console.log('Successfully signed in with magic link:', user);
+              // Clean up the URL to remove the email link parameters
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+          } else {
+            setError('Email is required to complete sign-in');
+            setLoading(false);
+          }
+        } else {
+          const { user, error: authError } = await completeMagicLinkSignIn();
+          
+          if (authError) {
+            setError(authError);
+            console.error('Magic Link Error:', authError);
+            setLoading(false);
+          } else if (user) {
+            console.log('Successfully signed in with magic link:', user);
+            // Clean up the URL to remove the email link parameters
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // Note: Don't set loading to false here - let AuthContext handle the redirect
+            // The auth state change will trigger navigation via AuthProvider
+          }
         }
       } else {
         // Otherwise check for redirect result (Google/Apple)
@@ -40,12 +72,15 @@ function Login() {
         if (authError) {
           setError(authError);
           console.error('Redirect Error:', authError);
+          setLoading(false);
         } else if (user) {
           console.log('Successfully signed in:', user);
+          // Don't set loading to false - let the redirect happen
+        } else {
+          // No redirect result and no magic link
+          setLoading(false);
         }
       }
-      
-      setLoading(false);
     };
     
     checkAuth();
