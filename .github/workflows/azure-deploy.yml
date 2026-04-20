@@ -127,7 +127,7 @@ jobs:
                   azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
                   repo_token: ${{ secrets.GITHUB_TOKEN }}
                   action: "upload"
-                  app_location: "/" # Location of your application code
+                  app_location: "dist" # Upload only the built dist folder
                   api_location: "" # Leave empty if no API
-                  output_location: "dist" # Built app content directory - Vite default
+                  output_location: "" # Empty because we're already pointing to dist
                   skip_app_build: true # We already built it
