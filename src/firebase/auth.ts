@@ -29,7 +29,8 @@ interface SuccessResult {
 // Action code settings for magic link
 const actionCodeSettings: ActionCodeSettings = {
   // URL you want to redirect back to after email link is clicked
-  url: window.location.origin,
+  // Use the full URL including protocol
+  url: `${window.location.origin}/login`,
   handleCodeInApp: true,
 };
 
@@ -92,28 +93,39 @@ export const checkIsSignInWithEmailLink = (): boolean => {
 // Complete sign-in with email link
 export const completeMagicLinkSignIn = async (email: string | null = null): Promise<AuthResult> => {
   try {
+    console.log('Starting magic link sign-in completion...');
+    console.log('Current URL:', window.location.href);
+    
     // Get email from parameter or local storage
     let userEmail = email;
     if (!userEmail) {
       userEmail = window.localStorage.getItem('emailForSignIn');
+      console.log('Retrieved email from localStorage:', userEmail);
+    } else {
+      console.log('Using provided email:', userEmail);
     }
     
     if (!userEmail) {
+      console.error('No email available for sign-in');
       return { 
         user: null, 
         error: 'Please provide your email to complete sign-in' 
       };
     }
 
+    console.log('Attempting to sign in with email link...');
     const result = await signInWithEmailLink(auth, userEmail, window.location.href);
+    console.log('Sign-in successful:', result.user.email);
     
     // Clear email from local storage
     window.localStorage.removeItem('emailForSignIn');
+    console.log('Cleared email from localStorage');
     
     return { user: result.user, error: null };
   } catch (error) {
     console.error('Error completing magic link sign-in:', error);
-    return { user: null, error: (error as Error).message };
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return { user: null, error: errorMessage };
   }
 };
 
