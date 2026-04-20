@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth, GoogleAuthProvider, OAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, Auth, GoogleAuthProvider, OAuthProvider, browserLocalPersistence, setPersistence } from 'firebase/auth';
 
 // Firebase configuration using environment variables
 // Make sure to create a .env file based on .env.example
@@ -20,8 +20,9 @@ const app: FirebaseApp = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication and get a reference to the service
 export const auth: Auth = getAuth(app);
 
-// Set persistence to LOCAL (default) - keeps users logged in across browser sessions
-// This persists the user's session even after closing the browser
+// Set persistence to LOCAL - This is CRITICAL for session persistence
+// Must be set before any auth operations or state observers
+// This ensures users stay logged in across browser sessions and page refreshes
 setPersistence(auth, browserLocalPersistence).catch((error) => {
   console.error('Error setting auth persistence:', error);
 });

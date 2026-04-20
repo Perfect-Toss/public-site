@@ -12,13 +12,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('[AuthProvider] Setting up auth state listener...');
+    
+    // Check localStorage for Firebase auth data (debugging)
+    const localStorageKeys = Object.keys(localStorage).filter(key => 
+      key.startsWith('firebase:')
+    );
+    console.log('[AuthProvider] Firebase localStorage keys:', localStorageKeys);
+    
+    // onAuthStateChanged will automatically restore the session from persistence
+    // It triggers immediately with null if no session, or with the User if session exists
     const unsubscribe = onAuthStateChange((user) => {
-      console.log('Auth state changed:', user ? `User logged in: ${user.email}` : 'No user');
+      console.log('[AuthProvider] Auth state changed:', {
+        isLoggedIn: !!user,
+        email: user?.email,
+        uid: user?.uid
+      });
       setCurrentUser(user);
       setLoading(false);
     });
 
-    return unsubscribe;
+    // The unsubscribe function will be called when component unmounts
+    return () => {
+      console.log('[AuthProvider] Cleaning up auth listener');
+      unsubscribe();
+    };
   }, []);
 
   const value = {
