@@ -24,6 +24,11 @@ export type AddUserToEntityRequest = components['schemas']['AddUserToEntityReque
 export type LoginInfo = components['schemas']['LoginInfo'];
 export type MetaResponse = components['schemas']['MetaResponse'];
 export type Roles = components['schemas']['Roles'];
+export type EventLogUserSummary = components['schemas']['EventLogUserSummary'];
+export type EventLogMonthlySummary = components['schemas']['EventLogMonthlySummary'];
+export type EventLogSearchCriteriaDto = components['schemas']['EventLogSearchCriteriaDto'];
+export type EventLogIEnumerablePagedResponse = components['schemas']['EventLogIEnumerablePagedResponse'];
+export type StringIEnumerableGenericResponse = components['schemas']['StringIEnumerableGenericResponse'];
 
 // ============================================================================
 // Auth API
@@ -48,20 +53,6 @@ export async function login(username: string, password: string) {
 // ============================================================================
 // EventLogs API
 // ============================================================================
-
-/**
- * Get all event logs in the system (requires admin authorization)
- */
-export async function fetchAllEventLogs() {
-  const { data, error } = await api.GET('/api/v1/eventlogs', {});
-  
-  if (error) {
-    console.error('Failed to fetch all event logs:', error);
-    throw new Error('Failed to fetch all event logs');
-  }
-  
-  return data?.data || [];
-}
 
 /**
  * Create a single event log
@@ -96,35 +87,65 @@ export async function bulkCreateEventLogs(events: CreateEventLogDto[]) {
 }
 
 /**
- * Get all event logs for a specific entity (requires admin authorization)
+ * Get event log summary data grouped by user with monthly aggregates.
+ * Includes number of videos captured and days used per month.
+ * Requires admin authorization.
  */
-export async function fetchEventLogsByEntity(entityId: string) {
-  const { data, error } = await api.GET('/api/v1/eventlogs/entity/{entityId}', {
-    params: { path: { entityId } },
-  });
-  
+export async function fetchEventLogSummary(): Promise<EventLogUserSummary[]> {
+  const { data, error } = await api.GET('/api/v1/eventlogs/summary', {});
+
   if (error) {
-    console.error('Failed to fetch event logs by entity:', error);
-    throw new Error('Failed to fetch event logs by entity');
+    console.error('Failed to fetch event log summary:', error);
+    throw new Error('Failed to fetch event log summary');
   }
-  
+
   return data?.data || [];
 }
 
 /**
+ * Search event logs with flexible filtering and paging (requires admin authorization)
+ */
+export async function searchEventLogs(criteria: EventLogSearchCriteriaDto): Promise<EventLogIEnumerablePagedResponse> {
+  const { data, error } = await api.POST('/api/v1/eventlogs/search', {
+    body: criteria,
+  });
+
+  if (error) {
+    console.error('Failed to search event logs:', error);
+    throw new Error('Failed to search event logs');
+  }
+
+  return data ?? {};
+}
+
+/**
+ * Get all event log types
+ */
+export async function fetchEventLogTypes(): Promise<string[]> {
+  const { data, error } = await api.GET('/api/v1/eventlogs/types', {});
+
+  if (error) {
+    console.error('Failed to fetch event log types:', error);
+    throw new Error('Failed to fetch event log types');
+  }
+
+  return data?.data ?? [];
+}
+
+/**
+ * Get all event logs for a specific entity (requires admin authorization)
+ * @deprecated This endpoint has been removed. Use searchEventLogs with entityId filter instead.
+ */
+export async function fetchEventLogsByEntity(entityId: string) {
+  return searchEventLogs({ entityId });
+}
+
+/**
  * Get all event logs of a specific type (requires admin authorization)
+ * @deprecated This endpoint has been removed. Use searchEventLogs with eventType filter instead.
  */
 export async function fetchEventLogsByType(eventType: string) {
-  const { data, error } = await api.GET('/api/v1/eventlogs/type/{eventType}', {
-    params: { path: { eventType } },
-  });
-  
-  if (error) {
-    console.error('Failed to fetch event logs by type:', error);
-    throw new Error('Failed to fetch event logs by type');
-  }
-  
-  return data?.data || [];
+  return searchEventLogs({ eventType });
 }
 
 /**
@@ -345,6 +366,20 @@ export async function syncUsers() {
   }
   
   return data?.data || [];
+}
+
+/**
+ * Remove inactive or invalid users from the system (requires super user authorization)
+ */
+export async function pruneUsers() {
+  const { data, error } = await api.DELETE('/api/v1/users', {});
+
+  if (error) {
+    console.error('Failed to prune users:', error);
+    throw new Error('Failed to prune users');
+  }
+
+  return data?.succeeded || false;
 }
 
 // ============================================================================

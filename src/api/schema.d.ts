@@ -430,29 +430,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Gets all event logs in the system. Requires admin authorization. */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                    };
-                };
-            };
-        };
+        get?: never;
         put?: never;
         /** Creates a new event log entry. */
         post: {
@@ -535,25 +513,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/eventlogs/user/{userId}": {
+    "/api/v1/eventlogs/search": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Gets all event logs for a specific user. Requires admin authorization. */
-        get: {
+        get?: never;
+        put?: never;
+        /** Searches event logs with flexible filtering and paging. Requires admin authorization. */
+        post: {
             parameters: {
                 query?: never;
                 header?: never;
-                path: {
-                    /** @description The unique identifier of the user. */
-                    userId: string;
-                };
+                path?: never;
                 cookie?: never;
             };
-            requestBody?: never;
+            /** @description The search criteria including filters and paging parameters. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["EventLogSearchCriteriaDto"];
+                    "text/json": components["schemas"]["EventLogSearchCriteriaDto"];
+                    "application/*+json": components["schemas"]["EventLogSearchCriteriaDto"];
+                };
+            };
             responses: {
                 /** @description OK */
                 200: {
@@ -561,37 +545,32 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["EventLogIEnumerablePagedResponse"];
+                        "application/json": components["schemas"]["EventLogIEnumerablePagedResponse"];
+                        "text/json": components["schemas"]["EventLogIEnumerablePagedResponse"];
                     };
                 };
             };
         };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/eventlogs/entity/{entityId}": {
+    "/api/v1/eventlogs/types": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Gets all event logs for a specific entity. Requires admin authorization. */
+        /** Gets all event log types */
         get: {
             parameters: {
                 query?: never;
                 header?: never;
-                path: {
-                    /** @description The unique identifier of the entity. */
-                    entityId: string;
-                };
+                path?: never;
                 cookie?: never;
             };
             requestBody?: never;
@@ -602,50 +581,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/eventlogs/type/{eventType}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Gets all event logs of a specific type. Requires admin authorization. */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description The type of events to retrieve. */
-                    eventType: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["StringIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["StringIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["StringIEnumerableGenericResponse"];
                     };
                 };
             };
@@ -687,6 +625,48 @@ export interface paths {
                         "text/plain": components["schemas"]["DateTimeOffsetNullableGenericResponse"];
                         "application/json": components["schemas"]["DateTimeOffsetNullableGenericResponse"];
                         "text/json": components["schemas"]["DateTimeOffsetNullableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/eventlogs/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets event log summary data grouped by user with monthly aggregates.
+         *     Includes the number of videos captured (RecordingStopped events) and number of days used per month.
+         *     Requires admin authorization.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventLogUserSummaryIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["EventLogUserSummaryIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["EventLogUserSummaryIEnumerableGenericResponse"];
                     };
                 };
             };
@@ -1372,6 +1352,85 @@ export interface components {
             errors?: string[] | null;
             data?: components["schemas"]["EventLog"][] | null;
         };
+        EventLogIEnumerablePagedResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["EventLog"][] | null;
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        EventLogMonthlySummary: {
+            /** Format: int32 */
+            year?: number;
+            /** Format: int32 */
+            month?: number;
+            /** Format: int32 */
+            videosCaptured?: number;
+            /** Format: int32 */
+            daysUsed?: number;
+            /** Format: int32 */
+            totalDaysInPeriod?: number;
+            /** Format: double */
+            usageRatio?: number;
+            eventTypeCounts?: {
+                [key: string]: number;
+            } | null;
+        };
+        /** @description Data transfer object for searching event logs with filtering and paging. */
+        EventLogSearchCriteriaDto: {
+            /**
+             * Format: uuid
+             * @description Gets the optional user identifier to filter event logs.
+             */
+            userId?: string | null;
+            /**
+             * Format: uuid
+             * @description Gets the optional entity identifier to filter event logs.
+             */
+            entityId?: string | null;
+            /** @description Gets the optional event type to filter event logs. */
+            eventType?: string | null;
+            /**
+             * Format: date-time
+             * @description Gets the optional timestamp cutoff to filter out logs prior to this date.
+             *     Defaults to 6 months ago from the first day of the month if not specified.
+             */
+            timestampFrom?: string | null;
+            /**
+             * Format: date-time
+             * @description Gets the optional end timestamp to filter event logs up to this date.
+             */
+            timestampTo?: string | null;
+            /**
+             * Format: int32
+             * @description Gets the page number for pagination. Defaults to 1.
+             */
+            pageNumber?: number;
+            /**
+             * Format: int32
+             * @description Gets the page size for pagination. Defaults to 50. Maximum is 200.
+             */
+            pageSize?: number;
+        };
+        EventLogUserSummary: {
+            /** Format: uuid */
+            userId?: string;
+            email?: string | null;
+            firstName?: string | null;
+            lastName?: string | null;
+            monthlyData?: components["schemas"]["EventLogMonthlySummary"][] | null;
+        };
+        EventLogUserSummaryIEnumerableGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["EventLogUserSummary"][] | null;
+        };
         GenericResponse: {
             succeeded?: boolean;
             message?: string | null;
@@ -1411,6 +1470,12 @@ export interface components {
             message?: string | null;
             errors?: string[] | null;
             data?: string | null;
+        };
+        StringIEnumerableGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: string[] | null;
         };
         /** @description Request model for updating an existing entity. */
         UpdateEntityRequest: {

@@ -1,7 +1,9 @@
-import { useEffect, useState, ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
+
 import AuthContext from './useAuth';
-import { onAuthStateChange } from '../firebase/auth';
 import { User } from 'firebase/auth';
+import { onAuthStateChange } from '../firebase/auth';
+import { setAuthToken } from '../api/client';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -22,12 +24,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     
     // onAuthStateChanged will automatically restore the session from persistence
     // It triggers immediately with null if no session, or with the User if session exists
-    const unsubscribe = onAuthStateChange((user) => {
+    const unsubscribe = onAuthStateChange(async (user) => {
       console.log('[AuthProvider] Auth state changed:', {
         isLoggedIn: !!user,
         email: user?.email,
         uid: user?.uid
       });
+
+      if (user) {
+        const token = await user.getIdToken();
+        setAuthToken(token);
+      } else {
+        setAuthToken(null);
+      }
+
       setCurrentUser(user);
       setLoading(false);
     });

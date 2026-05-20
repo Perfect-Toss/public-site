@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, Routes, Route, useNavigate } from 'react-router-dom';
+import { NavLink, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import './HomePage.css';
 import { logout } from '../../firebase/auth';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,18 +9,21 @@ import {
   faBuilding, 
   faUser, 
   faRightFromBracket,
-  faUserShield
+  faUserShield,
+  faChartBar
 } from '@fortawesome/free-solid-svg-icons';
 import HomeView, { type PendingReview, type TrendingContent } from './views/HomeView';
 import VideosView from './views/VideosView';
 import OrganizationsView from './views/OrganizationsView';
 import AdminView from './views/AdminView';
 import AccountView from './views/AccountView';
+import DashboardView from './views/DashboardView';
 import type { Entity } from '../../api/api';
 import { fetchEntities } from '../../api/api';
 
 function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [organizations, setOrganizations] = useState<Entity[]>([]);
   const [pendingReviews] = useState<PendingReview[]>([]);
   const [trendingContent] = useState<TrendingContent[]>([]);
@@ -127,13 +130,28 @@ function HomePage() {
           </NavLink>
 
           {isAdmin && (
-            <NavLink 
-              to="/admin"
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-            >
-              <span className="nav-icon"><FontAwesomeIcon icon={faUserShield} /></span>
-              <span>ADMIN</span>
-            </NavLink>
+            <div className="nav-group">
+              <NavLink
+                to="/admin"
+                end
+                className={({ isActive }) => {
+                  const isSubActive = !isActive && location.pathname.startsWith('/admin/');
+                  return `nav-item ${isActive ? 'active' : ''} ${isSubActive ? 'nav-item--parent-active' : ''}`;
+                }}
+              >
+                <span className="nav-icon"><FontAwesomeIcon icon={faUserShield} /></span>
+                <span>ADMIN</span>
+              </NavLink>
+              <div className="nav-sub-items">
+                <NavLink
+                  to="/admin/dashboard"
+                  className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
+                >
+                  <span className="nav-icon"><FontAwesomeIcon icon={faChartBar} /></span>
+                  <span>DASHBOARD</span>
+                </NavLink>
+              </div>
+            </div>
           )}
         </nav>
 
@@ -173,6 +191,7 @@ function HomePage() {
           <Route path="/videos" element={<VideosView />} />
           <Route path="/organizations" element={<OrganizationsView />} />
           {isAdmin && <Route path="/admin" element={<AdminView />} />}
+          {isAdmin && <Route path="/admin/dashboard" element={<DashboardView />} />}
           <Route path="/account" element={<AccountView />} />
         </Routes>
       </main>
