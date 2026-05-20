@@ -1,0 +1,127 @@
+.dashboard-view {
+  padding: 0;
+}
+
+.dashboard-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 24px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  min-width: 600px;
+}
+
+.dashboard-table thead tr:first-child {
+  background-color: #1a1f24;
+  color: white;
+}
+
+.dashboard-table thead tr:last-child {
+  background-color: #2e353d;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.th-static {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: middle;
+}
+
+.th-month-group {
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  border-left: 2px solid rgba(207, 255, 4, 0.25);
+  border-right: 2px solid rgba(207, 255, 4, 0.25);
+}
+
+.th-sub {
+  padding: 8px 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.th-sub:first-of-type {
+  border-left: 2px solid rgba(207, 255, 4, 0.25);
+}
+
+/* Body rows */
+.dashboard-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.15s ease;
+}
+
+.dashboard-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.dashboard-table tbody tr:hover {
+  background-color: #f9fffe;
+}
+
+.td-email {
+  padding: 12px 16px;
+  color: #1a1f24;
+  font-weight: 500;
+  white-space: nowrap;
+  border-right: 1px solid #f0f0f0;
+}
+
+.td-name {
+  padding: 12px 16px;
+  color: #444;
+  white-space: nowrap;
+  border-right: 1px solid #eee;
+}
+
+.td-num {
+  padding: 12px 12px;
+  text-align: center;
+  color: #333;
+  border-left: 1px solid #f4f4f4;
+}
+
+.td-month-start {
+  border-left: 2px solid rgba(207, 255, 4, 0.35);
+}
+
+/* Frozen email column */
+.th-email {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background-color: #1a1f24;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.15);
+}
+
+.td-email {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background-color: white;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard-table tbody tr:hover .td-email {
+  background-color: #f9fffe;
+}

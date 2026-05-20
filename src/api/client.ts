@@ -12,19 +12,26 @@ export const apiClient = createClient<paths>({
   },
 });
 
+// Holds the current auth token in memory
+let currentAuthToken: string | null = null;
+
 /**
- * Set authorization token for authenticated requests
+ * Set authorization token for authenticated requests.
+ * Uses a single persistent middleware that reads the latest token.
  */
 export function setAuthToken(token: string | null) {
-  if (token) {
-    apiClient.use({
-      onRequest({ request }) {
-        request.headers.set('Authorization', `Bearer ${token}`);
-        return request;
-      },
-    });
-  }
+  currentAuthToken = token;
 }
+
+// Single auth middleware that always uses the latest token
+apiClient.use({
+  onRequest({ request }) {
+    if (currentAuthToken) {
+      request.headers.set('Authorization', `Bearer ${currentAuthToken}`);
+    }
+    return request;
+  },
+});
 
 /**
  * Add global error handling middleware
