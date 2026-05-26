@@ -1,12 +1,16 @@
+import '../../styles/page.css';
+import './VideosPage.css';
+
+import { faSearch, faVideo } from '@fortawesome/free-solid-svg-icons';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faVideo, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { useState } from 'react';
 
-function VideosView() {
+function VideosPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <div className="videos-view">
+    <div className="videos-page">
       <section className="section">
         <div className="section-header">
           <h2>VIDEOS</h2>
@@ -25,7 +29,6 @@ function VideosView() {
         </div>
 
         <div className="videos-grid">
-          {/* Placeholder for video content */}
           <div className="empty-state-large">
             <FontAwesomeIcon icon={faVideo} size="3x" style={{ opacity: 0.3 }} />
             <h3>No videos yet</h3>
@@ -37,4 +40,4 @@ function VideosView() {
   );
 }
 
-export default VideosView;
+export default VideosPage;

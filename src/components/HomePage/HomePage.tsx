@@ -1,45 +1,31 @@
-import { useState, useEffect } from 'react';
-import { NavLink, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import './HomePage.css';
-import { logout } from '../../firebase/auth';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
+
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import {
+  faBuilding,
+  faChartBar,
   faHome,
-  faVideo, 
-  faBuilding, 
-  faUser, 
   faRightFromBracket,
+  faUser,
   faUserShield,
-  faChartBar
+  faVideo
 } from '@fortawesome/free-solid-svg-icons';
-import HomeView, { type PendingReview, type TrendingContent } from './views/HomeView';
-import VideosView from './views/VideosView';
-import OrganizationsView from './views/OrganizationsView';
-import AdminView from './views/AdminView';
-import AccountView from './views/AccountView';
-import DashboardView from './views/DashboardView';
-import type { Entity } from '../../api/api';
-import { fetchEntities } from '../../api/api';
+import { useEffect, useState } from 'react';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { logout } from '../../firebase/auth';
 
 function HomePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [organizations, setOrganizations] = useState<Entity[]>([]);
-  const [pendingReviews] = useState<PendingReview[]>([]);
-  const [trendingContent] = useState<TrendingContent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
+
   // TODO: Replace with actual admin check from Firebase auth or user context
   const [isAdmin] = useState(true); // Set to true for testing, will be dynamic in production
 
   useEffect(() => {
-    loadData();
-    
     // Clean up URL query parameters after authentication
     const url = new URL(window.location.href);
     if (url.search) {
-      // Remove common auth-related query parameters
       const paramsToRemove = ['apiKey', 'oobCode', 'mode', 'lang', 'continueUrl'];
       let hasAuthParams = false;
       
@@ -50,36 +36,11 @@ function HomePage() {
         }
       });
       
-      // If we removed any auth params, update the URL without reloading
       if (hasAuthParams) {
         window.history.replaceState({}, document.title, url.pathname);
       }
     }
   }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Fetch entities (organizations)
-      const orgsData = await fetchEntities();
-      setOrganizations(orgsData);
-
-      // TODO: Fetch pending reviews and trending content when endpoints are available
-      // const [reviewsData, trendingData] = await Promise.all([
-      //   fetchPendingReviews(),
-      //   fetchTrendingContent(),
-      // ]);
-      // setPendingReviews(reviewsData);
-      // setTrendingContent(trendingData);
-    } catch (err) {
-      console.error('Failed to load data:', err);
-      setError('Failed to load data. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogout = async () => {
     const { success } = await logout();
@@ -174,26 +135,7 @@ function HomePage() {
 
       {/* Main Content */}
       <main className="main-content">
-        <Routes>
-          <Route 
-            path="/" 
-            element={
-              <HomeView 
-                organizations={organizations}
-                pendingReviews={pendingReviews}
-                trendingContent={trendingContent}
-                loading={loading}
-                error={error}
-                onRetry={loadData}
-              />
-            } 
-          />
-          <Route path="/videos" element={<VideosView />} />
-          <Route path="/organizations" element={<OrganizationsView />} />
-          {isAdmin && <Route path="/admin" element={<AdminView />} />}
-          {isAdmin && <Route path="/admin/dashboard" element={<DashboardView />} />}
-          <Route path="/account" element={<AccountView />} />
-        </Routes>
+        <Outlet />
       </main>
     </div>
   );

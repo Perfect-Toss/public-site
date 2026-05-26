@@ -1,6 +1,11 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlay, faCircle } from '@fortawesome/free-solid-svg-icons';
+import '../../../styles/page.css';
+
+import { faCircle, faPlay } from '@fortawesome/free-solid-svg-icons';
+import { useEffect, useState } from 'react';
+
 import type { Entity } from '../../../api/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { fetchEntities } from '../../../api/api';
 
 export interface PendingReview {
   id: string;
@@ -17,16 +22,31 @@ export interface TrendingContent {
   title: string;
 }
 
-interface HomeViewProps {
-  organizations: Entity[];
-  pendingReviews: PendingReview[];
-  trendingContent: TrendingContent[];
-  loading: boolean;
-  error: string | null;
-  onRetry: () => void;
-}
+function HomeView() {
+  const [organizations, setOrganizations] = useState<Entity[]>([]);
+  const [pendingReviews] = useState<PendingReview[]>([]);
+  const [trendingContent] = useState<TrendingContent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-function HomeView({ organizations, pendingReviews, trendingContent, loading, error, onRetry }: HomeViewProps) {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const orgsData = await fetchEntities();
+      setOrganizations(orgsData);
+      // TODO: Fetch pending reviews and trending content when endpoints are available
+    } catch (err) {
+      console.error('Failed to load data:', err);
+      setError('Failed to load data. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <>
       {/* Loading State */}
@@ -41,7 +61,7 @@ function HomeView({ organizations, pendingReviews, trendingContent, loading, err
       {error && (
         <div className="error-container">
           <p>{error}</p>
-          <button onClick={onRetry} className="retry-button">Retry</button>
+          <button onClick={loadData} className="retry-button">Retry</button>
         </div>
       )}
 

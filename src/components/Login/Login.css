@@ -37,7 +37,7 @@
   filter: drop-shadow(0 4px 20px rgba(207, 255, 4, 0.3));
 }
 
-.logo-text {
+.logo-container .logo-text {
   font-size: 2.5rem;
   font-weight: 700;
   color: white;
