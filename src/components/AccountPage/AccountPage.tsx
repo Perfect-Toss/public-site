@@ -1,15 +1,19 @@
-import { useState, useRef } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUser, 
-  faBell, 
-  faLock, 
-  faPalette,
-  faCamera 
-} from '@fortawesome/free-solid-svg-icons';
-import { useAuth } from '../../../contexts/useAuth';
+import '../../styles/page.css';
+import './AccountPage.css';
 
-function AccountView() {
+import {
+  faBell,
+  faCamera,
+  faLock,
+  faPalette,
+  faUser
+} from '@fortawesome/free-solid-svg-icons';
+import { useRef, useState } from 'react';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useAuth } from '../../contexts/useAuth';
+
+function AccountPage() {
   const { currentUser } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState<string>(currentUser?.photoURL || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,24 +25,17 @@ function AccountView() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         alert('Please select an image file');
         return;
       }
-
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('Image size should be less than 5MB');
         return;
       }
-
-      // Create a preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarUrl(reader.result as string);
-
-        
       };
       reader.readAsDataURL(file);
     }
@@ -50,7 +47,7 @@ function AccountView() {
   };
 
   return (
-    <div className="account-view">
+    <div className="account-page">
       <section className="section">
         <div className="section-header">
           <h2>ACCOUNT SETTINGS</h2>
@@ -97,11 +94,7 @@ function AccountView() {
                       <img 
                         src={avatarUrl} 
                         alt="Profile" 
-                        style={{ 
-                          width: '100%', 
-                          height: '100%', 
-                          objectFit: 'cover' 
-                        }} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                       />
                     ) : (
                       <div style={{ 
@@ -158,7 +151,7 @@ function AccountView() {
                   </div>
                 </div>
               </div>
-              
+
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', fontWeight: '600', marginBottom: '5px' }}>Email</label>
                 <p style={{ color: '#666' }}>{currentUser?.email || 'Not set'}</p>
@@ -246,4 +239,4 @@ function AccountView() {
   );
 }
 
-export default AccountView;
+export default AccountPage;

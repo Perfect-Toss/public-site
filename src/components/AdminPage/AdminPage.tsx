@@ -1,14 +1,18 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUsers, 
-  faChartLine, 
-  faFileAlt, 
-  faCog 
+import '../../styles/page.css';
+import './AdminPage.css';
+
+import {
+  faChartLine,
+  faCog,
+  faFileAlt,
+  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 
-function AdminView() {
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+function AdminPage() {
   return (
-    <div className="admin-view">
+    <div className="admin-page">
       <section className="section">
         <div className="section-header">
           <h2>ADMIN DASHBOARD</h2>
@@ -77,4 +81,4 @@ function AdminView() {
   );
 }
 
-export default AdminView;
+export default AdminPage;

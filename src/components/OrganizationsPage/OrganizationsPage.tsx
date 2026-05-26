@@ -1,12 +1,15 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import '../../styles/page.css';
+import './OrganizationsPage.css';
+
 import { faBuilding, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
 
-function OrganizationsView() {
+function OrganizationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // TODO: Replace with actual user role from API/AuthContext
-  // For now, assume user has permission (will be connected to actual user.roles later)
   const canCreateOrganization = true; // Will check for EntityAdmin, Admin, or SuperUser roles
 
   const handleCreateOrganization = () => {
@@ -15,7 +18,7 @@ function OrganizationsView() {
   };
 
   return (
-    <div className="organizations-view">
+    <div className="organizations-page">
       <section className="section">
         <div className="section-header">
           <h2>ORGANIZATIONS</h2>
@@ -43,7 +46,6 @@ function OrganizationsView() {
         </div>
 
         <div className="organizations-grid">
-          {/* Placeholder for organizations */}
           <div className="empty-state-large">
             <FontAwesomeIcon icon={faBuilding} size="3x" style={{ opacity: 0.3 }} />
             <h3>No organizations yet</h3>
@@ -55,4 +57,4 @@ function OrganizationsView() {
   );
 }
 
-export default OrganizationsView;
+export default OrganizationsPage;

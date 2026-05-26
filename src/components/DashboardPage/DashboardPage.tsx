@@ -1,9 +1,10 @@
-import './DashboardView.css';
+import '../../styles/page.css';
+import './DashboardPage.css';
 
 import { useEffect, useMemo, useState } from 'react';
 
-import type { EventLogUserSummary } from '../../../api/api';
-import { fetchEventLogSummary } from '../../../api/api';
+import type { EventLogUserSummary } from '../../api/api';
+import { fetchEventLogSummary } from '../../api/api';
 
 const MONTH_NAMES = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -25,7 +26,7 @@ function getDisplayName(row: EventLogUserSummary): string {
   return full || '-';
 }
 
-function DashboardView() {
+function DashboardPage() {
   const [summaryData, setSummaryData] = useState<EventLogUserSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +49,6 @@ function DashboardView() {
     }
   }
 
-  // Collect all unique month keys across all users, ensuring at least 6 months shown
   const allMonths = useMemo(() => {
     const monthSet = new Set<string>();
     summaryData.forEach((user) => {
@@ -58,7 +58,6 @@ function DashboardView() {
         }
       });
     });
-    // Pad to at least 6 months ending with the current month
     const now = new Date();
     for (let i = 0; i < 6; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -67,7 +66,6 @@ function DashboardView() {
     return Array.from(monthSet).sort().reverse();
   }, [summaryData]);
 
-  // Build a lookup: userId -> monthKey -> monthly summary
   const dataByUser = useMemo(() => {
     const map = new Map<string, Map<string, { videosCaptured: number; daysUsed: number }>>();
     summaryData.forEach((user) => {
@@ -87,7 +85,7 @@ function DashboardView() {
 
   if (loading) {
     return (
-      <div className="dashboard-view">
+      <div className="dashboard-page">
         <section className="section">
           <div className="section-header">
             <h2>USAGE DASHBOARD</h2>
@@ -102,7 +100,7 @@ function DashboardView() {
 
   if (error) {
     return (
-      <div className="dashboard-view">
+      <div className="dashboard-page">
         <section className="section">
           <div className="section-header">
             <h2>USAGE DASHBOARD</h2>
@@ -130,7 +128,7 @@ function DashboardView() {
   }
 
   return (
-    <div className="dashboard-view">
+    <div className="dashboard-page">
       <section className="section">
         <div className="section-header">
           <h2>USAGE DASHBOARD</h2>
@@ -142,7 +140,6 @@ function DashboardView() {
         <div className="dashboard-scroll-wrapper">
           <table className="dashboard-table">
             <thead>
-              {/* Row 1: static headers + month group headers */}
               <tr>
                 <th rowSpan={2} className="th-static th-email">Email</th>
                 <th rowSpan={2} className="th-static">Name</th>
@@ -155,7 +152,6 @@ function DashboardView() {
                   );
                 })}
               </tr>
-              {/* Row 2: sub-column headers for each month */}
               <tr>
                 {allMonths.map((key) => (
                   <>
@@ -208,4 +204,4 @@ function DashboardView() {
   );
 }
 
-export default DashboardView;
+export default DashboardPage;
