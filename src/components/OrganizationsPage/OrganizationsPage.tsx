@@ -1,13 +1,22 @@
 import '../../styles/page.css';
 import './OrganizationsPage.css';
 
-import { faBuilding, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faBuilding, faPlus, faSearch, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { fetchEntities, type Entity } from '../../api/api';
+import { usePageData } from '../../hooks/usePageData';
 
 function OrganizationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const { data: organizations, loading, error, load } = usePageData<Entity[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    load(fetchEntities);
+  }, [load]);
 
   // TODO: Replace with actual user role from API/AuthContext
   const canCreateOrganization = true; // Will check for EntityAdmin, Admin, or SuperUser roles
@@ -16,6 +25,10 @@ function OrganizationsPage() {
     // TODO: Implement create organization functionality
     console.log('Create organization clicked');
   };
+
+  const filteredOrganizations = organizations.filter(org =>
+    org.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="organizations-page">
@@ -46,11 +59,36 @@ function OrganizationsPage() {
         </div>
 
         <div className="organizations-grid">
-          <div className="empty-state-large">
-            <FontAwesomeIcon icon={faBuilding} size="3x" style={{ opacity: 0.3 }} />
-            <h3>No organizations yet</h3>
-            <p>Create or join an organization to get started</p>
-          </div>
+          {loading && (
+            <div className="empty-state-large">
+              <FontAwesomeIcon icon={faSpinner} size="3x" spin style={{ opacity: 0.5 }} />
+              <p>Loading organizations...</p>
+            </div>
+          )}
+          {!loading && error && (
+            <div className="empty-state-large">
+              <FontAwesomeIcon icon={faBuilding} size="3x" style={{ opacity: 0.3 }} />
+              <h3>Failed to load organizations</h3>
+              <p>{error}</p>
+            </div>
+          )}
+          {!loading && !error && filteredOrganizations.length === 0 && (
+            <div className="empty-state-large">
+              <FontAwesomeIcon icon={faBuilding} size="3x" style={{ opacity: 0.3 }} />
+              <h3>No organizations yet</h3>
+              <p>Create or join an organization to get started</p>
+            </div>
+          )}
+          {!loading && !error && filteredOrganizations.map(org => (
+            <div key={org.id} className="organization-card" onClick={() => org.id && navigate(`/organizations/${org.id}`)}>
+              <FontAwesomeIcon icon={faBuilding} className="org-icon" />
+              <div className="org-details">
+                <h3 className="org-name">{org.name}</h3>
+                {org.description && <p className="org-description">{org.description}</p>}
+                {org.entityType && <span className="org-type">{org.entityType}</span>}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     </div>
