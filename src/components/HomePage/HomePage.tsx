@@ -103,15 +103,17 @@ function HomePage() {
                 <span className="nav-icon"><FontAwesomeIcon icon={faUserShield} /></span>
                 <span>ADMIN</span>
               </NavLink>
-              <div className="nav-sub-items">
-                <NavLink
-                  to="/admin/dashboard"
-                  className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
-                >
-                  <span className="nav-icon"><FontAwesomeIcon icon={faChartBar} /></span>
-                  <span>DASHBOARD</span>
-                </NavLink>
-              </div>
+              {location.pathname.startsWith('/admin') && (
+                <div className="nav-sub-items">
+                  <NavLink
+                    to="/admin/dashboard"
+                    className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
+                  >
+                    <span className="nav-icon"><FontAwesomeIcon icon={faChartBar} /></span>
+                    <span>DASHBOARD</span>
+                  </NavLink>
+                </div>
+              )}
             </div>
           )}
         </nav>

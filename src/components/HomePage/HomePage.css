@@ -86,7 +86,6 @@
 }
 
 .nav-item--parent-active {
-  background-color: rgba(207, 255, 4, 0.05);
   color: rgba(255, 255, 255, 0.9);
   border-left-color: rgba(207, 255, 4, 0.4);
 }
