@@ -511,6 +511,19 @@ export async function deleteEntity(id: string) {
   return data?.succeeded || false;
 }
 
+export async function fetchEntityUsers(entityId: string) {
+  const { data, error } = await api.GET('/api/v1/entities/{entityId}/users', {
+    params: { path: { entityId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch entity users:', error);
+    throw new Error('Failed to fetch entity users');
+  }
+
+  return data?.data || [];
+};
+
 /**
  * Add a user to an entity with specific roles
  */
