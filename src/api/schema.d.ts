@@ -857,29 +857,7 @@ export interface paths {
                 };
             };
         };
-        /** Removes inactive or invalid users from the system. Requires super user authorization. */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
-                };
-            };
-        };
+        delete?: never;
         options?: never;
         head?: never;
         /** Updates an existing user's profile information. */
@@ -987,7 +965,32 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /** Deletes a user by their identifier. Requires super user authorization. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The identifier of the user to delete. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1243,6 +1246,44 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/v1/users/clean": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Removes inactive or invalid users from the system. Requires super user authorization. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1315,6 +1356,8 @@ export interface components {
             lastName?: string | null;
             /** @description Gets the email address of the user. */
             email?: string | null;
+            /** @description Gets or sets the roles assigned to the user. */
+            roles?: components["schemas"]["Roles"][] | null;
         };
         DateTimeOffsetNullableGenericResponse: {
             succeeded?: boolean;
@@ -1560,6 +1603,8 @@ export interface components {
              * @description Gets or sets the thumbnail image data for the user.
              */
             thumbnailImage?: string | null;
+            /** @description Gets or sets the roles assigned to the user. */
+            roles?: components["schemas"]["Roles"][] | null;
         };
         User: {
             /** Format: uuid */
