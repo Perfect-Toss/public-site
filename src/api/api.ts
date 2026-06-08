@@ -24,6 +24,18 @@ export type AddUserToEntityRequest = components['schemas']['AddUserToEntityReque
 export type LoginInfo = components['schemas']['LoginInfo'];
 export type MetaResponse = components['schemas']['MetaResponse'];
 export type Roles = components['schemas']['Roles'];
+/** Runtime array of all possible role values, matching the Roles schema type. */
+export const ROLES: Roles[] = [
+  'Athlete',
+  'Coach',
+  'EntityAdmin',
+  'OrganizationAdmin',
+  'Admin',
+  'ServiceAccount',
+  'AlphaTester',
+  'BetaTester',
+  'SuperUser',
+];
 export type EventLogUserSummary = components['schemas']['EventLogUserSummary'];
 export type EventLogMonthlySummary = components['schemas']['EventLogMonthlySummary'];
 export type EventLogSearchCriteriaDto = components['schemas']['EventLogSearchCriteriaDto'];
@@ -369,17 +381,19 @@ export async function syncUsers() {
 }
 
 /**
- * Remove inactive or invalid users from the system (requires super user authorization)
+ * Delete a user by their identifier (requires super user authorization)
  */
-export async function pruneUsers() {
-  const { data, error } = await api.DELETE('/api/v1/users', {});
+export async function deleteUserById(id: string) {
+  const { data, error } = await api.DELETE('/api/v1/users/{id}', {
+    params: { path: { id } },
+  });
 
   if (error) {
-    console.error('Failed to prune users:', error);
-    throw new Error('Failed to prune users');
+    console.error('Failed to delete user:', error);
+    throw new Error('Failed to delete user');
   }
 
-  return data?.succeeded || false;
+  return data?.succeeded ?? false;
 }
 
 // ============================================================================

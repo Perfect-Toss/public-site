@@ -9,8 +9,11 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useNavigate } from 'react-router-dom';
 
 function AdminPage() {
+  const navigate = useNavigate();
+
   return (
     <div className="admin-page">
       <section className="section">
@@ -24,7 +27,7 @@ function AdminPage() {
           gap: '20px',
           marginTop: '30px'
         }}>
-          <div className="admin-card" style={{ 
+          <div className="admin-card" onClick={() => navigate('/admin/users')} style={{ 
             padding: '30px', 
             background: 'white', 
             borderRadius: '8px', 
