@@ -1,9 +1,11 @@
 import { createContext, useContext } from 'react';
+
 import { User } from 'firebase/auth';
 
 interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

@@ -314,6 +314,12 @@
 
 .member-name {
   font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.member-name:hover {
+  color: #4a90d9;
 }
 
 .member-email {

@@ -3,9 +3,10 @@ import './App.css'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import AccountPage from './components/AccountPage'
+import AdminAddOrganizationPage from './components/AdminAddOrganizationPage'
+import AdminOrganizationsPage from './components/AdminOrganizationsPage'
 import AdminPage from './components/AdminPage'
 import AdminUsersPage from './components/AdminUsersPage'
-import UserDetailPage from './components/UserDetailPage'
 import { AuthProvider } from './contexts/AuthContext'
 import DashboardPage from './components/DashboardPage'
 import HomePage from './components/HomePage'
@@ -17,6 +18,7 @@ import OrganizationsPage from './components/OrganizationsPage'
 import OverviewView from './components/OrganizationPage/views/OverviewView'
 import SettingsView from './components/OrganizationPage/views/SettingsView'
 import SubOrgsView from './components/OrganizationPage/views/SubOrgsView'
+import UserDetailPage from './components/UserDetailPage'
 import VideosPage from './components/VideosPage'
 import { useAuth } from './contexts/useAuth'
 
@@ -83,6 +85,10 @@ function AppContent() {
         <Route path="admin">
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="organizations">
+            <Route index element={<AdminOrganizationsPage />} />
+            <Route path="new" element={<AdminAddOrganizationPage />} />
+          </Route>
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="*" element={<AdminPage />} />

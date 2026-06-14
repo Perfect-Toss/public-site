@@ -1,15 +1,16 @@
 import { addUserToEntity, fetchAllUsers, fetchEntityUsers, removeUserFromEntity } from '../../../api/api';
 import { faPlus, faSpinner, faTrash, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
 import type { User } from '../../../api/api';
-import { useOutletContext } from 'react-router-dom';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 function MembersView() {
   const { organization, isAdmin } = useOutletContext<OrganizationPageContext>();
+  const navigate = useNavigate();
 
   const [members, setMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -284,7 +285,13 @@ function MembersView() {
             <tbody>
               {sortUsers(members).map((member) => (
                 <tr key={member.id}>
-                  <td className="member-name">{getDisplayName(member)}</td>
+                  <td
+                    className="member-name"
+                    onClick={() => navigate(`/admin/users/${member.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {getDisplayName(member)}
+                  </td>
                   <td className="member-email">{member.email || '—'}</td>
                   <td>
                     <span className="role-badge">{member.roles?.join(', ') || 'Member'}</span>

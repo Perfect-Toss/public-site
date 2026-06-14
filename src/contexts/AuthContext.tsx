@@ -12,6 +12,26 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!currentUser) {
+      setIsAdmin(false);
+      return;
+    }
+    currentUser
+      .getIdTokenResult()
+      .then((tokenResult) => {
+        const claims = tokenResult.claims;
+        setIsAdmin(
+          claims.role === 'Admin' ||
+          claims.role === 'SuperUser' ||
+          (Array.isArray(claims.roles) &&
+            (claims.roles as string[]).some((r) => r === 'Admin' || r === 'SuperUser')),
+        );
+      })
+      .catch(() => setIsAdmin(false));
+  }, [currentUser]);
 
   useEffect(() => {
     console.log('[AuthProvider] Setting up auth state listener...');
@@ -51,7 +71,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value = {
     currentUser,
-    loading
+    loading,
+    isAdmin,
   };
 
   return (
