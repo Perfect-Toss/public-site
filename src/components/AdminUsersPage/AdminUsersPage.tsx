@@ -3,7 +3,6 @@ import './AdminUsersPage.css';
 
 import {
   faCheckCircle,
-  faEye,
   faFileImport,
   faFilter,
   faPlus,
@@ -32,38 +31,8 @@ import {
   type User,
 } from '../../api/api';
 import { usePageData } from '../../hooks/usePageData';
-
-/* ─── Helpers ─────────────────────────────────────────────────────── */
-
-function getInitials(user: User): string {
-  const first = user.firstName?.trim() ?? '';
-  const last = user.lastName?.trim() ?? '';
-  const f = first.charAt(0);
-  const l = last.charAt(0);
-  if (f && l) return `${f}${l}`.toUpperCase();
-  if (f) return f.toUpperCase();
-  return (user.email?.charAt(0) ?? '?').toUpperCase();
-}
-
-function getDisplayName(user: User): string {
-  const first = user.firstName?.trim() ?? '';
-  const last = user.lastName?.trim() ?? '';
-  const full = [first, last].filter(Boolean).join(' ');
-  return full || user.email || '-';
-}
-
-function formatDate(dateStr?: string | null): string {
-  if (!dateStr) return '-';
-  try {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return dateStr;
-  }
-}
+import { formatDate } from '../../utils/format';
+import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../../utils/user';
 
 /* ─── Bulk CSV Parser ─────────────────────────────────────────────── */
 
@@ -277,15 +246,6 @@ function AdminUsersPage() {
 
   /* ─── Render Helpers ───────────────────────────────────────── */
 
-  const renderRoleBadges = (roles?: string[] | null) => {
-    if (!roles || roles.length === 0) return <span style={{ color: '#999', fontSize: 11 }}>—</span>;
-    return roles.map((r) => (
-      <span key={r} className={`role-badge ${r.toLowerCase()}`}>
-        {r}
-      </span>
-    ));
-  };
-
   const renderStatus = (user: User) => {
     if (user.isDeleted) {
       return (
@@ -473,7 +433,21 @@ function AdminUsersPage() {
                       <tr key={user.id} onClick={() => navigate(`/admin/users/${user.id}`)}>
                         <td>
                           <div className="user-name-cell">
-                            <div className="user-avatar">{getInitials(user)}</div>
+                            {user.thumbnailImage ? (
+                              <img
+                                className="user-avatar user-avatar-img"
+                                src={`data:image/jpeg;base64,${user.thumbnailImage}`}
+                                alt={getDisplayName(user)}
+                              />
+                            ) : (
+                              <div
+                                className="user-avatar"
+                                style={user.colorHex ? {
+                                  background: user.colorHex,
+                                  color: isLightColor(user.colorHex) ? '#1a1f24' : '#fff',
+                                } : undefined}
+                              >{getInitials(user)}</div>
+                            )}
                             <div className="user-info">
                               <span className="name">{getDisplayName(user)}</span>
                             </div>
@@ -484,27 +458,15 @@ function AdminUsersPage() {
                         <td>{renderStatus(user)}</td>
                         <td style={{ color: '#999', fontSize: 12 }}>{formatDate(user.createdAt)}</td>
                         <td>
-                          <div style={{ display: 'flex', gap: 6 }}>
-                            <button
-                              className="action-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/admin/users/${user.id}`);
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faEye} style={{ marginRight: 4 }} />
-                              View
-                            </button>
-                            <button
-                              className="action-btn delete-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteConfirm({ id: user.id, name: getDisplayName(user) });
-                              }}
-                            >
-                              <FontAwesomeIcon icon={faTrash} />
-                            </button>
-                          </div>
+                          <button
+                            className="action-btn delete-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirm({ id: user.id, name: getDisplayName(user) });
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
                         </td>
                       </tr>
                     )))}

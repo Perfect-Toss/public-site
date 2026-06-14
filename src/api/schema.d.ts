@@ -346,6 +346,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/entities/user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all entities associated with a specific user. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the user. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/entities/{entityId}/users": {
         parameters: {
             query?: never;

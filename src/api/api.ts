@@ -575,6 +575,22 @@ export async function removeUserFromEntity(entityId: string, userId: string) {
   return data?.succeeded || false;
 }
 
+/**
+ * Fetch all entities associated with a specific user.
+ */
+export async function fetchEntitiesForUser(userId: string): Promise<Entity[]> {
+  const { data, error } = await api.GET('/api/v1/entities/user/{userId}', {
+    params: { path: { userId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch user entities:', error);
+    throw new Error('Failed to fetch user entities');
+  }
+
+  return data?.data || [];
+}
+
 // ============================================================================
 // Deprecated aliases (for backwards compatibility)
 // ============================================================================

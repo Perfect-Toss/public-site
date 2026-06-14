@@ -2,6 +2,7 @@ import '../../styles/page.css';
 import './AdminPage.css';
 
 import {
+  faBuilding,
   faChartLine,
   faCog,
   faFileAlt,
@@ -27,6 +28,19 @@ function AdminPage() {
           gap: '20px',
           marginTop: '30px'
         }}>
+          <div className="admin-card" onClick={() => navigate('/admin/organizations')} style={{ 
+            padding: '30px', 
+            background: 'white', 
+            borderRadius: '8px', 
+            border: '1px solid #e0e0e0',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}>
+            <FontAwesomeIcon icon={faBuilding} size="2x" style={{ color: '#cfff04', marginBottom: '15px' }} />
+            <h3>Organization Management</h3>
+            <p style={{ color: '#666', fontSize: '14px' }}>Manage organizations and entities</p>
+          </div>
+
           <div className="admin-card" onClick={() => navigate('/admin/users')} style={{ 
             padding: '30px', 
             background: 'white', 

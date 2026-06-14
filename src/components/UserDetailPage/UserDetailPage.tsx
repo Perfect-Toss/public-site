@@ -3,65 +3,48 @@ import './UserDetailPage.css';
 
 import {
   faArrowLeft,
+  faBuilding,
+  faCamera,
   faCheckCircle,
+  faChevronDown,
+  faSave,
   faSpinner,
+  faTimes,
+  faTrash,
   faUser,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchUserById, type User } from '../../api/api';
-
-/* ─── Helpers ─────────────────────────────────────────────────────── */
-
-function getInitials(user: User): string {
-  const first = user.firstName?.trim() ?? '';
-  const last = user.lastName?.trim() ?? '';
-  const f = first.charAt(0);
-  const l = last.charAt(0);
-  if (f && l) return `${f}${l}`.toUpperCase();
-  if (f) return f.toUpperCase();
-  return (user.email?.charAt(0) ?? '?').toUpperCase();
-}
-
-function getDisplayName(user: User): string {
-  const first = user.firstName?.trim() ?? '';
-  const last = user.lastName?.trim() ?? '';
-  const full = [first, last].filter(Boolean).join(' ');
-  return full || user.email || '-';
-}
-
-function formatDate(dateStr?: string | null): string {
-  if (!dateStr) return '-';
-  try {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return dateStr;
-  }
-}
-
-function renderRoleBadges(roles?: string[] | null) {
-  if (!roles || roles.length === 0) return <span style={{ color: '#999', fontSize: 12 }}>—</span>;
-  return roles.map((r) => (
-    <span key={r} className={`role-badge ${r.toLowerCase()}`}>
-      {r}
-    </span>
-  ));
-}
+import { fetchEntitiesForUser, fetchUserById, ROLES, updateUser, type Entity, type Roles, type UpdateUserDto, type User } from '../../api/api';
+import { useAuth } from '../../contexts/useAuth';
+import { formatDate } from '../../utils/format';
+import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../../utils/user';
 
 /* ─── Component ───────────────────────────────────────────────────── */
 
 function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [thumbnailSaving, setThumbnailSaving] = useState(false);
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const [editForm, setEditForm] = useState<{
+    firstName: string;
+    lastName: string;
+    heightInInches: string;
+    birthdate: string;
+    roles: Roles[];
+  }>({ firstName: '', lastName: '', heightInInches: '', birthdate: '', roles: [] });
+
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [entitiesLoading, setEntitiesLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -76,9 +59,116 @@ function UserDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Load associated entities when user is available
+  useEffect(() => {
+    if (!user?.id) return;
+    setEntitiesLoading(true);
+    fetchEntitiesForUser(user.id)
+      .then(setEntities)
+      .catch((err) => console.error('Failed to load user entities:', err))
+      .finally(() => setEntitiesLoading(false));
+  }, [user?.id]);
+
+  // Populate edit form when user loads or editing starts
+  useEffect(() => {
+    if (user && isEditing) {
+      setEditForm({
+        firstName: user.firstName ?? '',
+        lastName: user.lastName ?? '',
+        heightInInches: user.heightInInches != null ? String(user.heightInInches) : '',
+        birthdate: user.birthdate ?? '',
+        roles: [...(user.roles as Roles[] | null) ?? []],
+      });
+    }
+  }, [user, isEditing]);
+
+  const startEditing = useCallback(() => {
+    if (!user) return;
+    setEditForm({
+      firstName: user.firstName ?? '',
+      lastName: user.lastName ?? '',
+      heightInInches: user.heightInInches != null ? String(user.heightInInches) : '',
+      birthdate: user.birthdate ?? '',
+      roles: [...(user.roles as Roles[] | null) ?? []],
+    });
+    setIsEditing(true);
+  }, [user]);
+
+  const cancelEditing = useCallback(() => {
+    setIsEditing(false);
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!user?.id) return;
+    setSaving(true);
+    try {
+      const dto: UpdateUserDto = {
+        id: user.id,
+        firstName: editForm.firstName.trim() || null,
+        lastName: editForm.lastName.trim() || null,
+        heightInInches: editForm.heightInInches ? Number(editForm.heightInInches) : null,
+        birthdate: editForm.birthdate.trim() || null,
+        roles: editForm.roles.length > 0 ? editForm.roles : null,
+      };
+      await updateUser(dto);
+      // Refresh user data
+      const updated = await fetchUserById(user.id);
+      setUser(updated);
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Failed to save user:', err);
+    } finally {
+      setSaving(false);
+    }
+  }, [user, editForm]);
+
+  const buildSafeThumbnailDto = useCallback((overrides: { thumbnailImage: string | null }) => ({
+    id: user!.id,
+    firstName: user!.firstName ?? null,
+    lastName: user!.lastName ?? null,
+    heightInInches: user!.heightInInches ?? null,
+    birthdate: user!.birthdate ?? null,
+    roles: (user!.roles as Roles[] | null) ?? null,
+    ...overrides,
+  }), [user]);
+
+  const handleThumbnailUpload = useCallback(async (file: File) => {
+    if (!user?.id) return;
+    setThumbnailSaving(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const result = reader.result as string;
+        const base64 = result.split(',')[1];
+        await updateUser(buildSafeThumbnailDto({ thumbnailImage: base64 }));
+        const updated = await fetchUserById(user.id);
+        setUser(updated);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Failed to upload thumbnail:', err);
+    } finally {
+      setThumbnailSaving(false);
+    }
+  }, [user, buildSafeThumbnailDto]);
+
+  const handleThumbnailRemove = useCallback(async () => {
+    if (!user?.id) return;
+    setThumbnailSaving(true);
+    try {
+      await updateUser(buildSafeThumbnailDto({ thumbnailImage: '' }));
+      const updated = await fetchUserById(user.id);
+      setUser(updated);
+    } catch (err) {
+      console.error('Failed to remove thumbnail:', err);
+    } finally {
+      setThumbnailSaving(false);
+    }
+  }, [user, buildSafeThumbnailDto]);
+
   return (
     <div className="user-detail-page">
-      <button className="user-detail-back" onClick={() => navigate('/admin/users')}>
+      <button className="user-detail-back" onClick={() => navigate(-1)}>
         <FontAwesomeIcon icon={faArrowLeft} />
         Back to Users
       </button>
@@ -96,9 +186,9 @@ function UserDetailPage() {
             <FontAwesomeIcon icon={faUser} size="3x" style={{ opacity: 0.3 }} />
             <h3>Failed to load user</h3>
             <p>{error}</p>
-            <button className="primary-btn" onClick={() => navigate('/admin/users')}>
+            <button className="primary-btn" onClick={() => navigate(-1)}>
               <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: 6 }} />
-              Back to Users
+              Back
             </button>
           </div>
         )}
@@ -108,9 +198,9 @@ function UserDetailPage() {
             <FontAwesomeIcon icon={faUser} size="3x" style={{ opacity: 0.3 }} />
             <h3>User not found</h3>
             <p>The requested user could not be found.</p>
-            <button className="primary-btn" onClick={() => navigate('/admin/users')}>
+            <button className="primary-btn" onClick={() => navigate(-1)}>
               <FontAwesomeIcon icon={faArrowLeft} style={{ marginRight: 6 }} />
-              Back to Users
+              Back
             </button>
           </div>
         )}
@@ -118,11 +208,74 @@ function UserDetailPage() {
         {!loading && !error && user && (
           <div className="user-detail-card">
             <div className="user-detail-header">
-              <div className="user-detail-avatar-large">{getInitials(user)}</div>
+              <div className="thumbnail-edit-wrapper">
+                {user.thumbnailImage ? (
+                  <img
+                    className="user-detail-avatar-large user-detail-avatar-img"
+                    src={`data:image/jpeg;base64,${user.thumbnailImage}`}
+                    alt={getDisplayName(user)}
+                  />
+                ) : (
+                  <div
+                    className="user-detail-avatar-large"
+                    style={user.colorHex ? {
+                      background: user.colorHex,
+                      color: isLightColor(user.colorHex) ? '#1a1f24' : '#fff',
+                    } : undefined}
+                  >{getInitials(user)}</div>
+                )}
+                {isAdmin && (
+                  <div className="thumbnail-edit-actions">
+                    <label className={`thumbnail-upload-btn ${thumbnailSaving ? 'disabled' : ''}`} title="Upload photo">
+                      <FontAwesomeIcon icon={faCamera} />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={thumbnailSaving}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          handleThumbnailUpload(file);
+                          e.target.value = '';
+                        }}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                    {user.thumbnailImage && (
+                      <button
+                        className="thumbnail-remove-btn"
+                        title="Remove photo"
+                        disabled={thumbnailSaving}
+                        onClick={handleThumbnailRemove}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
               <div className="user-detail-heading">
                 <h2>{getDisplayName(user)}</h2>
                 <p className="email">{user.email || '-'}</p>
               </div>
+              {isAdmin && !isEditing && (
+                <button className="detail-edit-btn" onClick={startEditing}>
+                  <FontAwesomeIcon icon={faSave} style={{ marginRight: 6 }} />
+                  Edit
+                </button>
+              )}
+              {isAdmin && isEditing && (
+                <div className="detail-edit-actions">
+                  <button className="detail-save-btn" onClick={handleSave} disabled={saving}>
+                    <FontAwesomeIcon icon={faSave} style={{ marginRight: 6 }} />
+                    {saving ? 'Saving...' : 'Save'}
+                  </button>
+                  <button className="detail-cancel-btn" onClick={cancelEditing} disabled={saving}>
+                    <FontAwesomeIcon icon={faTimes} style={{ marginRight: 6 }} />
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="user-detail-body">
@@ -132,9 +285,56 @@ function UserDetailPage() {
                 <div className="detail-grid">
                   <div className="detail-field">
                     <span className="detail-field-label">Roles</span>
-                    <span className="detail-field-value detail-roles-list">
-                      {renderRoleBadges(user.roles)}
-                    </span>
+                    {isEditing ? (
+                      <div className="multi-select-wrapper">
+                        <div
+                          className="multi-select-trigger"
+                          onClick={() => setRoleDropdownOpen((o) => !o)}
+                        >
+                          <div className="multi-select-tags">
+                            {editForm.roles.length === 0 ? (
+                              <span className="multi-select-placeholder">Select roles...</span>
+                            ) : (
+                              editForm.roles.map((r) => (
+                                <span key={r} className={`role-badge ${r.toLowerCase()}`}>{r}</span>
+                              ))
+                            )}
+                          </div>
+                          <FontAwesomeIcon icon={faChevronDown} className={`multi-select-chevron ${roleDropdownOpen ? 'open' : ''}`} />
+                        </div>
+                        {roleDropdownOpen && (
+                          <>
+                            <div className="multi-select-backdrop" onClick={() => setRoleDropdownOpen(false)} />
+                            <div className="multi-select-dropdown">
+                              {ROLES.filter((r) => r !== 'ServiceAccount').map((role) => (
+                                <label
+                                  key={role}
+                                  className={`multi-select-option ${editForm.roles.includes(role) ? 'selected' : ''}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={editForm.roles.includes(role)}
+                                    onChange={() => {
+                                      setEditForm((f) => ({
+                                        ...f,
+                                        roles: f.roles.includes(role)
+                                          ? f.roles.filter((r) => r !== role)
+                                          : [...f.roles, role],
+                                      }));
+                                    }}
+                                  />
+                                  <span className={`role-badge ${role.toLowerCase()}`}>{role}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="detail-field-value detail-roles-list">
+                        {renderRoleBadges(user.roles)}
+                      </span>
+                    )}
                   </div>
                   <div className="detail-field">
                     <span className="detail-field-label">Status</span>
@@ -170,23 +370,96 @@ function UserDetailPage() {
                 <div className="detail-grid">
                   <div className="detail-field">
                     <span className="detail-field-label">First Name</span>
-                    <span className="detail-field-value">{user.firstName || '-'}</span>
+                    {isEditing ? (
+                      <input
+                        className="detail-input"
+                        type="text"
+                        value={editForm.firstName}
+                        onChange={(e) => setEditForm((f) => ({ ...f, firstName: e.target.value }))}
+                      />
+                    ) : (
+                      <span className="detail-field-value">{user.firstName || '-'}</span>
+                    )}
                   </div>
                   <div className="detail-field">
                     <span className="detail-field-label">Last Name</span>
-                    <span className="detail-field-value">{user.lastName || '-'}</span>
+                    {isEditing ? (
+                      <input
+                        className="detail-input"
+                        type="text"
+                        value={editForm.lastName}
+                        onChange={(e) => setEditForm((f) => ({ ...f, lastName: e.target.value }))}
+                      />
+                    ) : (
+                      <span className="detail-field-value">{user.lastName || '-'}</span>
+                    )}
                   </div>
                   <div className="detail-field">
-                    <span className="detail-field-label">Height</span>
-                    <span className="detail-field-value">
-                      {user.heightInInches != null ? `${user.heightInInches} in` : '-'}
-                    </span>
+                    <span className="detail-field-label">Height (in)</span>
+                    {isEditing ? (
+                      <input
+                        className="detail-input"
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={editForm.heightInInches}
+                        onChange={(e) => setEditForm((f) => ({ ...f, heightInInches: e.target.value }))}
+                      />
+                    ) : (
+                      <span className="detail-field-value">
+                        {user.heightInInches != null ? `${user.heightInInches} in` : '-'}
+                      </span>
+                    )}
                   </div>
                   <div className="detail-field">
                     <span className="detail-field-label">Birthdate</span>
-                    <span className="detail-field-value">{formatDate(user.birthdate)}</span>
+                    {isEditing ? (
+                      <input
+                        className="detail-input"
+                        type="date"
+                        value={editForm.birthdate}
+                        onChange={(e) => setEditForm((f) => ({ ...f, birthdate: e.target.value }))}
+                      />
+                    ) : (
+                      <span className="detail-field-value">{formatDate(user.birthdate)}</span>
+                    )}
                   </div>
                 </div>
+              </div>
+
+              {/* Associated Entities */}
+              <div className="user-detail-section">
+                <h3>Associated Entities</h3>
+                {entitiesLoading ? (
+                  <div style={{ padding: '16px 0', color: '#999', fontSize: 13 }}>
+                    <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} />
+                    Loading entities...
+                  </div>
+                ) : entities.length === 0 ? (
+                  <div style={{ padding: '16px 0', color: '#999', fontSize: 13 }}>
+                    No associated entities found.
+                  </div>
+                ) : (
+                  <div className="entities-list">
+                    {entities.map((entity) => (
+                      <div
+                        key={entity.id}
+                        className="entity-card"
+                        onClick={() => navigate(`/organizations/${entity.id}`)}
+                      >
+                        <div className="entity-card-icon">
+                          <FontAwesomeIcon icon={faBuilding} />
+                        </div>
+                        <div className="entity-card-info">
+                          <span className="entity-card-name">{entity.name || 'Untitled'}</span>
+                          {entity.entityType && (
+                            <span className="entity-card-type">{entity.entityType}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* System Info */}
