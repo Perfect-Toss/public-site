@@ -761,6 +761,235 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/machines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all machines. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MachineIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["MachineIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["MachineIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new machine. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The machine creation request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateMachineRequest"];
+                    "text/json": components["schemas"]["CreateMachineRequest"];
+                    "application/*+json": components["schemas"]["CreateMachineRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MachineGenericResponse"];
+                        "application/json": components["schemas"]["MachineGenericResponse"];
+                        "text/json": components["schemas"]["MachineGenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/id/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a specific machine by its identifier. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the machine. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MachineGenericResponse"];
+                        "application/json": components["schemas"]["MachineGenericResponse"];
+                        "text/json": components["schemas"]["MachineGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Updates an existing machine. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the machine to update. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The machine update request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateMachineRequest"];
+                    "text/json": components["schemas"]["UpdateMachineRequest"];
+                    "application/*+json": components["schemas"]["UpdateMachineRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MachineGenericResponse"];
+                        "application/json": components["schemas"]["MachineGenericResponse"];
+                        "text/json": components["schemas"]["MachineGenericResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes a machine. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the machine to delete. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{id}/info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Updates the machine info (device details) for a machine. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the machine. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The machine info update request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateMachineInfoRequest"];
+                    "text/json": components["schemas"]["UpdateMachineInfoRequest"];
+                    "application/*+json": components["schemas"]["UpdateMachineInfoRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MachineInfoGenericResponse"];
+                        "application/json": components["schemas"]["MachineInfoGenericResponse"];
+                        "text/json": components["schemas"]["MachineInfoGenericResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/meta/info": {
         parameters: {
             query?: never;
@@ -1389,6 +1618,24 @@ export interface components {
             /** @description Gets the list of event logs to create. */
             eventLogs?: components["schemas"]["CreateEventLogDto"][] | null;
         };
+        /** @description Request model for creating a new machine. */
+        CreateMachineRequest: {
+            /** @description Gets the name of the machine. */
+            name: string | null;
+            /** @description Gets the machine identifier of the machine. */
+            machineId: string | null;
+            /** @description Gets a value indicating whether the machine is a physical device. */
+            isPhysicalDevice: boolean;
+            /** @description Gets the optional purpose of the machine. */
+            purpose?: string | null;
+            /** @description Gets the status of the machine. */
+            status?: string | null;
+            /**
+             * Format: date-time
+             * @description Gets the date by which the machine must be available.
+             */
+            mustHaveDate?: string;
+        };
         /** @description Data transfer object for creating a new user. */
         CreateUserDto: {
             /** @description Gets the first name of the user. */
@@ -1568,6 +1815,82 @@ export interface components {
             /** @description Gets or sets the password for authentication. */
             password: string | null;
         };
+        Machine: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            name: string | null;
+            machineId: string | null;
+            isPhysicalDevice: boolean;
+            purpose?: string | null;
+            status?: string | null;
+            comments?: string | null;
+            /** Format: date-time */
+            mustHaveDate?: string | null;
+            machineInfo?: components["schemas"]["MachineInfo"];
+        };
+        MachineGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["Machine"];
+        };
+        MachineIEnumerableGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["Machine"][] | null;
+        };
+        MachineInfo: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            machine?: components["schemas"]["Machine"];
+            tabletName?: string | null;
+            softwareVersion?: string | null;
+            mainPCBVersion?: string | null;
+            displayPCBVersion?: string | null;
+            feedType?: string | null;
+            singulator?: string | null;
+            hopperBottom?: string | null;
+            shield?: string | null;
+            ledMount?: string | null;
+            hasLaunchSideSupports?: boolean | null;
+            hasDecal?: boolean | null;
+            motors?: string | null;
+            vesc?: string | null;
+            launchShaft?: string | null;
+            feedShute?: string | null;
+            displayPanelMount?: string | null;
+            hopper?: string | null;
+            launcherShroud?: string | null;
+            elbow?: string | null;
+        };
+        MachineInfoGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["MachineInfo"];
+        };
         /** @description Response model containing metadata about the API and current user. */
         MetaResponse: {
             /** @description The API version. */
@@ -1615,6 +1938,65 @@ export interface components {
              * @description Gets the updated parent entity identifier.
              */
             parentEntityId?: string | null;
+        };
+        /** @description Request model for updating machine info (device details). */
+        UpdateMachineInfoRequest: {
+            /** @description Gets the tablet name installed on the machine. */
+            tabletName?: string | null;
+            /** @description Gets the software version running on the machine. */
+            softwareVersion?: string | null;
+            /** @description Gets the main PCB version. */
+            mainPCBVersion?: string | null;
+            /** @description Gets the display PCB version. */
+            displayPCBVersion?: string | null;
+            /** @description Gets the feed type. */
+            feedType?: string | null;
+            /** @description Gets the singulator type. */
+            singulator?: string | null;
+            /** @description Gets the hopper bottom type. */
+            hopperBottom?: string | null;
+            /** @description Gets the shield type. */
+            shield?: string | null;
+            /** @description Gets the LED mount type. */
+            ledMount?: string | null;
+            /** @description Gets whether the machine has launch side supports. */
+            hasLaunchSideSupports?: boolean | null;
+            /** @description Gets whether the machine has a decal. */
+            hasDecal?: boolean | null;
+            /** @description Gets the motors type. */
+            motors?: string | null;
+            /** @description Gets the VESC type. */
+            vesc?: string | null;
+            /** @description Gets the launch shaft type. */
+            launchShaft?: string | null;
+            /** @description Gets the feed shute type. */
+            feedShute?: string | null;
+            /** @description Gets the display panel mount type. */
+            displayPanelMount?: string | null;
+            /** @description Gets the hopper type. */
+            hopper?: string | null;
+            /** @description Gets the launcher shroud type. */
+            launcherShroud?: string | null;
+            /** @description Gets the elbow type. */
+            elbow?: string | null;
+        };
+        /** @description Request model for updating an existing machine. */
+        UpdateMachineRequest: {
+            /** @description Gets the updated name of the machine. */
+            name: string | null;
+            /** @description Gets the updated machine identifier of the machine. */
+            machineId: string | null;
+            /** @description Gets a value indicating whether the machine is a physical device. */
+            isPhysicalDevice: boolean;
+            /** @description Gets the updated purpose of the machine. */
+            purpose?: string | null;
+            /** @description Gets the updated status of the machine. */
+            status?: string | null;
+            /**
+             * Format: date-time
+             * @description Gets the updated date by which the machine must be available.
+             */
+            mustHaveDate?: string;
         };
         /** @description Data transfer object for updating an existing user. */
         UpdateUserDto: {
