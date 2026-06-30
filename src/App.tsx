@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import AccountPage from './components/AccountPage'
 import AdminAddOrganizationPage from './components/AdminAddOrganizationPage'
 import AdminOrganizationsPage from './components/AdminOrganizationsPage'
+import AdminMachinesPage from './components/AdminMachinesPage'
 import AdminPage from './components/AdminPage'
 import AdminUsersPage from './components/AdminUsersPage'
 import { AuthProvider } from './contexts/AuthContext'
@@ -89,6 +90,7 @@ function AppContent() {
             <Route index element={<AdminOrganizationsPage />} />
             <Route path="new" element={<AdminAddOrganizationPage />} />
           </Route>
+          <Route path="machines" element={<AdminMachinesPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="*" element={<AdminPage />} />

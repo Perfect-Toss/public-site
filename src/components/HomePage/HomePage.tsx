@@ -5,6 +5,7 @@ import {
   faBuilding,
   faChartBar,
   faHome,
+  faMicrochip,
   faRightFromBracket,
   faUser,
   faUserShield,
@@ -119,6 +120,13 @@ function HomePage() {
                   >
                     <span className="nav-icon"><FontAwesomeIcon icon={faBuilding} /></span>
                     <span>ORGANIZATIONS</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admin/machines"
+                    className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
+                  >
+                    <span className="nav-icon"><FontAwesomeIcon icon={faMicrochip} /></span>
+                    <span>MACHINES</span>
                   </NavLink>
                   <NavLink
                     to="/admin/users"
