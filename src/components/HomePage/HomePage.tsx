@@ -7,6 +7,7 @@ import {
   faHome,
   faMicrochip,
   faRightFromBracket,
+  faTablet,
   faUser,
   faUserShield,
   faUsers,
@@ -127,6 +128,13 @@ function HomePage() {
                   >
                     <span className="nav-icon"><FontAwesomeIcon icon={faMicrochip} /></span>
                     <span>MACHINES</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admin/tablets"
+                    className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
+                  >
+                    <span className="nav-icon"><FontAwesomeIcon icon={faTablet} /></span>
+                    <span>TABLETS</span>
                   </NavLink>
                   <NavLink
                     to="/admin/users"

@@ -4,9 +4,10 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 
 import AccountPage from './components/AccountPage'
 import AdminAddOrganizationPage from './components/AdminAddOrganizationPage'
-import AdminOrganizationsPage from './components/AdminOrganizationsPage'
 import AdminMachinesPage from './components/AdminMachinesPage'
+import AdminOrganizationsPage from './components/AdminOrganizationsPage'
 import AdminPage from './components/AdminPage'
+import AdminTabletsPage from './components/AdminTabletsPage'
 import AdminUsersPage from './components/AdminUsersPage'
 import { AuthProvider } from './contexts/AuthContext'
 import DashboardPage from './components/DashboardPage'
@@ -91,6 +92,7 @@ function AppContent() {
             <Route path="new" element={<AdminAddOrganizationPage />} />
           </Route>
           <Route path="machines" element={<AdminMachinesPage />} />
+          <Route path="tablets" element={<AdminTabletsPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="*" element={<AdminPage />} />

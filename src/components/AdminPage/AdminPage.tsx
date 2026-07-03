@@ -7,6 +7,7 @@ import {
   faCog,
   faFileAlt,
   faMicrochip,
+  faTablet,
   faUsers
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -53,6 +54,19 @@ function AdminPage() {
             <FontAwesomeIcon icon={faMicrochip} size="2x" style={{ color: '#cfff04', marginBottom: '15px' }} />
             <h3>Machine Management</h3>
             <p style={{ color: '#666', fontSize: '14px' }}>Manage tossing machines and devices</p>
+          </div>
+
+          <div className="admin-card" onClick={() => navigate('/admin/tablets')} style={{ 
+            padding: '30px', 
+            background: 'white', 
+            borderRadius: '8px', 
+            border: '1px solid #e0e0e0',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease'
+          }}>
+            <FontAwesomeIcon icon={faTablet} size="2x" style={{ color: '#cfff04', marginBottom: '15px' }} />
+            <h3>Tablet Management</h3>
+            <p style={{ color: '#666', fontSize: '14px' }}>Manage tablets and tablet types</p>
           </div>
 
           <div className="admin-card" onClick={() => navigate('/admin/users')} style={{ 
