@@ -6,7 +6,6 @@ import {
   faDesktop,
   faLaptop,
   faMicrochip,
-  faPlus,
   faSearch,
   faSort,
   faSortDown,
@@ -16,14 +15,16 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import {
   createMachine,
   deleteMachine,
   fetchAllMachines,
+  fetchAllTablets,
   updateMachine,
   type CreateMachineRequest,
   type Machine,
+  type Tablet,
   type UpdateMachineRequest,
 } from '../../api/api';
 import { usePageData } from '../../hooks/usePageData';
@@ -49,9 +50,13 @@ function getStatusClass(status?: string | null): string {
 
 /* ─── Component ───────────────────────────────────────────────────── */
 
-type TabId = 'all-machines' | 'add-machine';
+type TabId = 'all-machines';
 
-function AdminMachinesPage() {
+export interface AdminMachinesPageHandle {
+  openAddForm: () => void;
+}
+
+const AdminMachinesPage = forwardRef<AdminMachinesPageHandle>(function AdminMachinesPage(_props: unknown, ref) {
   const [activeTab, setActiveTab] = useState<TabId>('all-machines');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
@@ -69,6 +74,8 @@ function AdminMachinesPage() {
     purpose: '',
     status: 'Active',
     mustHaveDate: '',
+    tabletId: '',
+    comments: '',
   });
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formResult, setFormResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -76,9 +83,13 @@ function AdminMachinesPage() {
   // ── Delete confirm state ────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<Machine | null>(null);
 
+  // ── Tablets list for assignment dropdown ────────────────────────
+  const { data: tablets, load: loadTablets } = usePageData<Tablet[]>([]);
+
   useEffect(() => {
     load(fetchAllMachines);
-  }, [load]);
+    loadTablets(fetchAllTablets);
+  }, [load, loadTablets]);
 
   /* ─── Sorting & Filtering ─────────────────────────────────────── */
 
@@ -89,7 +100,8 @@ function AdminMachinesPage() {
         (m.name ?? '').toLowerCase().includes(q) ||
         (m.machineId ?? '').toLowerCase().includes(q) ||
         (m.purpose ?? '').toLowerCase().includes(q) ||
-        (m.status ?? '').toLowerCase().includes(q)
+        (m.status ?? '').toLowerCase().includes(q) ||
+        (m.tablet?.name ?? '').toLowerCase().includes(q)
       );
     });
 
@@ -135,7 +147,7 @@ function AdminMachinesPage() {
 
   const openAddForm = () => {
     setEditingMachine(null);
-    setFormData({ name: '', machineId: '', isPhysicalDevice: true, purpose: '', status: 'Active', mustHaveDate: '' });
+    setFormData({ name: '', machineId: '', isPhysicalDevice: true, purpose: '', status: 'Active', mustHaveDate: '', tabletId: '', comments: '' });
     setFormResult(null);
     setShowForm(true);
   };
@@ -149,6 +161,8 @@ function AdminMachinesPage() {
       purpose: machine.purpose ?? '',
       status: machine.status ?? 'Active',
       mustHaveDate: machine.mustHaveDate ?? '',
+      tabletId: machine.tabletId ?? '',
+      comments: machine.comments ?? '',
     });
     setFormResult(null);
     setShowForm(true);
@@ -177,6 +191,7 @@ function AdminMachinesPage() {
           purpose: formData.purpose.trim() || undefined,
           status: formData.status.trim() || undefined,
           mustHaveDate: formData.mustHaveDate || undefined,
+          tabletId: formData.tabletId || null,
         };
         await updateMachine(editingMachine.id, dto);
         setFormResult({ type: 'success', message: 'Machine updated successfully!' });
@@ -188,10 +203,11 @@ function AdminMachinesPage() {
           purpose: formData.purpose.trim() || undefined,
           status: formData.status.trim() || undefined,
           mustHaveDate: formData.mustHaveDate || undefined,
+          tabletId: formData.tabletId || null,
         };
         await createMachine(dto);
         setFormResult({ type: 'success', message: 'Machine created successfully!' });
-        setFormData({ name: '', machineId: '', isPhysicalDevice: true, purpose: '', status: 'Active', mustHaveDate: '' });
+        setFormData({ name: '', machineId: '', isPhysicalDevice: true, purpose: '', status: 'Active', mustHaveDate: '', tabletId: '', comments: '' });
       }
 
       load(fetchAllMachines);
@@ -222,37 +238,13 @@ function AdminMachinesPage() {
     }
   }, [deleteTarget, load]);
 
+  useImperativeHandle(ref, () => ({ openAddForm }), []);
+
   /* ─── Render ──────────────────────────────────────────────────── */
 
   return (
     <div className="admin-machines-page">
       <section className="section">
-        <div className="section-header">
-          <h2>MACHINE MANAGEMENT</h2>
-          <div className="header-actions">
-            <button className="primary-btn" onClick={openAddForm}>
-              <FontAwesomeIcon icon={faPlus} style={{ marginRight: 8 }} />
-              Add Machine
-            </button>
-          </div>
-        </div>
-
-        {/* ─── Tabs ──────────────────────────────────────────── */}
-        <div className="tab-bar">
-          <button
-            className={`tab-btn ${activeTab === 'all-machines' ? 'active' : ''}`}
-            onClick={() => setActiveTab('all-machines')}
-          >
-            All Machines
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'add-machine' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('add-machine'); openAddForm(); }}
-          >
-            Add Machine
-          </button>
-        </div>
-
         {/* ─── Toolbar ───────────────────────────────────────── */}
         <div className="table-toolbar">
           <div className="search-box">
@@ -290,6 +282,7 @@ function AdminMachinesPage() {
                 <th className="sortable-header" onClick={() => handleSort('purpose')}>
                   Purpose {renderSortIcon('purpose')}
                 </th>
+                <th>Assigned Tablet</th>
                 <th className="sortable-header" onClick={() => handleSort('createdAt')}>
                   Created {renderSortIcon('createdAt')}
                 </th>
@@ -299,7 +292,7 @@ function AdminMachinesPage() {
             <tbody>
               {loading && (
                 <tr className="loading-row">
-                  <td colSpan={7}>
+                  <td colSpan={8}>
                     <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} />
                     Loading machines...
                   </td>
@@ -307,12 +300,12 @@ function AdminMachinesPage() {
               )}
               {error && (
                 <tr className="error-row">
-                  <td colSpan={7}>Failed to load machines. Please try again.</td>
+                  <td colSpan={8}>Failed to load machines. Please try again.</td>
                 </tr>
               )}
               {!loading && !error && sortedMachines.length === 0 && (
                 <tr className="loading-row">
-                  <td colSpan={7}>
+                  <td colSpan={8}>
                     <div className="empty-state">
                       <FontAwesomeIcon icon={faMicrochip} size="3x" />
                       <p>No machines found. Add your first machine to get started.</p>
@@ -345,6 +338,9 @@ function AdminMachinesPage() {
                   </td>
                   <td style={{ color: '#666', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {machine.purpose || '—'}
+                  </td>
+                  <td style={{ fontFamily: 'monospace', fontSize: 12, color: '#666' }}>
+                    {machine.tablet?.name || '—'}
                   </td>
                   <td style={{ color: '#999', fontSize: 12, whiteSpace: 'nowrap' }}>
                     {machine.createdAt ? formatDate(machine.createdAt) : '—'}
@@ -439,6 +435,31 @@ function AdminMachinesPage() {
               />
             </div>
 
+            <div className="form-group">
+              <label>Assigned Tablet</label>
+              <select
+                value={formData.tabletId}
+                onChange={(e) => setFormData((prev) => ({ ...prev, tabletId: e.target.value }))}
+              >
+                <option value="">— None —</option>
+                {tablets.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name || 'Unnamed'} {t.tabletUserId ? `(${t.tabletUserId})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Comments</label>
+              <textarea
+                placeholder="Optional notes about this machine..."
+                value={formData.comments}
+                onChange={(e) => setFormData((prev) => ({ ...prev, comments: e.target.value }))}
+                rows={3}
+              />
+            </div>
+
             <div className="form-actions">
               <button className="cancel-btn" onClick={closeForm}>Cancel</button>
               <button
@@ -482,6 +503,6 @@ function AdminMachinesPage() {
       )}
     </div>
   );
-}
+});
 
 export default AdminMachinesPage;
