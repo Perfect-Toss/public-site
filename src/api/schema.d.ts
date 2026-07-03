@@ -1066,6 +1066,336 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tablets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all tablets. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TabletIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["TabletIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["TabletIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new tablet. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The tablet creation request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateTabletRequest"];
+                    "text/json": components["schemas"]["CreateTabletRequest"];
+                    "application/*+json": components["schemas"]["CreateTabletRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TabletGenericResponse"];
+                        "application/json": components["schemas"]["TabletGenericResponse"];
+                        "text/json": components["schemas"]["TabletGenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tablets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a specific tablet by its identifier. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the tablet. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TabletGenericResponse"];
+                        "application/json": components["schemas"]["TabletGenericResponse"];
+                        "text/json": components["schemas"]["TabletGenericResponse"];
+                    };
+                };
+            };
+        };
+        /** Updates an existing tablet. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the tablet to update. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The tablet update request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateTabletRequest"];
+                    "text/json": components["schemas"]["UpdateTabletRequest"];
+                    "application/*+json": components["schemas"]["UpdateTabletRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TabletGenericResponse"];
+                        "application/json": components["schemas"]["TabletGenericResponse"];
+                        "text/json": components["schemas"]["TabletGenericResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes a tablet. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the tablet to delete. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tablets/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all tablet types. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TabletTypeIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["TabletTypeIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["TabletTypeIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new tablet type. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The tablet type creation request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateTabletTypeRequest"];
+                    "text/json": components["schemas"]["CreateTabletTypeRequest"];
+                    "application/*+json": components["schemas"]["CreateTabletTypeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TabletTypeGenericResponse"];
+                        "application/json": components["schemas"]["TabletTypeGenericResponse"];
+                        "text/json": components["schemas"]["TabletTypeGenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tablets/types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a specific tablet type by its identifier. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the tablet type. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TabletTypeGenericResponse"];
+                        "application/json": components["schemas"]["TabletTypeGenericResponse"];
+                        "text/json": components["schemas"]["TabletTypeGenericResponse"];
+                    };
+                };
+            };
+        };
+        /** Updates an existing tablet type. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the tablet type to update. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The tablet type update request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateTabletTypeRequest"];
+                    "text/json": components["schemas"]["UpdateTabletTypeRequest"];
+                    "application/*+json": components["schemas"]["UpdateTabletTypeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["TabletTypeGenericResponse"];
+                        "application/json": components["schemas"]["TabletTypeGenericResponse"];
+                        "text/json": components["schemas"]["TabletTypeGenericResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes a tablet type. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the tablet type to delete. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -1636,6 +1966,47 @@ export interface components {
              */
             mustHaveDate?: string;
         };
+        /** @description Request model for creating a new tablet. */
+        CreateTabletRequest: {
+            /** @description Gets the name of the tablet. */
+            name?: string | null;
+            /** @description Gets the tablet user identifier. */
+            tabletUserId?: string | null;
+            /**
+             * Format: int32
+             * @description Gets the PIN code for the tablet.
+             */
+            pin?: number | null;
+            /** @description Gets the Perfect Toss user identifier. */
+            ptUserId?: string | null;
+            /** @description Gets whether the tablet has a cover. */
+            cover?: boolean | null;
+            /** @description Gets whether the tablet has a holder. */
+            holder?: boolean | null;
+            /** @description Gets whether the tablet has a tripod. */
+            tripod?: boolean | null;
+            /**
+             * Format: uuid
+             * @description Gets the optional tablet type identifier.
+             */
+            tabletTypeId?: string | null;
+        };
+        /** @description Request model for creating a new tablet type. */
+        CreateTabletTypeRequest: {
+            /** @description Gets the model name of the tablet type. */
+            model?: string | null;
+            /** @description Gets the size of the tablet type. */
+            size?: string | null;
+            /** @description Gets the memory of the tablet type. */
+            memory?: string | null;
+            /** @description Gets the camera specification of the tablet type. */
+            camera?: string | null;
+            /**
+             * Format: double
+             * @description Gets the price of the tablet type.
+             */
+            price?: number | null;
+        };
         /** @description Data transfer object for creating a new user. */
         CreateUserDto: {
             /** @description Gets the first name of the user. */
@@ -1925,6 +2296,81 @@ export interface components {
             errors?: string[] | null;
             data?: string[] | null;
         };
+        Tablet: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            name?: string | null;
+            tabletUserId?: string | null;
+            /** Format: int32 */
+            pin?: number | null;
+            ptUserId?: string | null;
+            cover?: boolean | null;
+            holder?: boolean | null;
+            tripod?: boolean | null;
+            /** Format: uuid */
+            tabletTypeId?: string | null;
+            tabletType?: components["schemas"]["TabletType"];
+        };
+        TabletGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["Tablet"];
+        };
+        TabletIEnumerableGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["Tablet"][] | null;
+        };
+        TabletType: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            model?: string | null;
+            size?: string | null;
+            memory?: string | null;
+            camera?: string | null;
+            /** Format: double */
+            price?: number | null;
+        };
+        TabletTypeGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["TabletType"];
+        };
+        TabletTypeIEnumerableGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["TabletType"][] | null;
+        };
         /** @description Request model for updating an existing entity. */
         UpdateEntityRequest: {
             /** @description Gets the updated name of the entity. */
@@ -1997,6 +2443,47 @@ export interface components {
              * @description Gets the updated date by which the machine must be available.
              */
             mustHaveDate?: string;
+        };
+        /** @description Request model for updating an existing tablet. */
+        UpdateTabletRequest: {
+            /** @description Gets the name of the tablet. */
+            name?: string | null;
+            /** @description Gets the tablet user identifier. */
+            tabletUserId?: string | null;
+            /**
+             * Format: int32
+             * @description Gets the PIN code for the tablet.
+             */
+            pin?: number | null;
+            /** @description Gets the Perfect Toss user identifier. */
+            ptUserId?: string | null;
+            /** @description Gets whether the tablet has a cover. */
+            cover?: boolean | null;
+            /** @description Gets whether the tablet has a holder. */
+            holder?: boolean | null;
+            /** @description Gets whether the tablet has a tripod. */
+            tripod?: boolean | null;
+            /**
+             * Format: uuid
+             * @description Gets the optional tablet type identifier.
+             */
+            tabletTypeId?: string | null;
+        };
+        /** @description Request model for updating an existing tablet type. */
+        UpdateTabletTypeRequest: {
+            /** @description Gets the model name of the tablet type. */
+            model?: string | null;
+            /** @description Gets the size of the tablet type. */
+            size?: string | null;
+            /** @description Gets the memory of the tablet type. */
+            memory?: string | null;
+            /** @description Gets the camera specification of the tablet type. */
+            camera?: string | null;
+            /**
+             * Format: double
+             * @description Gets the price of the tablet type.
+             */
+            price?: number | null;
         };
         /** @description Data transfer object for updating an existing user. */
         UpdateUserDto: {

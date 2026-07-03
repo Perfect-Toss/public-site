@@ -29,6 +29,12 @@ export type CreateMachineRequest = components['schemas']['CreateMachineRequest']
 export type UpdateMachineRequest = components['schemas']['UpdateMachineRequest'];
 export type UpdateMachineInfoRequest = components['schemas']['UpdateMachineInfoRequest'];
 export type MachineInfo = components['schemas']['MachineInfo'];
+export type Tablet = components['schemas']['Tablet'];
+export type CreateTabletRequest = components['schemas']['CreateTabletRequest'];
+export type UpdateTabletRequest = components['schemas']['UpdateTabletRequest'];
+export type TabletType = components['schemas']['TabletType'];
+export type CreateTabletTypeRequest = components['schemas']['CreateTabletTypeRequest'];
+export type UpdateTabletTypeRequest = components['schemas']['UpdateTabletTypeRequest'];
 /** Runtime array of all possible role values, matching the Roles schema type. */
 export const ROLES: Roles[] = [
   'Athlete',
@@ -694,6 +700,172 @@ export async function updateMachineInfo(id: string, infoData: UpdateMachineInfoR
   }
 
   return data?.data || null;
+}
+
+// ============================================================================
+// Tablets API
+// ============================================================================
+
+/**
+ * Fetch all tablets (requires admin authorization)
+ */
+export async function fetchAllTablets(): Promise<Tablet[]> {
+  const { data, error } = await api.GET('/api/v1/tablets', {});
+
+  if (error) {
+    console.error('Failed to fetch tablets:', error);
+    throw new Error('Failed to fetch tablets');
+  }
+
+  return data?.data || [];
+}
+
+/**
+ * Fetch a specific tablet by ID (requires admin authorization)
+ */
+export async function fetchTabletById(id: string): Promise<Tablet | null> {
+  const { data, error } = await api.GET('/api/v1/tablets/{id}', {
+    params: { path: { id } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch tablet:', error);
+    throw new Error('Failed to fetch tablet');
+  }
+
+  return data?.data || null;
+}
+
+/**
+ * Create a new tablet (requires admin authorization)
+ */
+export async function createTablet(tabletData: CreateTabletRequest): Promise<Tablet | null> {
+  const { data, error } = await api.POST('/api/v1/tablets', {
+    body: tabletData,
+  });
+
+  if (error) {
+    console.error('Failed to create tablet:', error);
+    throw new Error('Failed to create tablet');
+  }
+
+  return data?.data || null;
+}
+
+/**
+ * Update an existing tablet (requires admin authorization)
+ */
+export async function updateTablet(id: string, tabletData: UpdateTabletRequest): Promise<Tablet | null> {
+  const { data, error } = await api.PUT('/api/v1/tablets/{id}', {
+    params: { path: { id } },
+    body: tabletData,
+  });
+
+  if (error) {
+    console.error('Failed to update tablet:', error);
+    throw new Error('Failed to update tablet');
+  }
+
+  return data?.data || null;
+}
+
+/**
+ * Delete a tablet (requires admin authorization)
+ */
+export async function deleteTablet(id: string): Promise<boolean> {
+  const { data, error } = await api.DELETE('/api/v1/tablets/{id}', {
+    params: { path: { id } },
+  });
+
+  if (error) {
+    console.error('Failed to delete tablet:', error);
+    throw new Error('Failed to delete tablet');
+  }
+
+  return data?.succeeded || false;
+}
+
+// ============================================================================
+// Tablet Types API
+// ============================================================================
+
+/**
+ * Fetch all tablet types (requires admin authorization)
+ */
+export async function fetchAllTabletTypes(): Promise<TabletType[]> {
+  const { data, error } = await api.GET('/api/v1/tablets/types', {});
+
+  if (error) {
+    console.error('Failed to fetch tablet types:', error);
+    throw new Error('Failed to fetch tablet types');
+  }
+
+  return data?.data || [];
+}
+
+/**
+ * Fetch a specific tablet type by ID (requires admin authorization)
+ */
+export async function fetchTabletTypeById(id: string): Promise<TabletType | null> {
+  const { data, error } = await api.GET('/api/v1/tablets/types/{id}', {
+    params: { path: { id } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch tablet type:', error);
+    throw new Error('Failed to fetch tablet type');
+  }
+
+  return data?.data || null;
+}
+
+/**
+ * Create a new tablet type (requires admin authorization)
+ */
+export async function createTabletType(typeData: CreateTabletTypeRequest): Promise<TabletType | null> {
+  const { data, error } = await api.POST('/api/v1/tablets/types', {
+    body: typeData,
+  });
+
+  if (error) {
+    console.error('Failed to create tablet type:', error);
+    throw new Error('Failed to create tablet type');
+  }
+
+  return data?.data || null;
+}
+
+/**
+ * Update an existing tablet type (requires admin authorization)
+ */
+export async function updateTabletType(id: string, typeData: UpdateTabletTypeRequest): Promise<TabletType | null> {
+  const { data, error } = await api.PUT('/api/v1/tablets/types/{id}', {
+    params: { path: { id } },
+    body: typeData,
+  });
+
+  if (error) {
+    console.error('Failed to update tablet type:', error);
+    throw new Error('Failed to update tablet type');
+  }
+
+  return data?.data || null;
+}
+
+/**
+ * Delete a tablet type (requires admin authorization)
+ */
+export async function deleteTabletType(id: string): Promise<boolean> {
+  const { data, error } = await api.DELETE('/api/v1/tablets/types/{id}', {
+    params: { path: { id } },
+  });
+
+  if (error) {
+    console.error('Failed to delete tablet type:', error);
+    throw new Error('Failed to delete tablet type');
+  }
+
+  return data?.succeeded || false;
 }
 
 // ============================================================================
