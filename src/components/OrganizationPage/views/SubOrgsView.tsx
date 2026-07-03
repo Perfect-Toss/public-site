@@ -1,10 +1,10 @@
+import { createEntity, fetchChildEntities } from '../../../api/api';
 import { faBuilding, faPlus, faSitemap, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Entity } from '../../../api/api';
-import { createEntity, fetchChildEntities } from '../../../api/api';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+
+import type { Entity } from '../../../api/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
 
 function SubOrgsView() {
@@ -58,17 +58,11 @@ function SubOrgsView() {
 
   return (
     <div>
-      <div className="section-header" style={{ marginBottom: 20 }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FontAwesomeIcon icon={faSitemap} />
-          Sub-Organizations
-        </h2>
-        {isAdmin && !showForm && (
-          <button className="primary-btn icon-only-btn" onClick={() => setShowForm(true)} title="Add Sub-Organization">
-            <FontAwesomeIcon icon={faPlus} />
-          </button>
-        )}
-      </div>
+      {isAdmin && !showForm && (
+        <button className="fab" onClick={() => setShowForm(true)} title="Add Sub-Organization">
+          <FontAwesomeIcon icon={faPlus} />
+        </button>
+      )}
 
       {isAdmin && showForm && (
         <div className="info-card" style={{ marginBottom: 20 }}>

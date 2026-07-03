@@ -1,11 +1,11 @@
-import { faCog, faEdit, faSave, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { useState } from 'react';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Entity, UpdateEntityRequest } from '../../../api/api';
 import { deleteEntity, updateEntity } from '../../../api/api';
+import { faCog, faEdit, faSave, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
+import { useState } from 'react';
 
 function SettingsView() {
   const { organization, isAdmin, onUpdated } = useOutletContext<OrganizationPageContext>();
@@ -60,13 +60,6 @@ function SettingsView() {
 
   return (
     <div>
-      <div className="section-header" style={{ marginBottom: 20 }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FontAwesomeIcon icon={faCog} />
-          Settings
-        </h2>
-      </div>
-
       {/* General Settings */}
       <div className="info-card" style={{ marginBottom: 20 }}>
         <div className="info-card-header">

@@ -3,12 +3,14 @@ import './App.css'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import AccountPage from './components/AccountPage'
+import AddUserPage from './components/AddUserPage'
 import AdminAddOrganizationPage from './components/AdminAddOrganizationPage'
 import AdminDevicesPage from './components/AdminDevicesPage'
 import AdminOrganizationsPage from './components/AdminOrganizationsPage'
 import AdminPage from './components/AdminPage'
 import AdminUsersPage from './components/AdminUsersPage'
 import { AuthProvider } from './contexts/AuthContext'
+import BulkImportPage from './components/BulkImportPage'
 import DashboardPage from './components/DashboardPage'
 import HomePage from './components/HomePage'
 import HomeView from './components/HomePage/views/HomeView'
@@ -92,6 +94,8 @@ function AppContent() {
           </Route>
           <Route path="devices" element={<AdminDevicesPage />} />
           <Route path="users" element={<AdminUsersPage />} />
+          <Route path="users/new" element={<AddUserPage />} />
+          <Route path="users/import" element={<BulkImportPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="*" element={<AdminPage />} />
         </Route>

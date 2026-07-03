@@ -34,7 +34,6 @@ function OrganizationsPage() {
     <div className="organizations-page">
       <section className="section">
         <div className="section-header">
-          <h2>ORGANIZATIONS</h2>
           <div className="header-actions">
             <div className="search-box">
               <FontAwesomeIcon icon={faSearch} className="search-icon" />
@@ -46,17 +45,18 @@ function OrganizationsPage() {
                 className="search-input"
               />
             </div>
-            {canCreateOrganization && (
-              <button 
-                className="primary-btn icon-only-btn" 
-                onClick={handleCreateOrganization}
-                title="Create Organization"
-              >
-                <FontAwesomeIcon icon={faPlus} />
-              </button>
-            )}
           </div>
         </div>
+
+        {canCreateOrganization && (
+          <button 
+            className="fab" 
+            onClick={handleCreateOrganization}
+            title="Create Organization"
+          >
+            <FontAwesomeIcon icon={faPlus} />
+          </button>
+        )}
 
         <div className="organizations-grid">
           {loading && (
