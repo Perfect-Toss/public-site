@@ -33,15 +33,17 @@ function AdminDevicesPage() {
       <section className="section">
         <div className="section-header">
           <h2>DEVICE MANAGEMENT</h2>
-          {showAddButton && (
-            <div className="header-actions">
-              <button className="primary-btn" onClick={handleAdd}>
-                <FontAwesomeIcon icon={faPlus} style={{ marginRight: 8 }} />
-                Add {activeTab === 'machines' ? 'Machine' : activeTab === 'tablets' ? 'Tablet' : 'Tablet Type'}
-              </button>
-            </div>
-          )}
         </div>
+
+        {showAddButton && (
+          <button
+            className="fab"
+            onClick={handleAdd}
+            title={'Add ' + (activeTab === 'machines' ? 'Machine' : activeTab === 'tablets' ? 'Tablet' : 'Tablet Type')}
+          >
+            <FontAwesomeIcon icon={faPlus} />
+          </button>
+        )}
 
         {/* ─── Tabs ──────────────────────────────────────────── */}
         <div className="device-tab-bar">

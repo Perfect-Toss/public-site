@@ -204,16 +204,15 @@ function AdminOrganizationsPage() {
       <section className="section">
         <div className="section-header">
           <h2>ORGANIZATION MANAGEMENT</h2>
-          <div className="header-actions">
-            <button
-              className="primary-btn icon-only-btn"
-              onClick={() => navigate('/admin/organizations/new')}
-              title="Add Organization"
-            >
-              <FontAwesomeIcon icon={faPlus} />
-            </button>
-          </div>
         </div>
+
+        <button
+          className="fab"
+          onClick={() => navigate('/admin/organizations/new')}
+          title="Add Organization"
+        >
+          <FontAwesomeIcon icon={faPlus} />
+        </button>
 
         {/* ── Organizations List ──────────────────────────────── */}
             <div className="table-toolbar">

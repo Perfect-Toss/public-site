@@ -159,17 +159,11 @@ function MembersView() {
 
   return (
     <div>
-      <div className="section-header" style={{ marginBottom: 20 }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FontAwesomeIcon icon={faUsers} />
-          Members
-        </h2>
-        {isAdmin && !showAddForm && (
-          <button className="primary-btn icon-only-btn" onClick={handleOpenAddForm} title="Add Member">
-            <FontAwesomeIcon icon={faPlus} />
-          </button>
-        )}
-      </div>
+      {isAdmin && !showAddForm && (
+        <button className="fab" onClick={handleOpenAddForm} title="Add Member">
+          <FontAwesomeIcon icon={faPlus} />
+        </button>
+      )}
 
       {isAdmin && showAddForm && (
         <div className="info-card" style={{ marginBottom: 20 }}>

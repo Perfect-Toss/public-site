@@ -115,18 +115,18 @@ function HomePage() {
                     <span>DASHBOARD</span>
                   </NavLink>
                   <NavLink
-                    to="/admin/organizations"
-                    className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
-                  >
-                    <span className="nav-icon"><FontAwesomeIcon icon={faBuilding} /></span>
-                    <span>ORGANIZATIONS</span>
-                  </NavLink>
-                  <NavLink
                     to="/admin/devices"
                     className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
                   >
                     <span className="nav-icon"><FontAwesomeIcon icon={faMicrochip} /></span>
                     <span>DEVICES</span>
+                  </NavLink>
+                  <NavLink
+                    to="/admin/organizations"
+                    className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
+                  >
+                    <span className="nav-icon"><FontAwesomeIcon icon={faBuilding} /></span>
+                    <span>ORGANIZATIONS</span>
                   </NavLink>
                   <NavLink
                     to="/admin/users"

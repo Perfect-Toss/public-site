@@ -246,3 +246,35 @@
   font-size: 14px;
   max-width: 400px;
 }
+
+/* ─── Floating Action Button ─────────────────────────────────────────────── */
+
+.fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #cfff04;
+  color: #1a1f24;
+  border: none;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.fab:hover {
+  background-color: #b8e600;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(207, 255, 4, 0.4);
+}
+
+.fab:active {
+  transform: translateY(0);
+}
