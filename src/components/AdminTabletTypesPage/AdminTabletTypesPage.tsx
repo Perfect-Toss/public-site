@@ -3,7 +3,6 @@ import './AdminTabletTypesPage.css';
 
 import {
   faCog,
-  faPlus,
   faSearch,
   faSort,
   faSortDown,
@@ -14,7 +13,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import {
   createTabletType,
   deleteTabletType,
@@ -32,9 +31,13 @@ import { formatDate } from '../../utils/format';
 type SortColumn = 'model' | 'size' | 'memory' | 'camera' | 'price' | 'createdAt';
 type SortDir = 'asc' | 'desc';
 
+export interface AdminTabletTypesPageHandle {
+  openAddForm: () => void;
+}
+
 /* ─── Component ───────────────────────────────────────────────────── */
 
-function AdminTabletTypesPage() {
+const AdminTabletTypesPage = forwardRef<AdminTabletTypesPageHandle>(function AdminTabletTypesPage(_props: unknown, ref) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('model');
   const [sortDirection, setSortDirection] = useState<SortDir>('asc');
@@ -201,20 +204,12 @@ function AdminTabletTypesPage() {
     }
   }, [deleteTarget, load]);
 
+  useImperativeHandle(ref, () => ({ openAddForm }), []);
+
   /* ─── Render ──────────────────────────────────────────────────── */
 
   return (
     <div className="admin-tablet-types-page">
-      <div className="section-header" style={{ marginBottom: 20 }}>
-        <h2>TABLET TYPE MANAGEMENT</h2>
-        <div className="header-actions">
-          <button className="primary-btn" onClick={openAddForm}>
-            <FontAwesomeIcon icon={faPlus} style={{ marginRight: 8 }} />
-            Add Tablet Type
-          </button>
-        </div>
-      </div>
-
       {/* ─── Toolbar ───────────────────────────────────────── */}
       <div className="table-toolbar">
         <div className="search-box">
@@ -413,6 +408,6 @@ function AdminTabletTypesPage() {
       )}
     </div>
   );
-}
+});
 
 export default AdminTabletTypesPage;

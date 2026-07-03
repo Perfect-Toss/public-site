@@ -1965,6 +1965,11 @@ export interface components {
              * @description Gets the date by which the machine must be available.
              */
             mustHaveDate?: string;
+            /**
+             * Format: uuid
+             * @description Gets the optional tablet identifier for the 1:1 relationship.
+             */
+            tabletId?: string | null;
         };
         /** @description Request model for creating a new tablet. */
         CreateTabletRequest: {
@@ -1977,8 +1982,11 @@ export interface components {
              * @description Gets the PIN code for the tablet.
              */
             pin?: number | null;
-            /** @description Gets the Perfect Toss user identifier. */
-            ptUserId?: string | null;
+            /**
+             * Format: uuid
+             * @description Gets the service account user identifier.
+             */
+            serviceAccountId?: string | null;
             /** @description Gets whether the tablet has a cover. */
             cover?: boolean | null;
             /** @description Gets whether the tablet has a holder. */
@@ -2211,6 +2219,9 @@ export interface components {
             /** Format: date-time */
             mustHaveDate?: string | null;
             machineInfo?: components["schemas"]["MachineInfo"];
+            /** Format: uuid */
+            tabletId?: string | null;
+            tablet?: components["schemas"]["Tablet"];
         };
         MachineGenericResponse: {
             succeeded?: boolean;
@@ -2316,7 +2327,9 @@ export interface components {
             tabletUserId?: string | null;
             /** Format: int32 */
             pin?: number | null;
-            ptUserId?: string | null;
+            /** Format: uuid */
+            serviceAccountId?: string | null;
+            serviceAccount?: components["schemas"]["User"];
             cover?: boolean | null;
             holder?: boolean | null;
             tripod?: boolean | null;
@@ -2443,6 +2456,11 @@ export interface components {
              * @description Gets the updated date by which the machine must be available.
              */
             mustHaveDate?: string;
+            /**
+             * Format: uuid
+             * @description Gets the updated optional tablet identifier for the 1:1 relationship.
+             */
+            tabletId?: string | null;
         };
         /** @description Request model for updating an existing tablet. */
         UpdateTabletRequest: {
@@ -2455,8 +2473,11 @@ export interface components {
              * @description Gets the PIN code for the tablet.
              */
             pin?: number | null;
-            /** @description Gets the Perfect Toss user identifier. */
-            ptUserId?: string | null;
+            /**
+             * Format: uuid
+             * @description Gets the service account user identifier.
+             */
+            serviceAccountId?: string | null;
             /** @description Gets whether the tablet has a cover. */
             cover?: boolean | null;
             /** @description Gets whether the tablet has a holder. */

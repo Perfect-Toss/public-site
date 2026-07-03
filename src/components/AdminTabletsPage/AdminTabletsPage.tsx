@@ -3,8 +3,6 @@ import './AdminTabletsPage.css';
 
 import {
   faCog,
-  faDesktop,
-  faPlus,
   faSearch,
   faSort,
   faSortDown,
@@ -12,34 +10,37 @@ import {
   faSpinner,
   faTablet,
   faTrash,
+  faUserCog,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import {
   createTablet,
   deleteTablet,
   fetchAllTablets,
+  fetchServiceAccounts,
   updateTablet,
   type CreateTabletRequest,
   type Tablet,
   type UpdateTabletRequest,
+  type User,
 } from '../../api/api';
 import { usePageData } from '../../hooks/usePageData';
 import { formatDate } from '../../utils/format';
-import AdminTabletTypesPage from '../AdminTabletTypesPage';
 
 /* ─── Helpers ─────────────────────────────────────────────────────── */
 
-type SortColumn = 'name' | 'tabletUserId' | 'model' | 'pin' | 'cover' | 'holder' | 'tripod' | 'createdAt';
+type SortColumn = 'name' | 'tabletUserId' | 'model' | 'pin' | 'cover' | 'holder' | 'tripod' | 'serviceAccount' | 'createdAt';
 type SortDir = 'asc' | 'desc';
 
 /* ─── Component ───────────────────────────────────────────────────── */
 
-type TabId = 'all-tablets' | 'tablet-types';
+export interface AdminTabletsPageHandle {
+  openAddForm: () => void;
+}
 
-function AdminTabletsPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('all-tablets');
+const AdminTabletsPage = forwardRef<AdminTabletsPageHandle>(function AdminTabletsPage(_props: unknown, ref) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDir>('asc');
@@ -53,7 +54,7 @@ function AdminTabletsPage() {
     name: '',
     tabletUserId: '',
     pin: '',
-    ptUserId: '',
+    serviceAccountId: '',
     cover: false,
     holder: false,
     tripod: false,
@@ -65,11 +66,21 @@ function AdminTabletsPage() {
   // ── Delete confirm state ────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<Tablet | null>(null);
 
+  // ── Service accounts list for assignment dropdown ───────────────
+  const [serviceAccounts, setServiceAccounts] = useState<User[]>([]);
+  const [serviceAccountsLoading, setServiceAccountsLoading] = useState(false);
+
   useEffect(() => {
-    if (activeTab === 'all-tablets') {
-      load(fetchAllTablets);
-    }
-  }, [load, activeTab]);
+    load(fetchAllTablets);
+  }, [load]);
+
+  useEffect(() => {
+    setServiceAccountsLoading(true);
+    fetchServiceAccounts()
+      .then(setServiceAccounts)
+      .catch(() => setServiceAccounts([]))
+      .finally(() => setServiceAccountsLoading(false));
+  }, []);
 
   /* ─── Sorting & Filtering ─────────────────────────────────────── */
 
@@ -79,7 +90,9 @@ function AdminTabletsPage() {
       return (
         (t.name ?? '').toLowerCase().includes(q) ||
         (t.tabletUserId ?? '').toLowerCase().includes(q) ||
-        (t.ptUserId ?? '').toLowerCase().includes(q) ||
+        (t.serviceAccount?.email ?? '').toLowerCase().includes(q) ||
+        (t.serviceAccount?.firstName ?? '').toLowerCase().includes(q) ||
+        (t.serviceAccount?.lastName ?? '').toLowerCase().includes(q) ||
         (t.tabletType?.model ?? '').toLowerCase().includes(q)
       );
     });
@@ -111,6 +124,9 @@ function AdminTabletsPage() {
         case 'createdAt':
           cmp = (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
           break;
+        case 'serviceAccount':
+          cmp = (a.serviceAccount?.email ?? '').localeCompare(b.serviceAccount?.email ?? '');
+          break;
       }
       return sortDirection === 'asc' ? cmp : -cmp;
     });
@@ -132,7 +148,7 @@ function AdminTabletsPage() {
 
   const openAddForm = () => {
     setEditingTablet(null);
-    setFormData({ name: '', tabletUserId: '', pin: '', ptUserId: '', cover: false, holder: false, tripod: false, tabletTypeId: '' });
+    setFormData({ name: '', tabletUserId: '', pin: '', serviceAccountId: '', cover: false, holder: false, tripod: false, tabletTypeId: '' });
     setFormResult(null);
     setShowForm(true);
   };
@@ -143,7 +159,7 @@ function AdminTabletsPage() {
       name: tablet.name ?? '',
       tabletUserId: tablet.tabletUserId ?? '',
       pin: tablet.pin != null ? String(tablet.pin) : '',
-      ptUserId: tablet.ptUserId ?? '',
+      serviceAccountId: tablet.serviceAccountId ?? '',
       cover: tablet.cover ?? false,
       holder: tablet.holder ?? false,
       tripod: tablet.tripod ?? false,
@@ -175,7 +191,7 @@ function AdminTabletsPage() {
           name: formData.name.trim() || undefined,
           tabletUserId: formData.tabletUserId.trim() || undefined,
           pin: !isNaN(pinValue!) ? pinValue : undefined,
-          ptUserId: formData.ptUserId.trim() || undefined,
+          serviceAccountId: formData.serviceAccountId || null,
           cover: formData.cover || undefined,
           holder: formData.holder || undefined,
           tripod: formData.tripod || undefined,
@@ -188,7 +204,7 @@ function AdminTabletsPage() {
           name: formData.name.trim() || undefined,
           tabletUserId: formData.tabletUserId.trim() || undefined,
           pin: !isNaN(pinValue!) ? pinValue : undefined,
-          ptUserId: formData.ptUserId.trim() || undefined,
+          serviceAccountId: formData.serviceAccountId || null,
           cover: formData.cover || undefined,
           holder: formData.holder || undefined,
           tripod: formData.tripod || undefined,
@@ -196,7 +212,7 @@ function AdminTabletsPage() {
         };
         await createTablet(dto);
         setFormResult({ type: 'success', message: 'Tablet created successfully!' });
-        setFormData({ name: '', tabletUserId: '', pin: '', ptUserId: '', cover: false, holder: false, tripod: false, tabletTypeId: '' });
+        setFormData({ name: '', tabletUserId: '', pin: '', serviceAccountId: '', cover: false, holder: false, tripod: false, tabletTypeId: '' });
       }
 
       load(fetchAllTablets);
@@ -228,6 +244,8 @@ function AdminTabletsPage() {
 
   /* ─── Render Boolean Badge ────────────────────────────────────── */
 
+  useImperativeHandle(ref, () => ({ openAddForm }), []);
+
   const renderBool = (value: boolean | null | undefined) => (
     <span className={`bool-badge ${value ? 'yes' : 'no'}`}>
       {value ? 'Yes' : 'No'}
@@ -239,38 +257,7 @@ function AdminTabletsPage() {
   return (
     <div className="admin-tablets-page">
       <section className="section">
-        <div className="section-header">
-          <h2>TABLET MANAGEMENT</h2>
-          {activeTab === 'all-tablets' && (
-            <div className="header-actions">
-              <button className="primary-btn" onClick={openAddForm}>
-                <FontAwesomeIcon icon={faPlus} style={{ marginRight: 8 }} />
-                Add Tablet
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* ─── Tabs ──────────────────────────────────────────── */}
-        <div className="tab-bar">
-          <button
-            className={`tab-btn ${activeTab === 'all-tablets' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('all-tablets'); setSearchQuery(''); }}
-          >
-            All Tablets
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'tablet-types' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('tablet-types'); setSearchQuery(''); }}
-          >
-            Tablet Types
-          </button>
-        </div>
-
-        {/* ─── All Tablets Tab ───────────────────────────────── */}
-        {activeTab === 'all-tablets' && (
-          <div className="tab-content">
-            <div className="table-toolbar">
+        <div className="table-toolbar">
               <div className="search-box">
                 <FontAwesomeIcon icon={faSearch} className="search-icon" />
                 <input
@@ -311,6 +298,9 @@ function AdminTabletsPage() {
                     <th className="sortable-header" onClick={() => handleSort('tripod')}>
                       Tripod {renderSortIcon('tripod')}
                     </th>
+                    <th className="sortable-header" onClick={() => handleSort('serviceAccount')}>
+                      Service Account {renderSortIcon('serviceAccount')}
+                    </th>
                     <th className="sortable-header" onClick={() => handleSort('createdAt')}>
                       Created {renderSortIcon('createdAt')}
                     </th>
@@ -320,7 +310,7 @@ function AdminTabletsPage() {
                 <tbody>
                   {loading && (
                     <tr className="loading-row">
-                      <td colSpan={9}>
+                      <td colSpan={10}>
                         <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} />
                         Loading tablets...
                       </td>
@@ -328,12 +318,12 @@ function AdminTabletsPage() {
                   )}
                   {error && (
                     <tr className="error-row">
-                      <td colSpan={9}>Failed to load tablets. Please try again.</td>
+                      <td colSpan={10}>Failed to load tablets. Please try again.</td>
                     </tr>
                   )}
                   {!loading && !error && sortedTablets.length === 0 && (
                     <tr className="loading-row">
-                      <td colSpan={9}>
+                      <td colSpan={10}>
                         <div className="empty-state">
                           <FontAwesomeIcon icon={faTablet} size="3x" />
                           <p>No tablets found. Add your first tablet to get started.</p>
@@ -354,6 +344,17 @@ function AdminTabletsPage() {
                       <td>{renderBool(tablet.cover)}</td>
                       <td>{renderBool(tablet.holder)}</td>
                       <td>{renderBool(tablet.tripod)}</td>
+                      <td style={{ fontFamily: 'monospace', fontSize: 12, color: '#666' }}>
+                        {tablet.serviceAccount ? (
+                          <span title={tablet.serviceAccount.email ?? ''}>
+                            {tablet.serviceAccount.firstName || tablet.serviceAccount.lastName
+                              ? `${tablet.serviceAccount.firstName ?? ''} ${tablet.serviceAccount.lastName ?? ''}`.trim()
+                              : tablet.serviceAccount.email || '—'}
+                          </span>
+                        ) : (
+                          <span style={{ color: '#bbb' }}>None</span>
+                        )}
+                      </td>
                       <td style={{ color: '#999', fontSize: 12, whiteSpace: 'nowrap' }}>
                         {tablet.createdAt ? formatDate(tablet.createdAt) : '—'}
                       </td>
@@ -369,16 +370,7 @@ function AdminTabletsPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
           </div>
-        )}
-
-        {/* ─── Tablet Types Tab ─────────────────────────────── */}
-        {activeTab === 'tablet-types' && (
-          <div className="tab-content">
-            <AdminTabletTypesPage />
-          </div>
-        )}
       </section>
 
       {/* ─── Add / Edit Form Overlay ──────────────────────────────── */}
@@ -424,13 +416,23 @@ function AdminTabletsPage() {
             </div>
 
             <div className="form-group">
-              <label>Perfect Toss User ID</label>
-              <input
-                type="text"
-                placeholder="e.g. pt-user-001"
-                value={formData.ptUserId}
-                onChange={(e) => setFormData((prev) => ({ ...prev, ptUserId: e.target.value }))}
-              />
+              <label>Service Account</label>
+              <select
+                value={formData.serviceAccountId}
+                onChange={(e) => setFormData((prev) => ({ ...prev, serviceAccountId: e.target.value }))}
+              >
+                <option value="">— None —</option>
+                {serviceAccountsLoading && (
+                  <option value="" disabled>Loading...</option>
+                )}
+                {!serviceAccountsLoading && serviceAccounts.map((sa) => (
+                  <option key={sa.id} value={sa.id}>
+                    {sa.firstName && sa.lastName
+                      ? `${sa.firstName} ${sa.lastName}`
+                      : sa.email || sa.id}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
@@ -509,6 +511,6 @@ function AdminTabletsPage() {
       )}
     </div>
   );
-}
+});
 
 export default AdminTabletsPage;
