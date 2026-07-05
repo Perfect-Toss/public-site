@@ -50,14 +50,11 @@ function getStatusClass(status?: string | null): string {
 
 /* ─── Component ───────────────────────────────────────────────────── */
 
-type TabId = 'all-machines';
-
 export interface AdminMachinesPageHandle {
   openAddForm: () => void;
 }
 
 const AdminMachinesPage = forwardRef<AdminMachinesPageHandle>(function AdminMachinesPage(_props: unknown, ref) {
-  const [activeTab, setActiveTab] = useState<TabId>('all-machines');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDir>('asc');

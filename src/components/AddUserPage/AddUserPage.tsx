@@ -1,7 +1,7 @@
 import '../../styles/page.css';
 import '../AdminUsersPage/AdminUsersPage.css';
 
-import { faCheckCircle, faPlus, faSpinner, faTimesCircle, faUsers, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faPlus, faSpinner, faTimesCircle, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
