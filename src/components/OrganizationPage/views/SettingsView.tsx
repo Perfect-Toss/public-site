@@ -1,6 +1,6 @@
 import type { Entity, UpdateEntityRequest } from '../../../api/api';
 import { deleteEntity, updateEntity } from '../../../api/api';
-import { faCog, faEdit, faSave, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faSave, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

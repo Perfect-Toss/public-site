@@ -10,7 +10,6 @@ import {
   faSpinner,
   faTablet,
   faTrash,
-  faUserCog,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
