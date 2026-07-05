@@ -3,7 +3,6 @@ import './AdminOrganizationsPage.css';
 
 import {
   faBuilding,
-  faCheck,
   faChevronDown,
   faChevronRight,
   faEdit,
@@ -16,13 +15,11 @@ import {
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   type Entity,
-  type UpdateEntityRequest,
   deleteEntity,
   fetchAllEntities,
-  updateEntity,
 } from '../../api/api';
 import { usePageData } from '../../hooks/usePageData';
 import { formatDate } from '../../utils/format';
@@ -38,13 +35,6 @@ function AdminOrganizationsPage() {
   useEffect(() => {
     load(fetchAllEntities);
   }, [load]);
-
-  // ── Edit organization ──────────────────────────────────────────
-
-  const [editTarget, setEditTarget] = useState<Entity | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', description: '', entityType: '', parentEntityId: '' });
-  const [editSubmitting, setEditSubmitting] = useState(false);
-  const [editResult, setEditResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // ── Delete confirmation ────────────────────────────────────────
 
@@ -149,37 +139,8 @@ function AdminOrganizationsPage() {
   /* ─── Edit Organization ────────────────────────────────────── */
 
   const openEdit = (org: Entity) => {
-    setEditTarget(org);
-    setEditForm({
-      name: org.name ?? '',
-      description: org.description ?? '',
-      entityType: org.entityType ?? '',
-      parentEntityId: org.parentEntityId ?? '',
-    });
-    setEditResult(null);
+    navigate(`/admin/organizations/${org.id}/edit`);
   };
-
-  const handleEditOrganization = useCallback(async () => {
-    if (!editTarget?.id || !editForm.name.trim()) return;
-    setEditSubmitting(true);
-    setEditResult(null);
-    try {
-      const dto: UpdateEntityRequest = {
-        name: editForm.name.trim(),
-        description: editForm.description.trim() || undefined,
-        entityType: editForm.entityType.trim() || undefined,
-        parentEntityId: editForm.parentEntityId || undefined,
-      };
-      await updateEntity(editTarget.id, dto);
-      setEditResult({ type: 'success', message: 'Organization updated successfully!' });
-      setEditTarget(null);
-      load(fetchAllEntities);
-    } catch (err) {
-      setEditResult({ type: 'error', message: err instanceof Error ? err.message : 'Failed to update organization.' });
-    } finally {
-      setEditSubmitting(false);
-    }
-  }, [editTarget, editForm, load]);
 
   /* ─── Delete Organization ──────────────────────────────────── */
 
@@ -274,7 +235,7 @@ function AdminOrganizationsPage() {
                         <tr
                           key={org.id}
                           className={depth > 0 ? 'org-row-child' : 'org-row-root'}
-                          onClick={() => org.id && navigate(`/organizations/${org.id}`)}
+                          onClick={() => org.id && toggleExpand(org.id)}
                         >
                           <td>
                             <div
@@ -301,7 +262,13 @@ function AdminOrganizationsPage() {
                               <div className="org-avatar">
                                 <FontAwesomeIcon icon={faBuilding} />
                               </div>
-                              <span className="org-name-text">{org.name ?? '-'}</span>
+                              <Link
+                                to={`/organizations/${org.id}`}
+                                className="org-name-link"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {org.name ?? '-'}
+                              </Link>
                               {hasChildren && (
                                 <span className="org-child-count">
                                   {(orgTree.childrenMap.get(org.id) ?? []).length}
@@ -330,7 +297,7 @@ function AdminOrganizationsPage() {
                           <td>
                             <div className="org-action-buttons">
                               <button
-                                className="action-btn edit-btn"
+                                className="action-btn edit"
                                 title="Edit organization"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -340,7 +307,7 @@ function AdminOrganizationsPage() {
                                 <FontAwesomeIcon icon={faEdit} />
                               </button>
                               <button
-                                className="action-btn delete-btn"
+                                className="action-btn delete"
                                 title="Delete organization"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -360,90 +327,6 @@ function AdminOrganizationsPage() {
             )}
 
       </section>
-
-      {/* ── Edit Modal ──────────────────────────────────────────── */}
-      {editTarget && (
-        <div className="modal-overlay" onClick={() => setEditTarget(null)}>
-          <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Edit Organization</h3>
-              <button className="close-btn" onClick={() => setEditTarget(null)}>
-                <FontAwesomeIcon icon={faTimes} />
-              </button>
-            </div>
-            <div className="modal-body" style={{ maxWidth: 480 }}>
-              {editResult && (
-                <div className={`import-result ${editResult.type}`} style={{ marginBottom: 16 }}>
-                  <FontAwesomeIcon
-                    icon={editResult.type === 'success' ? faCheck : faTimes}
-                    style={{ marginRight: 8 }}
-                  />
-                  {editResult.message}
-                </div>
-              )}
-              <div className="form-group">
-                <label htmlFor="edit-name">Organization Name *</label>
-                <input
-                  id="edit-name"
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-type">Type</label>
-                <input
-                  id="edit-type"
-                  type="text"
-                  value={editForm.entityType}
-                  onChange={(e) => setEditForm((f) => ({ ...f, entityType: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-parent">Parent Organization</label>
-                <select
-                  id="edit-parent"
-                  value={editForm.parentEntityId}
-                  onChange={(e) => setEditForm((f) => ({ ...f, parentEntityId: e.target.value }))}
-                >
-                  <option value="">— None (root level) —</option>
-                  {organizations
-                    .filter((org) => org.id !== editTarget?.id) // can't be its own parent
-                    .map((org) => (
-                      <option key={org.id} value={org.id}>{org.name}</option>
-                    ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="edit-description">Description</label>
-                <textarea
-                  id="edit-description"
-                  value={editForm.description}
-                  onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
-                  rows={3}
-                />
-              </div>
-              <div className="modal-actions" style={{ borderTop: 'none', paddingTop: 0, marginTop: 8 }}>
-                <button className="cancel-btn" onClick={() => setEditTarget(null)}>
-                  Cancel
-                </button>
-                <button
-                  className="submit-btn"
-                  disabled={!editForm.name.trim() || editSubmitting}
-                  onClick={handleEditOrganization}
-                >
-                  {editSubmitting ? (
-                    <FontAwesomeIcon icon={faSpinner} spin />
-                  ) : (
-                    <FontAwesomeIcon icon={faCheck} style={{ marginRight: 6 }} />
-                  )}
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Delete Confirmation ──────────────────────────────────── */}
       {deleteConfirm && (

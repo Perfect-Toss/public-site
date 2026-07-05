@@ -6,9 +6,18 @@ import AccountPage from './components/AccountPage'
 import AddUserPage from './components/AddUserPage'
 import AdminAddOrganizationPage from './components/AdminAddOrganizationPage'
 import AdminDevicesPage from './components/AdminDevicesPage'
+import {
+  MachinesTabPage,
+  TabletsTabPage,
+  TabletTypesTabPage,
+} from './components/AdminDevicesPage/DeviceTabWrappers'
+import EditOrganizationPage from './components/AdminOrganizationsPage/EditOrganizationPage'
 import AdminOrganizationsPage from './components/AdminOrganizationsPage'
 import AdminPage from './components/AdminPage'
 import AdminUsersPage from './components/AdminUsersPage'
+import MachineFormPage from './components/AdminMachinesPage/MachineFormPage'
+import TabletFormPage from './components/AdminTabletsPage/TabletFormPage'
+import TabletTypeFormPage from './components/AdminTabletTypesPage/TabletTypeFormPage'
 import { AuthProvider } from './contexts/AuthContext'
 import BulkImportPage from './components/BulkImportPage'
 import DashboardPage from './components/DashboardPage'
@@ -91,8 +100,20 @@ function AppContent() {
           <Route path="organizations">
             <Route index element={<AdminOrganizationsPage />} />
             <Route path="new" element={<AdminAddOrganizationPage />} />
+            <Route path=":orgId/edit" element={<EditOrganizationPage />} />
           </Route>
-          <Route path="devices" element={<AdminDevicesPage />} />
+          <Route path="devices" element={<AdminDevicesPage />}>
+            <Route index element={<Navigate to="machines" replace />} />
+            <Route path="machines" element={<MachinesTabPage />} />
+            <Route path="tablets" element={<TabletsTabPage />} />
+            <Route path="tablet-types" element={<TabletTypesTabPage />} />
+          </Route>
+          <Route path="devices/machines/new" element={<MachineFormPage />} />
+          <Route path="devices/machines/:id/edit" element={<MachineFormPage />} />
+          <Route path="devices/tablets/new" element={<TabletFormPage />} />
+          <Route path="devices/tablets/:id/edit" element={<TabletFormPage />} />
+          <Route path="devices/tablet-types/new" element={<TabletTypeFormPage />} />
+          <Route path="devices/tablet-types/:id/edit" element={<TabletTypeFormPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/new" element={<AddUserPage />} />
           <Route path="users/import" element={<BulkImportPage />} />

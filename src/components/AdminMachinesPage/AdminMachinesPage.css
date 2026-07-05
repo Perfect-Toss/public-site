@@ -284,15 +284,7 @@
   margin-bottom: 18px;
 }
 
-.form-group label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
-}
+
 
 .form-group input,
 .form-group select,

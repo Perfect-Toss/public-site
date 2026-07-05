@@ -2,7 +2,6 @@ import '../../styles/page.css';
 import './AdminTabletTypesPage.css';
 
 import {
-  faCog,
   faSearch,
   faSort,
   faSortDown,
@@ -13,15 +12,12 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  createTabletType,
   deleteTabletType,
   fetchAllTabletTypes,
-  updateTabletType,
-  type CreateTabletTypeRequest,
   type TabletType,
-  type UpdateTabletTypeRequest,
 } from '../../api/api';
 import { usePageData } from '../../hooks/usePageData';
 import { formatDate } from '../../utils/format';
@@ -31,31 +27,15 @@ import { formatDate } from '../../utils/format';
 type SortColumn = 'model' | 'size' | 'memory' | 'camera' | 'price' | 'createdAt';
 type SortDir = 'asc' | 'desc';
 
-export interface AdminTabletTypesPageHandle {
-  openAddForm: () => void;
-}
-
 /* ─── Component ───────────────────────────────────────────────────── */
 
-const AdminTabletTypesPage = forwardRef<AdminTabletTypesPageHandle>(function AdminTabletTypesPage(_props: unknown, ref) {
+function AdminTabletTypesPage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('model');
   const [sortDirection, setSortDirection] = useState<SortDir>('asc');
 
   const { data: tabletTypes, loading, error, load } = usePageData<TabletType[]>([]);
-
-  // ── Form state ──────────────────────────────────────────────────
-  const [showForm, setShowForm] = useState(false);
-  const [editingType, setEditingType] = useState<TabletType | null>(null);
-  const [formData, setFormData] = useState({
-    model: '',
-    size: '',
-    memory: '',
-    camera: '',
-    price: '',
-  });
-  const [formSubmitting, setFormSubmitting] = useState(false);
-  const [formResult, setFormResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // ── Delete confirm state ────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<TabletType | null>(null);
@@ -115,79 +95,11 @@ const AdminTabletTypesPage = forwardRef<AdminTabletTypesPageHandle>(function Adm
       : <FontAwesomeIcon icon={faSortDown} style={{ marginLeft: 4 }} />;
   };
 
-  /* ─── Open Add / Edit Form ────────────────────────────────────── */
-
-  const openAddForm = () => {
-    setEditingType(null);
-    setFormData({ model: '', size: '', memory: '', camera: '', price: '' });
-    setFormResult(null);
-    setShowForm(true);
-  };
+  /* ─── Edit / Delete ──────────────────────────────────────────── */
 
   const openEditForm = (type: TabletType) => {
-    setEditingType(type);
-    setFormData({
-      model: type.model ?? '',
-      size: type.size ?? '',
-      memory: type.memory ?? '',
-      camera: type.camera ?? '',
-      price: type.price != null ? String(type.price) : '',
-    });
-    setFormResult(null);
-    setShowForm(true);
+    navigate(`/admin/devices/tablet-types/${type.id}/edit`);
   };
-
-  const closeForm = () => {
-    setShowForm(false);
-    setEditingType(null);
-    setFormResult(null);
-  };
-
-  /* ─── Submit Form ─────────────────────────────────────────────── */
-
-  const handleSubmit = useCallback(async () => {
-    if (!formData.model.trim()) return;
-
-    setFormSubmitting(true);
-    setFormResult(null);
-
-    try {
-      const priceValue = formData.price ? parseFloat(formData.price) : undefined;
-
-      if (editingType) {
-        const dto: UpdateTabletTypeRequest = {
-          model: formData.model.trim() || undefined,
-          size: formData.size.trim() || undefined,
-          memory: formData.memory.trim() || undefined,
-          camera: formData.camera.trim() || undefined,
-          price: !isNaN(priceValue!) ? priceValue : undefined,
-        };
-        await updateTabletType(editingType.id, dto);
-        setFormResult({ type: 'success', message: 'Tablet type updated successfully!' });
-      } else {
-        const dto: CreateTabletTypeRequest = {
-          model: formData.model.trim() || undefined,
-          size: formData.size.trim() || undefined,
-          memory: formData.memory.trim() || undefined,
-          camera: formData.camera.trim() || undefined,
-          price: !isNaN(priceValue!) ? priceValue : undefined,
-        };
-        await createTabletType(dto);
-        setFormResult({ type: 'success', message: 'Tablet type created successfully!' });
-        setFormData({ model: '', size: '', memory: '', camera: '', price: '' });
-      }
-
-      load(fetchAllTabletTypes);
-
-      setTimeout(() => {
-        closeForm();
-      }, 1200);
-    } catch (err) {
-      setFormResult({ type: 'error', message: err instanceof Error ? err.message : 'An error occurred.' });
-    } finally {
-      setFormSubmitting(false);
-    }
-  }, [formData, editingType, load]);
 
   /* ─── Delete ──────────────────────────────────────────────────── */
 
@@ -203,8 +115,6 @@ const AdminTabletTypesPage = forwardRef<AdminTabletTypesPageHandle>(function Adm
       setDeleteTarget(null);
     }
   }, [deleteTarget, load]);
-
-  useImperativeHandle(ref, () => ({ openAddForm }), []);
 
   /* ─── Render ──────────────────────────────────────────────────── */
 
@@ -250,7 +160,7 @@ const AdminTabletTypesPage = forwardRef<AdminTabletTypesPageHandle>(function Adm
               <th className="sortable-header" onClick={() => handleSort('createdAt')}>
                 Created {renderSortIcon('createdAt')}
               </th>
-              <th style={{ width: 140 }}>Actions</th>
+              <th style={{ width: 80 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -279,7 +189,15 @@ const AdminTabletTypesPage = forwardRef<AdminTabletTypesPageHandle>(function Adm
             )}
             {!loading && !error && sortedTypes.map((type) => (
               <tr key={type.id}>
-                <td><strong>{type.model || '—'}</strong></td>
+                <td>
+                  <a
+                    href="#"
+                    className="table-link"
+                    onClick={(e) => { e.preventDefault(); openEditForm(type); }}
+                  >
+                    {type.model || '—'}
+                  </a>
+                </td>
                 <td>{type.size || '—'}</td>
                 <td>{type.memory || '—'}</td>
                 <td>{type.camera || '—'}</td>
@@ -288,9 +206,6 @@ const AdminTabletTypesPage = forwardRef<AdminTabletTypesPageHandle>(function Adm
                   {type.createdAt ? formatDate(type.createdAt) : '—'}
                 </td>
                 <td>
-                  <button className="action-btn edit" onClick={() => openEditForm(type)} title="Edit tablet type">
-                    <FontAwesomeIcon icon={faCog} />
-                  </button>
                   <button className="action-btn delete" onClick={() => setDeleteTarget(type)} title="Delete tablet type">
                     <FontAwesomeIcon icon={faTrash} />
                   </button>
@@ -300,91 +215,6 @@ const AdminTabletTypesPage = forwardRef<AdminTabletTypesPageHandle>(function Adm
           </tbody>
         </table>
       </div>
-
-      {/* ─── Add / Edit Form Overlay ──────────────────────────────── */}
-      {showForm && (
-        <div className="form-overlay" onClick={closeForm}>
-          <div className="form-panel" onClick={(e) => e.stopPropagation()}>
-            <h3>{editingType ? 'Edit Tablet Type' : 'Add New Tablet Type'}</h3>
-
-            {formResult && (
-              <div className={`form-result ${formResult.type}`}>
-                {formResult.message}
-              </div>
-            )}
-
-            <div className="form-group">
-              <label>Model *</label>
-              <input
-                type="text"
-                placeholder="e.g. iPad Pro 12.9"
-                value={formData.model}
-                onChange={(e) => setFormData((prev) => ({ ...prev, model: e.target.value }))}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Size</label>
-              <input
-                type="text"
-                placeholder="e.g. 12.9 inches"
-                value={formData.size}
-                onChange={(e) => setFormData((prev) => ({ ...prev, size: e.target.value }))}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Memory</label>
-              <input
-                type="text"
-                placeholder="e.g. 256GB"
-                value={formData.memory}
-                onChange={(e) => setFormData((prev) => ({ ...prev, memory: e.target.value }))}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Camera</label>
-              <input
-                type="text"
-                placeholder="e.g. 12MP Wide"
-                value={formData.camera}
-                onChange={(e) => setFormData((prev) => ({ ...prev, camera: e.target.value }))}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Price ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="e.g. 799.99"
-                value={formData.price}
-                onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
-              />
-            </div>
-
-            <div className="form-actions">
-              <button className="cancel-btn" onClick={closeForm}>Cancel</button>
-              <button
-                className="submit-btn"
-                onClick={handleSubmit}
-                disabled={formSubmitting || !formData.model.trim()}
-              >
-                {formSubmitting ? (
-                  <>
-                    <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} />
-                    Saving...
-                  </>
-                ) : (
-                  editingType ? 'Update Tablet Type' : 'Create Tablet Type'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ─── Delete Confirmation ──────────────────────────────────── */}
       {deleteTarget && (
@@ -408,6 +238,6 @@ const AdminTabletTypesPage = forwardRef<AdminTabletTypesPageHandle>(function Adm
       )}
     </div>
   );
-});
+}
 
 export default AdminTabletTypesPage;

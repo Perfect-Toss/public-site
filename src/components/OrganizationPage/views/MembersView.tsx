@@ -1,6 +1,6 @@
 import { addUserToEntity, fetchAllUsers, fetchEntityUsers, removeUserFromEntity } from '../../../api/api';
 import { faPlus, faSpinner, faTrash, faUsers } from '@fortawesome/free-solid-svg-icons';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -23,12 +23,7 @@ function MembersView() {
   const [userSearch, setUserSearch] = useState('');
   const [adding, setAdding] = useState(false);
 
-  useEffect(() => {
-    if (!organization.id) return;
-    loadMembers();
-  }, [organization.id]);
-
-  async function loadMembers() {
+  const loadMembers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -39,7 +34,12 @@ function MembersView() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [organization.id]);
+
+  useEffect(() => {
+    if (!organization.id) return;
+    loadMembers();
+  }, [organization.id, loadMembers]);
 
   async function handleOpenAddForm() {
     setShowAddForm(true);

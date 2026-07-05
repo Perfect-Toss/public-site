@@ -1,32 +1,33 @@
 import './AdminDevicesPage.css';
 
 import { faDesktop, faLayerGroup, faPlus, faTablet } from '@fortawesome/free-solid-svg-icons';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
-import AdminMachinesPage, { type AdminMachinesPageHandle } from '../AdminMachinesPage';
-import AdminTabletTypesPage, { type AdminTabletTypesPageHandle } from '../AdminTabletTypesPage';
-import AdminTabletsPage, { type AdminTabletsPageHandle } from '../AdminTabletsPage';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useRef, useState } from 'react';
 
-type DeviceTab = 'machines' | 'tablets' | 'tablet-types';
+const TAB_LABELS: Record<string, string> = {
+  machines: 'Machine',
+  tablets: 'Tablet',
+  'tablet-types': 'Tablet Type',
+} as const;
+
+const TAB_NEW_ROUTES: Record<string, string> = {
+  machines: '/admin/devices/machines/new',
+  tablets: '/admin/devices/tablets/new',
+  'tablet-types': '/admin/devices/tablet-types/new',
+} as const;
 
 function AdminDevicesPage() {
-  const [activeTab, setActiveTab] = useState<DeviceTab>('machines');
-  const machinesRef = useRef<AdminMachinesPageHandle>(null);
-  const tabletsRef = useRef<AdminTabletsPageHandle>(null);
-  const tabletTypesRef = useRef<AdminTabletTypesPageHandle>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Determine active tab from the current path
+  const pathSegment = location.pathname.split('/').pop() ?? '';
+  const activeTab = pathSegment in TAB_LABELS ? pathSegment : 'machines';
 
   const handleAdd = () => {
-    if (activeTab === 'machines') {
-      machinesRef.current?.openAddForm();
-    } else if (activeTab === 'tablets') {
-      tabletsRef.current?.openAddForm();
-    } else if (activeTab === 'tablet-types') {
-      tabletTypesRef.current?.openAddForm();
-    }
+    navigate(TAB_NEW_ROUTES[activeTab] ?? '/admin/devices/machines/new');
   };
-
-  const showAddButton = true;
 
   return (
     <div className="admin-devices-page">
@@ -35,46 +36,42 @@ function AdminDevicesPage() {
           <h2>DEVICE MANAGEMENT</h2>
         </div>
 
-        {showAddButton && (
-          <button
-            className="fab"
-            onClick={handleAdd}
-            title={'Add ' + (activeTab === 'machines' ? 'Machine' : activeTab === 'tablets' ? 'Tablet' : 'Tablet Type')}
-          >
-            <FontAwesomeIcon icon={faPlus} />
-          </button>
-        )}
+        <button
+          className="fab"
+          onClick={handleAdd}
+          title={'Add ' + (TAB_LABELS[activeTab] ?? 'Item')}
+        >
+          <FontAwesomeIcon icon={faPlus} />
+        </button>
 
         {/* ─── Tabs ──────────────────────────────────────────── */}
         <div className="device-tab-bar">
-          <button
-            className={`device-tab-btn ${activeTab === 'machines' ? 'active' : ''}`}
-            onClick={() => setActiveTab('machines')}
+          <NavLink
+            to="/admin/devices/machines"
+            className={({ isActive }) => `device-tab-btn ${isActive ? 'active' : ''}`}
           >
             <FontAwesomeIcon icon={faDesktop} />
             Machines
-          </button>
-          <button
-            className={`device-tab-btn ${activeTab === 'tablets' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tablets')}
+          </NavLink>
+          <NavLink
+            to="/admin/devices/tablets"
+            className={({ isActive }) => `device-tab-btn ${isActive ? 'active' : ''}`}
           >
             <FontAwesomeIcon icon={faTablet} />
             Tablets
-          </button>
-          <button
-            className={`device-tab-btn ${activeTab === 'tablet-types' ? 'active' : ''}`}
-            onClick={() => setActiveTab('tablet-types')}
+          </NavLink>
+          <NavLink
+            to="/admin/devices/tablet-types"
+            className={({ isActive }) => `device-tab-btn ${isActive ? 'active' : ''}`}
           >
             <FontAwesomeIcon icon={faLayerGroup} />
             Tablet Types
-          </button>
+          </NavLink>
         </div>
 
         {/* ─── Tab Content ───────────────────────────────────── */}
         <div className="device-tab-content">
-          {activeTab === 'machines' && <AdminMachinesPage ref={machinesRef} />}
-          {activeTab === 'tablets' && <AdminTabletsPage ref={tabletsRef} />}
-          {activeTab === 'tablet-types' && <AdminTabletTypesPage ref={tabletTypesRef} />}
+          <Outlet />
         </div>
       </section>
     </div>

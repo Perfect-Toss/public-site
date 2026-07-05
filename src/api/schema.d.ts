@@ -1977,11 +1977,8 @@ export interface components {
             name?: string | null;
             /** @description Gets the tablet user identifier. */
             tabletUserId?: string | null;
-            /**
-             * Format: int32
-             * @description Gets the PIN code for the tablet.
-             */
-            pin?: number | null;
+            /** @description Gets the PIN code for the tablet. */
+            pin?: string | null;
             /**
              * Format: uuid
              * @description Gets the service account user identifier.
@@ -2325,8 +2322,7 @@ export interface components {
             deletedBy?: string | null;
             name?: string | null;
             tabletUserId?: string | null;
-            /** Format: int32 */
-            pin?: number | null;
+            pin?: string | null;
             /** Format: uuid */
             serviceAccountId?: string | null;
             serviceAccount?: components["schemas"]["User"];
@@ -2468,11 +2464,8 @@ export interface components {
             name?: string | null;
             /** @description Gets the tablet user identifier. */
             tabletUserId?: string | null;
-            /**
-             * Format: int32
-             * @description Gets the PIN code for the tablet.
-             */
-            pin?: number | null;
+            /** @description Gets the PIN code for the tablet. */
+            pin?: string | null;
             /**
              * Format: uuid
              * @description Gets the service account user identifier.
