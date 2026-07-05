@@ -54,35 +54,6 @@
   min-width: 600px;
 }
 
-.tablet-types-table thead {
-  background: #f9f9f9;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
 
-.tablet-types-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  color: #666;
-  text-transform: uppercase;
-  border-bottom: 2px solid #e0e0e0;
-  white-space: nowrap;
-}
 
-.tablet-types-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f0f0f0;
-  vertical-align: middle;
-}
 
-.tablet-types-table tbody tr:hover {
-  background: #fafafa;
-}
-
-.tablet-types-table tbody tr:last-child td {
-  border-bottom: none;
-}

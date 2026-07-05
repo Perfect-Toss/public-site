@@ -209,8 +209,8 @@ function AdminOrganizationsPage() {
               </div>
             )}
             {!loading && !error && (
-              <div className="orgs-table-wrapper">
-                <table className="orgs-table">
+              <div className="table-wrapper orgs-table-wrapper">
+                <table className="data-table orgs-table">
                   <thead>
                     <tr>
                       <th>Name</th>

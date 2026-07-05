@@ -1,35 +1,35 @@
 import './App.css'
 
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import {
+  MachinesTabPage,
+  TabletTypesTabPage,
+  TabletsTabPage,
+} from './components/AdminDevicesPage/DeviceTabWrappers'
 
 import AccountPage from './components/AccountPage'
 import AddUserPage from './components/AddUserPage'
 import AdminAddOrganizationPage from './components/AdminAddOrganizationPage'
 import AdminDevicesPage from './components/AdminDevicesPage'
-import {
-  MachinesTabPage,
-  TabletsTabPage,
-  TabletTypesTabPage,
-} from './components/AdminDevicesPage/DeviceTabWrappers'
-import EditOrganizationPage from './components/AdminOrganizationsPage/EditOrganizationPage'
 import AdminOrganizationsPage from './components/AdminOrganizationsPage'
 import AdminPage from './components/AdminPage'
 import AdminUsersPage from './components/AdminUsersPage'
-import MachineFormPage from './components/AdminMachinesPage/MachineFormPage'
-import TabletFormPage from './components/AdminTabletsPage/TabletFormPage'
-import TabletTypeFormPage from './components/AdminTabletTypesPage/TabletTypeFormPage'
 import { AuthProvider } from './contexts/AuthContext'
 import BulkImportPage from './components/BulkImportPage'
 import DashboardPage from './components/DashboardPage'
+import EditOrganizationPage from './components/AdminOrganizationsPage/EditOrganizationPage'
 import HomePage from './components/HomePage'
 import HomeView from './components/HomePage/views/HomeView'
 import Login from './components/Login'
+import MachineFormPage from './components/AdminMachinesPage/MachineFormPage'
 import MembersView from './components/OrganizationPage/views/MembersView'
 import OrganizationPage from './components/OrganizationPage'
 import OrganizationsPage from './components/OrganizationsPage'
 import OverviewView from './components/OrganizationPage/views/OverviewView'
 import SettingsView from './components/OrganizationPage/views/SettingsView'
 import SubOrgsView from './components/OrganizationPage/views/SubOrgsView'
+import TabletFormPage from './components/AdminTabletsPage/TabletFormPage'
+import TabletTypeFormPage from './components/AdminTabletTypesPage/TabletTypeFormPage'
 import UserDetailPage from './components/UserDetailPage'
 import VideosPage from './components/VideosPage'
 import { useAuth } from './contexts/useAuth'

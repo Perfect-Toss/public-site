@@ -1,7 +1,7 @@
 import './AdminDevicesPage.css';
 
-import { faDesktop, faLayerGroup, faPlus, faTablet } from '@fortawesome/free-solid-svg-icons';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { faDesktop, faLayerGroup, faPlus, faTablet } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 

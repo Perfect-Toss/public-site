@@ -139,8 +139,8 @@ function AdminTabletsPage() {
               </span>
             </div>
 
-            <div className="tablets-table-wrapper">
-              <table className="tablets-table">
+            <div className="table-wrapper tablets-table-wrapper">
+              <table className="data-table tablets-table">
                 <thead>
                   <tr>
                     <th className="sortable-header" onClick={() => handleSort('name')}>

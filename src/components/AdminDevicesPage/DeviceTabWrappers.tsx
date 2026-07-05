@@ -1,6 +1,6 @@
 import AdminMachinesPage from '../AdminMachinesPage';
-import AdminTabletsPage from '../AdminTabletsPage';
 import AdminTabletTypesPage from '../AdminTabletTypesPage';
+import AdminTabletsPage from '../AdminTabletsPage';
 
 export function MachinesTabPage() {
   return <AdminMachinesPage />;
