@@ -211,8 +211,8 @@ function AdminUsersPage() {
           </div>
         )}
         {!loading && !error && (
-          <div className="users-table-wrapper">
-            <table className="users-table">
+          <div className="table-wrapper users-table-wrapper">
+            <table className="data-table users-table">
               <thead>
                 <tr>
                   <th className="sortable-header" onClick={() => handleSort('name')}>

@@ -153,8 +153,8 @@ function AdminMachinesPage() {
         </div>
 
         {/* ─── Table ─────────────────────────────────────────── */}
-        <div className="machines-table-wrapper">
-          <table className="machines-table">
+        <div className="table-wrapper machines-table-wrapper">
+          <table className="data-table machines-table">
             <thead>
               <tr>
                 <th className="sortable-header" onClick={() => handleSort('name')}>

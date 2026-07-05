@@ -16,59 +16,16 @@
 
 /* ─── Table ─────────────────────────────────────────────────────────── */
 
-.orgs-table-wrapper {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: #fff;
-}
-
 .orgs-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
   min-width: 650px;
 }
 
-.orgs-table thead {
-  background: #f9f9f9;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.orgs-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  color: #666;
-  text-transform: uppercase;
-  border-bottom: 2px solid #e0e0e0;
-  white-space: nowrap;
-}
-
 .orgs-table tbody tr {
-  transition: background 0.15s;
   cursor: pointer;
 }
 
-.orgs-table tbody tr:hover {
-  background: #faf9f0;
-}
-
-.orgs-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
 .orgs-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f0f0f0;
   color: #1a1f24;
-  vertical-align: middle;
 }
 
 /* ─── Name Cell ─────────────────────────────────────────────────────── */

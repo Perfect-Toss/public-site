@@ -138,8 +138,8 @@ function AdminTabletTypesPage() {
       </div>
 
       {/* ─── Table ─────────────────────────────────────────── */}
-      <div className="tablet-types-table-wrapper">
-        <table className="tablet-types-table">
+      <div className="table-wrapper tablet-types-table-wrapper">
+        <table className="data-table tablet-types-table">
           <thead>
             <tr>
               <th className="sortable-header" onClick={() => handleSort('model')}>

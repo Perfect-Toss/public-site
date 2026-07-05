@@ -1,8 +1,10 @@
 import '../../styles/page.css';
 import './DashboardPage.css';
 
+import { faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useMemo, useState } from 'react';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { EventLogUserSummary } from '../../api/api';
 import { fetchEventLogSummary } from '../../api/api';
 
@@ -83,6 +85,31 @@ function DashboardPage() {
     return map;
   }, [summaryData]);
 
+  /* ─── Sorting ─────────────────────────────────────────────── */
+
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = () => {
+    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
+
+  const sortedData = useMemo(() => {
+    return [...summaryData].sort((a, b) => {
+      const emailA = (a.email ?? '').toLowerCase();
+      const emailB = (b.email ?? '').toLowerCase();
+      return sortDirection === 'asc'
+        ? emailA.localeCompare(emailB)
+        : emailB.localeCompare(emailA);
+    });
+  }, [summaryData, sortDirection]);
+
+  const renderSortIcon = () => {
+    if (sortDirection === 'asc') {
+      return <FontAwesomeIcon icon={faSortUp} style={{ marginLeft: 4 }} />;
+    }
+    return <FontAwesomeIcon icon={faSortDown} style={{ marginLeft: 4 }} />;
+  };
+
   if (loading) {
     return (
       <div className="dashboard-page">
@@ -90,8 +117,9 @@ function DashboardPage() {
           <div className="section-header">
             <h2>USAGE DASHBOARD</h2>
           </div>
-          <div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
-            Loading dashboard data…
+          <div className="loading-container">
+            <div className="spinner" />
+            <p>Loading dashboard data…</p>
           </div>
         </section>
       </div>
@@ -105,20 +133,9 @@ function DashboardPage() {
           <div className="section-header">
             <h2>USAGE DASHBOARD</h2>
           </div>
-          <div style={{ padding: '40px', textAlign: 'center' }}>
-            <p style={{ color: '#e53935', marginBottom: '16px' }}>{error}</p>
-            <button
-              onClick={loadSummary}
-              style={{
-                padding: '8px 20px',
-                background: '#cfff04',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 700,
-                fontSize: '13px',
-              }}
-            >
+          <div className="error-container">
+            <p>{error}</p>
+            <button className="retry-button" onClick={loadSummary}>
               RETRY
             </button>
           </div>
@@ -132,17 +149,18 @@ function DashboardPage() {
       <section className="section">
         <div className="section-header">
           <h2>USAGE DASHBOARD</h2>
-          <p style={{ color: '#666', fontSize: '13px', margin: '4px 0 0' }}>
+          <p className="dashboard-description">
             Event log summary grouped by user — videos captured &amp; days used per month
           </p>
         </div>
 
-        <div className="dashboard-scroll-wrapper">
+        <div className="dashboard-table-wrapper">
           <table className="dashboard-table">
             <thead>
               <tr>
-                <th rowSpan={2} className="th-static th-email">Email</th>
-                <th rowSpan={2} className="th-static">Name</th>
+                <th rowSpan={2} className="th-static th-email sortable-header" onClick={handleSort}>
+                  Email{renderSortIcon()}
+                </th>
                 {allMonths.map((key) => {
                   const [year, month] = key.split('-').map(Number);
                   return (
@@ -162,23 +180,27 @@ function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {summaryData.length === 0 ? (
+              {sortedData.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={2 + allMonths.length * 2}
-                    style={{ textAlign: 'center', padding: '32px', color: '#999' }}
+                    colSpan={1 + allMonths.length * 2}
+                    className="empty-state"
                   >
                     No data available.
                   </td>
                 </tr>
               ) : (
-                summaryData.map((user) => {
+                sortedData.map((user) => {
                   const userKey = user.userId ?? user.email ?? '';
                   const monthMap = dataByUser.get(userKey);
                   return (
                     <tr key={userKey}>
-                      <td className="td-email">{user.email || '-'}</td>
-                      <td className="td-name">{getDisplayName(user)}</td>
+                      <td className="td-email">
+                        {user.email || '-'}
+                        {getDisplayName(user) !== '-' && (
+                          <span className="td-name-inline"> [{getDisplayName(user)}]</span>
+                        )}
+                      </td>
                       {allMonths.map((mk) => {
                         const entry = monthMap?.get(mk);
                         return (
