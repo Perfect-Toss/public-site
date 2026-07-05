@@ -10,19 +10,14 @@ import {
   faTablet,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  deleteTablet,
-  fetchAllTablets,
-  fetchAllTabletTypes,
-  type Tablet,
-  type TabletType,
-} from '../../api/api';
-import { usePageData } from '../../hooks/usePageData';
+import type { Tablet } from '../../api/api';
 import { formatDate } from '../../utils/format';
+import { useNavigate } from 'react-router-dom';
+import { useTabletStore } from '../../stores/tabletStore';
+import { useUserStore } from '../../stores/userStore';
 
 /* ─── Helpers ─────────────────────────────────────────────────────── */
 
@@ -37,30 +32,45 @@ function AdminTabletsPage() {
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDir>('asc');
 
-  const { data: tablets, loading, error, load } = usePageData<Tablet[]>([]);
-  const [tabletTypes, setTabletTypes] = useState<TabletType[]>([]);
+  const {
+    tablets,
+    tabletsLoading: loading,
+    tabletsError: error,
+    loadTablets,
+    loadTabletTypes,
+    deleteTablet: deleteTabletFromStore,
+    getTypeName,
+  } = useTabletStore();
+
+  const { loadServiceAccounts, getServiceAccountName } = useUserStore();
 
   // ── Delete confirm state ────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<Tablet | null>(null);
 
   useEffect(() => {
-    load(fetchAllTablets);
-    fetchAllTabletTypes().then(setTabletTypes).catch(() => setTabletTypes([]));
-  }, [load]);
-
-  // Build a lookup from tabletTypeId → model name
-  const tabletTypeLookup = useMemo(() => {
-    const map = new Map<string, string>();
-    tabletTypes.forEach((tt) => {
-      if (tt.id && tt.model) map.set(tt.id, tt.model);
-    });
-    return map;
-  }, [tabletTypes]);
+    loadTablets();
+    loadTabletTypes();
+    loadServiceAccounts();
+  }, [loadTablets, loadTabletTypes, loadServiceAccounts]);
 
   /* ─── Sorting & Filtering ─────────────────────────────────────── */
 
   const sortedTablets = useMemo(() => {
     const q = searchQuery.toLowerCase();
+    const tabletTypes = useTabletStore.getState().tabletTypes;
+    const serviceAccounts = useUserStore.getState().serviceAccounts;
+
+    const typeLookup = new Map(tabletTypes.filter(t => t.id && t.model).map(t => [t.id!, t.model!]));
+    const saLookup = new Map<string, string>();
+    serviceAccounts.forEach((sa) => {
+      if (sa.id) {
+        const name = sa.firstName || sa.lastName
+          ? `${sa.firstName ?? ''} ${sa.lastName ?? ''}`.trim()
+          : sa.email || sa.id;
+        saLookup.set(sa.id, name);
+      }
+    });
+
     const filtered = tablets.filter((t) => {
       return (
         (t.name ?? '').toLowerCase().includes(q) ||
@@ -91,7 +101,10 @@ function AdminTabletsPage() {
           cmp = (a.tripod === b.tripod) ? 0 : a.tripod ? -1 : 1;
           break;
         case 'model':
-          cmp = (tabletTypeLookup.get(a.tabletTypeId ?? '') ?? '').localeCompare(tabletTypeLookup.get(b.tabletTypeId ?? '') ?? '');
+          cmp = (typeLookup.get(a.tabletTypeId ?? '') ?? '').localeCompare(typeLookup.get(b.tabletTypeId ?? '') ?? '');
+          break;
+        case 'serviceAccount':
+          cmp = (saLookup.get(a.serviceAccountId ?? '') ?? '').localeCompare(saLookup.get(b.serviceAccountId ?? '') ?? '');
           break;
         case 'createdAt':
           cmp = (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
@@ -125,14 +138,13 @@ function AdminTabletsPage() {
     if (!deleteTarget) return;
 
     try {
-      await deleteTablet(deleteTarget.id);
+      await deleteTabletFromStore(deleteTarget.id);
       setDeleteTarget(null);
-      load(fetchAllTablets);
     } catch (err) {
       console.error('Failed to delete tablet:', err);
       setDeleteTarget(null);
     }
-  }, [deleteTarget, load]);
+  }, [deleteTarget, deleteTabletFromStore]);
 
   /* ─── Render ──────────────────────────────────────────────────── */
 
@@ -226,11 +238,13 @@ function AdminTabletsPage() {
                               ? `${tablet.serviceAccount.firstName ?? ''} ${tablet.serviceAccount.lastName ?? ''}`.trim()
                               : tablet.serviceAccount.email || '—'}
                           </span>
+                        ) : getServiceAccountName(tablet.serviceAccountId) ? (
+                          <span>{getServiceAccountName(tablet.serviceAccountId)}</span>
                         ) : (
                           <span style={{ color: '#bbb' }}>None</span>
                         )}
                       </td>
-                      <td>{tabletTypeLookup.get(tablet.tabletTypeId ?? '') || tablet.tabletType?.model || '—'}</td>
+                      <td>{getTypeName(tablet.tabletTypeId) || tablet.tabletType?.model || '—'}</td>
                       <td style={{ fontFamily: 'monospace', fontSize: 12, color: '#666' }}>
                         {tablet.pin != null ? tablet.pin.padStart(4, '0') : '—'}
                       </td>
