@@ -7,8 +7,9 @@ import {
   faChevronLeft,
   faChevronRight,
   faHome,
-  faMicrochip,
   faRightFromBracket,
+  faSitemap,
+  faTabletScreenButton,
   faUser,
   faUsers,
   faVideo
@@ -114,7 +115,7 @@ function HomePage() {
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 data-tooltip="Devices"
               >
-                <span className="nav-icon"><FontAwesomeIcon icon={faMicrochip} /></span>
+                <span className="nav-icon"><FontAwesomeIcon icon={faTabletScreenButton} /></span>
                 {!collapsed && <span>DEVICES</span>}
               </NavLink>
               <NavLink
@@ -122,7 +123,7 @@ function HomePage() {
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 data-tooltip="Organizations"
               >
-                <span className="nav-icon"><FontAwesomeIcon icon={faBuilding} /></span>
+                <span className="nav-icon"><FontAwesomeIcon icon={faSitemap} /></span>
                 {!collapsed && <span>ORGANIZATIONS</span>}
               </NavLink>
               <NavLink
