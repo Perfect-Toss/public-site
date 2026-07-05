@@ -17,7 +17,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   deleteTablet,
   fetchAllTablets,
+  fetchAllTabletTypes,
   type Tablet,
+  type TabletType,
 } from '../../api/api';
 import { usePageData } from '../../hooks/usePageData';
 import { formatDate } from '../../utils/format';
@@ -36,13 +38,24 @@ function AdminTabletsPage() {
   const [sortDirection, setSortDirection] = useState<SortDir>('asc');
 
   const { data: tablets, loading, error, load } = usePageData<Tablet[]>([]);
+  const [tabletTypes, setTabletTypes] = useState<TabletType[]>([]);
 
   // ── Delete confirm state ────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<Tablet | null>(null);
 
   useEffect(() => {
     load(fetchAllTablets);
+    fetchAllTabletTypes().then(setTabletTypes).catch(() => setTabletTypes([]));
   }, [load]);
+
+  // Build a lookup from tabletTypeId → model name
+  const tabletTypeLookup = useMemo(() => {
+    const map = new Map<string, string>();
+    tabletTypes.forEach((tt) => {
+      if (tt.id && tt.model) map.set(tt.id, tt.model);
+    });
+    return map;
+  }, [tabletTypes]);
 
   /* ─── Sorting & Filtering ─────────────────────────────────────── */
 
@@ -76,6 +89,9 @@ function AdminTabletsPage() {
           break;
         case 'tripod':
           cmp = (a.tripod === b.tripod) ? 0 : a.tripod ? -1 : 1;
+          break;
+        case 'model':
+          cmp = (tabletTypeLookup.get(a.tabletTypeId ?? '') ?? '').localeCompare(tabletTypeLookup.get(b.tabletTypeId ?? '') ?? '');
           break;
         case 'createdAt':
           cmp = (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
@@ -214,7 +230,7 @@ function AdminTabletsPage() {
                           <span style={{ color: '#bbb' }}>None</span>
                         )}
                       </td>
-                      <td>{tablet.tabletType?.model || '—'}</td>
+                      <td>{tabletTypeLookup.get(tablet.tabletTypeId ?? '') || tablet.tabletType?.model || '—'}</td>
                       <td style={{ fontFamily: 'monospace', fontSize: 12, color: '#666' }}>
                         {tablet.pin != null ? tablet.pin.padStart(4, '0') : '—'}
                       </td>
