@@ -4,6 +4,7 @@ import AuthContext from './useAuth';
 import { User } from 'firebase/auth';
 import { onAuthStateChange } from '../firebase/auth';
 import { setAuthToken } from '../api/client';
+import { useAuthStore } from '../stores/authStore';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -14,36 +15,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const { setFirebaseUser, setAdmin } = useAuthStore();
+
   useEffect(() => {
     if (!currentUser) {
       setIsAdmin(false);
+      setAdmin(false);
       return;
     }
     currentUser
       .getIdTokenResult()
       .then((tokenResult) => {
         const claims = tokenResult.claims;
-        setIsAdmin(
-          claims.role === 'Admin' ||
+        const admin = claims.role === 'Admin' ||
           claims.role === 'SuperUser' ||
           (Array.isArray(claims.roles) &&
-            (claims.roles as string[]).some((r) => r === 'Admin' || r === 'SuperUser')),
-        );
+            (claims.roles as string[]).some((r) => r === 'Admin' || r === 'SuperUser'));
+        setIsAdmin(admin);
+        setAdmin(admin);
       })
-      .catch(() => setIsAdmin(false));
-  }, [currentUser]);
+      .catch(() => {
+        setIsAdmin(false);
+        setAdmin(false);
+      });
+  }, [currentUser, setAdmin]);
 
   useEffect(() => {
     console.log('[AuthProvider] Setting up auth state listener...');
     
-    // Check localStorage for Firebase auth data (debugging)
-    const localStorageKeys = Object.keys(localStorage).filter(key => 
-      key.startsWith('firebase:')
-    );
-    console.log('[AuthProvider] Firebase localStorage keys:', localStorageKeys);
-    
-    // onAuthStateChanged will automatically restore the session from persistence
-    // It triggers immediately with null if no session, or with the User if session exists
     const unsubscribe = onAuthStateChange(async (user) => {
       console.log('[AuthProvider] Auth state changed:', {
         isLoggedIn: !!user,
@@ -59,15 +58,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       setCurrentUser(user);
+      await setFirebaseUser(user);
       setLoading(false);
     });
 
-    // The unsubscribe function will be called when component unmounts
     return () => {
       console.log('[AuthProvider] Cleaning up auth listener');
       unsubscribe();
     };
-  }, []);
+  }, [setFirebaseUser]);
 
   const value = {
     currentUser,
