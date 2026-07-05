@@ -104,7 +104,7 @@
 }
 
 .dashboard-table tbody tr:hover {
-  background-color: #fafafa;
+  background-color: #fcfdff;
 }
 
 .td-email {
@@ -150,5 +150,5 @@
 }
 
 .dashboard-table tbody tr:hover .td-email {
-  background-color: #fafafa;
+  background-color: #fcfdff;
 }

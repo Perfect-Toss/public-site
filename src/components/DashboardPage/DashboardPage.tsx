@@ -4,8 +4,8 @@ import './DashboardPage.css';
 import { faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useMemo, useState } from 'react';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { EventLogUserSummary } from '../../api/api';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { fetchEventLogSummary } from '../../api/api';
 
 const MONTH_NAMES = [
