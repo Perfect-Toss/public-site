@@ -16,14 +16,16 @@ import {
 import { useEffect, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { STORAGE_KEYS } from '../../utils/constants';
 import { logout } from '../../firebase/auth';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 function HomePage() {
   const navigate = useNavigate();
 
   // TODO: Replace with actual admin check from Firebase auth or user context
   const [isAdmin] = useState(true); // Set to true for testing, will be dynamic in production
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useLocalStorage(STORAGE_KEYS.SIDEBAR_COLLAPSED, false);
 
   useEffect(() => {
     // Clean up URL query parameters after authentication
