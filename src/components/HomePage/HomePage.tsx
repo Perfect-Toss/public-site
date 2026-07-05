@@ -1,14 +1,15 @@
 import './HomePage.css';
 
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   faBuilding,
   faChartBar,
+  faChevronLeft,
+  faChevronRight,
   faHome,
   faMicrochip,
   faRightFromBracket,
   faUser,
-  faUserShield,
   faUsers,
   faVideo
 } from '@fortawesome/free-solid-svg-icons';
@@ -19,10 +20,10 @@ import { logout } from '../../firebase/auth';
 
 function HomePage() {
   const navigate = useNavigate();
-  const location = useLocation();
 
   // TODO: Replace with actual admin check from Firebase auth or user context
   const [isAdmin] = useState(true); // Set to true for testing, will be dynamic in production
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     // Clean up URL query parameters after authentication
@@ -52,9 +53,9 @@ function HomePage() {
   };
 
   return (
-    <div className="home-page">
+    <div className={`home-page${collapsed ? ' sidebar-collapsed' : ''}`}>
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
         <div className="sidebar-header">
           <div 
             className="logo" 
@@ -62,7 +63,7 @@ function HomePage() {
             style={{ cursor: 'pointer' }}
           >
             <div className="logo-icon"></div>
-            <span className="logo-text">PERFECT TOSS</span>
+            {!collapsed && <span className="logo-text">PERFECT TOSS</span>}
           </div>
         </div>
 
@@ -71,90 +72,93 @@ function HomePage() {
             to="/"
             end
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            data-tooltip="Home"
           >
             <span className="nav-icon"><FontAwesomeIcon icon={faHome} /></span>
-            <span>HOME</span>
+            {!collapsed && <span>HOME</span>}
           </NavLink>
 
           <NavLink 
             to="/organizations"
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            data-tooltip="Organizations"
           >
             <span className="nav-icon"><FontAwesomeIcon icon={faBuilding} /></span>
-            <span>ORGANIZATIONS</span>
+            {!collapsed && <span>ORGANIZATIONS</span>}
           </NavLink>
 
           <NavLink 
             to="/videos"
             className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            data-tooltip="Videos"
           >
             <span className="nav-icon"><FontAwesomeIcon icon={faVideo} /></span>
-            <span>VIDEOS</span>
+            {!collapsed && <span>VIDEOS</span>}
           </NavLink>
 
           {isAdmin && (
-            <div className="nav-group">
+            <>
+              <div className="nav-spacer" />
               <NavLink
-                to="/admin"
-                end
-                className={({ isActive }) => {
-                  const isSubActive = !isActive && location.pathname.startsWith('/admin/');
-                  return `nav-item ${isActive ? 'active' : ''} ${isSubActive ? 'nav-item--parent-active' : ''}`;
-                }}
+                to="/admin/dashboard"
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                data-tooltip="Dashboard"
               >
-                <span className="nav-icon"><FontAwesomeIcon icon={faUserShield} /></span>
-                <span>ADMIN</span>
+                <span className="nav-icon"><FontAwesomeIcon icon={faChartBar} /></span>
+                {!collapsed && <span>DASHBOARD</span>}
               </NavLink>
-              {location.pathname.startsWith('/admin') && (
-                <div className="nav-sub-items">
-                  <NavLink
-                    to="/admin/dashboard"
-                    className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
-                  >
-                    <span className="nav-icon"><FontAwesomeIcon icon={faChartBar} /></span>
-                    <span>DASHBOARD</span>
-                  </NavLink>
-                  <NavLink
-                    to="/admin/devices"
-                    className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
-                  >
-                    <span className="nav-icon"><FontAwesomeIcon icon={faMicrochip} /></span>
-                    <span>DEVICES</span>
-                  </NavLink>
-                  <NavLink
-                    to="/admin/organizations"
-                    className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
-                  >
-                    <span className="nav-icon"><FontAwesomeIcon icon={faBuilding} /></span>
-                    <span>ORGANIZATIONS</span>
-                  </NavLink>
-                  <NavLink
-                    to="/admin/users"
-                    className={({ isActive }) => `nav-item nav-sub-item ${isActive ? 'active' : ''}`}
-                  >
-                    <span className="nav-icon"><FontAwesomeIcon icon={faUsers} /></span>
-                    <span>USERS</span>
-                  </NavLink>
-                </div>
-              )}
-            </div>
+              <NavLink
+                to="/admin/devices"
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                data-tooltip="Devices"
+              >
+                <span className="nav-icon"><FontAwesomeIcon icon={faMicrochip} /></span>
+                {!collapsed && <span>DEVICES</span>}
+              </NavLink>
+              <NavLink
+                to="/admin/organizations"
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                data-tooltip="Organizations"
+              >
+                <span className="nav-icon"><FontAwesomeIcon icon={faBuilding} /></span>
+                {!collapsed && <span>ORGANIZATIONS</span>}
+              </NavLink>
+              <NavLink
+                to="/admin/users"
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                data-tooltip="Users"
+              >
+                <span className="nav-icon"><FontAwesomeIcon icon={faUsers} /></span>
+                {!collapsed && <span>USERS</span>}
+              </NavLink>
+            </>
           )}
         </nav>
 
         <NavLink 
           to="/account"
           className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+          data-tooltip="Account"
         >
           <span className="nav-icon"><FontAwesomeIcon icon={faUser} /></span>
-          <span>ACCOUNT</span>
+          {!collapsed && <span>ACCOUNT</span>}
         </NavLink>
 
         <button 
           className="nav-item logout-button"
           onClick={handleLogout}
+          data-tooltip="Logout"
         >
           <span className="nav-icon"><FontAwesomeIcon icon={faRightFromBracket} /></span>
-          <span>LOGOUT</span>
+          {!collapsed && <span>LOGOUT</span>}
+        </button>
+
+        <button
+          className="sidebar-toggle"
+          onClick={() => setCollapsed(!collapsed)}
+          data-tooltip={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <FontAwesomeIcon icon={collapsed ? faChevronRight : faChevronLeft} />
         </button>
       </aside>
 
