@@ -79,11 +79,6 @@
   min-height: 80px;
 }
 
-.form-group select {
-  cursor: pointer;
-  appearance: auto;
-}
-
 .form-actions {
   display: flex;
   justify-content: flex-end;

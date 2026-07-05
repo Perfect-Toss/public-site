@@ -124,6 +124,19 @@
   font-size: 13px;
 }
 
+.org-name-link {
+  font-weight: 600;
+  font-size: 13px;
+  color: #1a1f24;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.org-name-link:hover {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
 .org-child-count {
   display: inline-flex;
   align-items: center;
@@ -185,15 +198,35 @@
   gap: 6px;
 }
 
-.action-btn.edit-btn {
-  color: #1565c0;
-  border-color: #bbdefb;
+.action-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.action-btn.edit-btn:hover {
+.action-btn.delete {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.action-btn.delete:hover {
+  background: #f8bbd0;
+}
+
+.action-btn.edit {
   background: #e3f2fd;
-  border-color: #1565c0;
-  color: #0d47a1;
+  color: #1565c0;
+}
+
+.action-btn.edit:hover {
+  background: #bbdefb;
 }
 
 /* ─── Modal ─────────────────────────────────────────────────────────── */
@@ -254,15 +287,7 @@
   margin-bottom: 16px;
 }
 
-.form-group label {
-  display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  margin-bottom: 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
+
 
 .form-group input,
 .form-group textarea,
@@ -289,11 +314,6 @@
 .form-group textarea {
   resize: vertical;
   min-height: 60px;
-}
-
-.form-group select {
-  cursor: pointer;
-  appearance: auto;
 }
 
 /* ─── Buttons ───────────────────────────────────────────────────────── */

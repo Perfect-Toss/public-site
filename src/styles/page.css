@@ -278,3 +278,18 @@
 .fab:active {
   transform: translateY(0);
 }
+
+/* ─── Table Links ────────────────────────────────────────────────────────── */
+
+.table-link {
+  color: #1565c0;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.table-link:hover {
+  color: #0d47a1;
+  text-decoration: underline;
+}
