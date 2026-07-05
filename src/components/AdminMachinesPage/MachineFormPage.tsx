@@ -119,7 +119,7 @@ function MachineFormPage() {
 
   if (loadingEntity) {
     return (
-    <div className="admin-machines-page admin-form-page">
+      <div className="admin-machines-page admin-form-page">
         <section className="section">
           <div className="loading-container" style={{ minHeight: 200 }}>
             <FontAwesomeIcon icon={faSpinner} spin size="2x" />
@@ -142,7 +142,7 @@ function MachineFormPage() {
         </div>
 
         {result && (
-          <div className={`form-result ${result.type}`} style={{ marginBottom: 20 }}>
+          <div className={`import-result ${result.type}`} style={{ marginBottom: 20 }}>
             <FontAwesomeIcon
               icon={result.type === 'success' ? faCheck : faTimes}
               style={{ marginRight: 8 }}
@@ -151,7 +151,7 @@ function MachineFormPage() {
           </div>
         )}
 
-        <div className="form-panel" style={{ maxWidth: 600, margin: 0, border: '1px solid #e0e0e0', borderRadius: 8, padding: 24 }}>
+        <div className="admin-form-card">
           <div className="form-group">
             <label>Machine Name *</label>
             <input

@@ -14,6 +14,10 @@
   border-bottom: 2px solid #e0e0e0;
 }
 
+.sidebar-collapsed .admin-form-page .section-header {
+  left: 70px;
+}
+
 
 
 .admin-form-card {
@@ -121,6 +125,10 @@
   border-top: 1px solid #e0e0e0;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
   z-index: 100;
+}
+
+.sidebar-collapsed .admin-form-page .form-actions {
+  left: 70px;
 }
 
 .submit-btn {
