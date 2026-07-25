@@ -11,9 +11,8 @@ import {
   type Entity,
   type CreateEntityRequest,
   type UpdateEntityRequest,
-  type User,
-  type Roles,
-} from '../api/api';
+} from '../api/api.entities';
+import type { User, Roles } from '../api/api.users';
 
 interface EntityState {
   entities: Entity[];

@@ -17,7 +17,8 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchEntitiesForUser, fetchUserById, ROLES, updateUser, type Entity, type Roles, type UpdateUserDto, type User } from '../../api/api';
+import { fetchUserById, ROLES, updateUser, type Roles, type UpdateUserDto, type User } from '../../api/api.users';
+import { fetchEntitiesForUser, type Entity } from '../../api/api.entities';
 import { useAuth } from '../../contexts/useAuth';
 import { formatDate } from '../../utils/format';
 import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../../utils/user';

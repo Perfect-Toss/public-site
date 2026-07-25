@@ -14,13 +14,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   createMachine,
-  fetchAllTablets,
   fetchMachineById,
   updateMachine,
   type CreateMachineRequest,
-  type Tablet,
   type UpdateMachineRequest,
-} from '../../api/api';
+} from '../../api/api.machines';
+import { fetchAllTablets, type Tablet } from '../../api/api.tablets';
 import { usePageData } from '../../hooks/usePageData';
 
 function MachineFormPage() {

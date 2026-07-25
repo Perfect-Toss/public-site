@@ -24,7 +24,7 @@ import {
   deleteUserById,
   fetchAllUsers,
   type User,
-} from '../../api/api';
+} from '../../api/api.users';
 import { usePageData } from '../../hooks/usePageData';
 import { formatDate } from '../../utils/format';
 import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../../utils/user';

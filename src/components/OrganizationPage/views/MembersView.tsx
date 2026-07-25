@@ -1,11 +1,12 @@
-import { addUserToEntity, fetchAllUsers, fetchEntityUsers, removeUserFromEntity } from '../../../api/api';
+import { addUserToEntity, fetchEntityUsers, removeUserFromEntity } from '../../../api/api.entities';
+import { fetchAllUsers } from '../../../api/api.users';
 import { faPlus, faSpinner, faTrash, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
-import type { User } from '../../../api/api';
+import type { User } from '../../../api/api.users';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 function MembersView() {

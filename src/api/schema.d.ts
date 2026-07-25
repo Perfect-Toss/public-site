@@ -1884,6 +1884,697 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/videoaccess/{videoId}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Bulk-sets video access for users and entities, reconciling the provided
+         *     lists against existing access by adding new entries and removing ones not present.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    videoId: string;
+                };
+                cookie?: never;
+            };
+            /** @description The request containing user and entity access entries. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetVideoAccessRequest"];
+                    "text/json": components["schemas"]["SetVideoAccessRequest"];
+                    "application/*+json": components["schemas"]["SetVideoAccessRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        /** Shares a video with a specific user. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    videoId: string;
+                };
+                cookie?: never;
+            };
+            /** @description The share request containing the user identifier. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ShareVideoRequest"];
+                    "text/json": components["schemas"]["ShareVideoRequest"];
+                    "application/*+json": components["schemas"]["ShareVideoRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videoaccess/{videoId}/access/user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Removes a user's access to a video. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    videoId: string;
+                    /** @description The unique identifier of the user. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videoaccess/{videoId}/access/entity/{entityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Removes an entity's access to a video. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    videoId: string;
+                    /** @description The unique identifier of the entity. */
+                    entityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videoaccess/{videoId}/access/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all user identifiers that have access to a video. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    videoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoUserAccessResultIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["VideoUserAccessResultIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["VideoUserAccessResultIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videoaccess/{videoId}/access/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all entities that have access to a video. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    videoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videoaccess/{videoId}/access/entity-users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets all users who have access to a video through entity-level sharing.
+         *     These users gain Review access via entities they belong to.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    videoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
+                        "application/json": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
+                        "text/json": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all video metadata records with paging. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description The page number (default 1). */
+                    pageNumber?: number;
+                    /** @description The page size (default 10, max 200). */
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoIEnumerablePagedResponse"];
+                        "application/json": components["schemas"]["VideoIEnumerablePagedResponse"];
+                        "text/json": components["schemas"]["VideoIEnumerablePagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new video metadata record. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The video creation request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateVideoRequest"];
+                    "text/json": components["schemas"]["CreateVideoRequest"];
+                    "application/*+json": components["schemas"]["CreateVideoRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoGenericResponse"];
+                        "application/json": components["schemas"]["VideoGenericResponse"];
+                        "text/json": components["schemas"]["VideoGenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a specific video metadata record by its identifier. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoGenericResponse"];
+                        "application/json": components["schemas"]["VideoGenericResponse"];
+                        "text/json": components["schemas"]["VideoGenericResponse"];
+                    };
+                };
+            };
+        };
+        /** Updates an existing video metadata record. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video to update. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The video update request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateVideoRequest"];
+                    "text/json": components["schemas"]["UpdateVideoRequest"];
+                    "application/*+json": components["schemas"]["UpdateVideoRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoGenericResponse"];
+                        "application/json": components["schemas"]["VideoGenericResponse"];
+                        "text/json": components["schemas"]["VideoGenericResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes a video metadata record. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video to delete. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos/entity/{entityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all video metadata records associated with a specific entity. */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description The page number (default 1). */
+                    pageNumber?: number;
+                    /** @description The page size (default 10, max 200). */
+                    pageSize?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the entity. */
+                    entityId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoIEnumerablePagedResponse"];
+                        "application/json": components["schemas"]["VideoIEnumerablePagedResponse"];
+                        "text/json": components["schemas"]["VideoIEnumerablePagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos/{id}/request-upload-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generates a time-limited SAS URL for uploading the video file
+         *     directly to Azure Blob Storage.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SasUrlResponseGenericResponse"];
+                        "application/json": components["schemas"]["SasUrlResponseGenericResponse"];
+                        "text/json": components["schemas"]["SasUrlResponseGenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos/{id}/request-download-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generates a time-limited SAS URL for reading (downloading) the video file
+         *     from Azure Blob Storage.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SasUrlResponseGenericResponse"];
+                        "application/json": components["schemas"]["SasUrlResponseGenericResponse"];
+                        "text/json": components["schemas"]["SasUrlResponseGenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos/{id}/upload-complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirms that the video file has been uploaded to Azure Blob Storage
+         *     and updates the upload status to Uploaded.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos/{id}/owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Transfers video ownership to another user. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The transfer request containing the new owner identifier. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TransferOwnershipRequest"];
+                    "text/json": components["schemas"]["TransferOwnershipRequest"];
+                    "application/*+json": components["schemas"]["TransferOwnershipRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["GenericResponse"];
+                        "application/json": components["schemas"]["GenericResponse"];
+                        "text/json": components["schemas"]["GenericResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2023,6 +2714,41 @@ export interface components {
             /** @description Gets or sets the roles assigned to the user. */
             roles?: components["schemas"]["Roles"][] | null;
         };
+        /** @description Request model for creating a new video metadata record. */
+        CreateVideoRequest: {
+            /**
+             * Format: uuid
+             * @description Gets the owner user identifier.
+             */
+            ownerId: string;
+            /** @description Gets the label or title of the video. */
+            label: string | null;
+            /**
+             * Format: byte
+             * @description Gets the optional thumbnail image data.
+             */
+            thumbnail?: string | null;
+            /**
+             * Format: date-time
+             * @description Gets the timestamp of the video.
+             */
+            timestamp: string;
+            /**
+             * Format: int32
+             * @description Gets the length of the video in seconds.
+             */
+            lengthInSeconds: number;
+            /**
+             * Format: double
+             * @description Gets the aspect ratio of the video.
+             */
+            aspectRatio: number;
+            deviceOrientation: components["schemas"]["DeviceOrientation"];
+            /** @description Gets the optional list of associated entity identifiers. */
+            associatedEntityIds?: string[] | null;
+            /** @description Gets the optional list of tag identifiers. */
+            tagIds?: string[] | null;
+        };
         DateTimeOffsetNullableGenericResponse: {
             succeeded?: boolean;
             message?: string | null;
@@ -2030,6 +2756,8 @@ export interface components {
             /** Format: date-time */
             data?: string | null;
         };
+        /** @enum {string} */
+        DeviceOrientation: "Unknown" | "Portrait" | "Landscape" | "PortraitUpsideDown" | "LandscapeLeft" | "LandscapeRight";
         Entity: {
             /** Format: uuid */
             id: string;
@@ -2051,6 +2779,14 @@ export interface components {
             entityType?: string | null;
             /** Format: uuid */
             parentEntityId?: string | null;
+        };
+        /** @description Represents an entity access entry. Entity access defaults to Review level. */
+        EntityAccessEntry: {
+            /**
+             * Format: uuid
+             * @description Gets the entity identifier.
+             */
+            entityId: string;
         };
         EntityGenericResponse: {
             succeeded?: boolean;
@@ -2291,7 +3027,52 @@ export interface components {
             data?: components["schemas"]["MetaResponse"];
         };
         /** @enum {string} */
+        ReviewStatus: "Unknown" | "ReviewRequested" | "Reviewed";
+        /** @enum {string} */
         Roles: "Athlete" | "Coach" | "EntityAdmin" | "OrganizationAdmin" | "Admin" | "ServiceAccount" | "AlphaTester" | "BetaTester" | "SuperUser";
+        /**
+         * @description Response containing a SAS URL for direct access to Azure Blob Storage.
+         *     Used for both upload and download operations.
+         */
+        SasUrlResponse: {
+            /**
+             * @description A time-limited SAS URL the client can use to access
+             *     the video file directly in Azure Blob Storage.
+             *     Expires in 5 minutes.
+             */
+            sasUrl: string | null;
+        };
+        SasUrlResponseGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["SasUrlResponse"];
+        };
+        /**
+         * @description Request model for bulk-setting video access for users and entities.
+         *     Reconciles the provided lists against existing access, adding new entries
+         *     and removing entries not in the lists.
+         */
+        SetVideoAccessRequest: {
+            /** @description Gets the list of user access entries to set. */
+            users?: components["schemas"]["UserAccessEntry"][] | null;
+            /** @description Gets the list of entity access entries to set. */
+            entities?: components["schemas"]["EntityAccessEntry"][] | null;
+        };
+        /** @description Request model for sharing a video with a user or entity. */
+        ShareVideoRequest: {
+            /**
+             * Format: uuid
+             * @description Gets the optional user identifier to share the video with.
+             */
+            userId?: string | null;
+            /**
+             * Format: uuid
+             * @description Gets the optional entity identifier to share the video with.
+             */
+            entityId?: string | null;
+            accessLevel?: components["schemas"]["VideoAccessLevel"];
+        };
         StringGenericResponse: {
             succeeded?: boolean;
             message?: string | null;
@@ -2379,6 +3160,34 @@ export interface components {
             message?: string | null;
             errors?: string[] | null;
             data?: components["schemas"]["TabletType"][] | null;
+        };
+        Tag: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            name: string | null;
+            colorHex?: string | null;
+            isGlobal?: boolean;
+        };
+        /** @description Request model for transferring video ownership to another user. */
+        TransferOwnershipRequest: {
+            /**
+             * Format: uuid
+             * @description Gets the new owner user identifier.
+             */
+            newOwnerId: string;
         };
         /** @description Request model for updating an existing entity. */
         UpdateEntityRequest: {
@@ -2530,6 +3339,38 @@ export interface components {
             /** @description Gets or sets the roles assigned to the user. */
             roles?: components["schemas"]["Roles"][] | null;
         };
+        /** @description Request model for updating an existing video metadata record. */
+        UpdateVideoRequest: {
+            /** @description Gets the label or title of the video. */
+            label: string | null;
+            /**
+             * Format: byte
+             * @description Gets the optional thumbnail image data.
+             */
+            thumbnail?: string | null;
+            /**
+             * Format: date-time
+             * @description Gets the timestamp of the video.
+             */
+            timestamp: string;
+            /**
+             * Format: int32
+             * @description Gets the length of the video in seconds.
+             */
+            lengthInSeconds: number;
+            /**
+             * Format: double
+             * @description Gets the aspect ratio of the video.
+             */
+            aspectRatio: number;
+            deviceOrientation: components["schemas"]["DeviceOrientation"];
+            /** @description Gets the optional list of associated entity identifiers. */
+            associatedEntityIds?: string[] | null;
+            /** @description Gets the optional list of tag identifiers. */
+            tagIds?: string[] | null;
+        };
+        /** @enum {string} */
+        UploadStatus: "Unknown" | "NotUploaded" | "Pending" | "Uploaded" | "Deleted";
         User: {
             /** Format: uuid */
             id: string;
@@ -2562,6 +3403,15 @@ export interface components {
             isEmailVerified?: boolean;
             roles?: components["schemas"]["Roles"][] | null;
         };
+        /** @description Represents a user access entry with an access level. */
+        UserAccessEntry: {
+            /**
+             * Format: uuid
+             * @description Gets the user identifier.
+             */
+            userId: string;
+            accessLevel: components["schemas"]["VideoAccessLevel"];
+        };
         UserGenericResponse: {
             succeeded?: boolean;
             message?: string | null;
@@ -2573,6 +3423,86 @@ export interface components {
             message?: string | null;
             errors?: string[] | null;
             data?: components["schemas"]["User"][] | null;
+        };
+        Video: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            /** Format: uuid */
+            ownerId?: string;
+            owner?: components["schemas"]["User"];
+            associatedEntities?: components["schemas"]["Entity"][] | null;
+            tags?: components["schemas"]["Tag"][] | null;
+            label?: string | null;
+            /** Format: byte */
+            thumbnail?: string | null;
+            /** Format: date-time */
+            timestamp?: string;
+            /** Format: int32 */
+            lengthInSeconds?: number;
+            /** Format: double */
+            aspectRatio?: number | null;
+            deviceOrientation?: components["schemas"]["DeviceOrientation"];
+            uploadStatus?: components["schemas"]["UploadStatus"];
+            reviewStatus?: components["schemas"]["ReviewStatus"];
+            blobPath?: string | null;
+            /** Format: date-time */
+            uploadTokenIssuedAt?: string | null;
+            /** Format: date-time */
+            uploadTokenExpiresAt?: string | null;
+        };
+        /** @enum {string} */
+        VideoAccessLevel: "ReadOnly" | "Review" | "Edit";
+        VideoEntityAccessResult: {
+            entity: components["schemas"]["Entity"];
+            accessLevel: components["schemas"]["VideoAccessLevel"];
+            users?: components["schemas"]["VideoUserAccessResult"][] | null;
+        };
+        VideoEntityAccessResultIEnumerableGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["VideoEntityAccessResult"][] | null;
+        };
+        VideoGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["Video"];
+        };
+        VideoIEnumerablePagedResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["Video"][] | null;
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        VideoUserAccessResult: {
+            user: components["schemas"]["User"];
+            accessLevel: components["schemas"]["VideoAccessLevel"];
+        };
+        VideoUserAccessResultIEnumerableGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["VideoUserAccessResult"][] | null;
         };
     };
     responses: never;

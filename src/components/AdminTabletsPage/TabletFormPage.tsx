@@ -14,15 +14,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   createTablet,
-  fetchAllTabletTypes,
-  fetchServiceAccounts,
   fetchTabletById,
   updateTablet,
   type CreateTabletRequest,
-  type TabletType,
   type UpdateTabletRequest,
-  type User,
-} from '../../api/api';
+} from '../../api/api.tablets';
+import { fetchAllTabletTypes, type TabletType } from '../../api/api.tabletTypes';
+import { fetchServiceAccounts, type User } from '../../api/api.users';
 
 function TabletFormPage() {
   const { id } = useParams<{ id: string }>();

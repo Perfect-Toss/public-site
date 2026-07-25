@@ -10,7 +10,7 @@ import {
   type User,
   type CreateUserDto,
   type UpdateUserDto,
-} from '../api/api';
+} from '../api/api.users';
 
 interface UserState {
   // Users

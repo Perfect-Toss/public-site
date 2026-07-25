@@ -13,7 +13,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Tablet } from '../../api/api';
+import type { Tablet } from '../../api/api.tablets';
 import { formatDate } from '../../utils/format';
 import { useNavigate } from 'react-router-dom';
 import { useTabletStore } from '../../stores/tabletStore';

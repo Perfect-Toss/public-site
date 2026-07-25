@@ -13,8 +13,7 @@ import { NavLink, Outlet, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Entity } from '../../api/api';
-import { fetchEntityById } from '../../api/api';
+import { fetchEntityById, type Entity } from '../../api/api.entities';
 import { useNavigate } from 'react-router-dom';
 
 // TODO: Replace with real role check from AuthContext / current user API

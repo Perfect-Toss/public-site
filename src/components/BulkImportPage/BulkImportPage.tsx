@@ -1,12 +1,12 @@
 import '../../styles/page.css';
 import '../AdminUsersPage/AdminUsersPage.css';
 
-import { createAthletes, createCoaches, fetchAllUsers } from '../../api/api';
+import { createAthletes, createCoaches, fetchAllUsers } from '../../api/api.users';
 import { faCheckCircle, faChevronLeft, faFileImport, faSpinner, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { User } from '../../api/api';
+import type { User } from '../../api/api.users';
 import { useNavigate } from 'react-router-dom';
 import { usePageData } from '../../hooks/usePageData';
 
