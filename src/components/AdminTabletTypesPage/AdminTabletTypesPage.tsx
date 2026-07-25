@@ -18,7 +18,7 @@ import {
   deleteTabletType,
   fetchAllTabletTypes,
   type TabletType,
-} from '../../api/api';
+} from '../../api/api.tabletTypes';
 import { usePageData } from '../../hooks/usePageData';
 import { formatDate } from '../../utils/format';
 

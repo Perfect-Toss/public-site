@@ -20,7 +20,7 @@ import {
   deleteMachine,
   fetchAllMachines,
   type Machine,
-} from '../../api/api';
+} from '../../api/api.machines';
 import { usePageData } from '../../hooks/usePageData';
 import { formatDate } from '../../utils/format';
 

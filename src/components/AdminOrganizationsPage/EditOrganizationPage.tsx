@@ -18,7 +18,7 @@ import {
   fetchAllEntities,
   fetchEntityById,
   updateEntity,
-} from '../../api/api';
+} from '../../api/api.entities';
 import { usePageData } from '../../hooks/usePageData';
 
 function EditOrganizationPage() {

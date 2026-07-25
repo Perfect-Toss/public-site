@@ -6,7 +6,7 @@ import { faBuilding, faPlus, faSearch, faSpinner } from '@fortawesome/free-solid
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchEntities, type Entity } from '../../api/api';
+import { fetchEntities, type Entity } from '../../api/api.entities';
 import { usePageData } from '../../hooks/usePageData';
 
 function OrganizationsPage() {

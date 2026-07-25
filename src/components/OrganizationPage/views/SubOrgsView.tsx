@@ -1,9 +1,9 @@
-import { createEntity, fetchChildEntities } from '../../../api/api';
+import { createEntity, fetchChildEntities } from '../../../api/api.entities';
 import { faBuilding, faPlus, faSitemap, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
-import type { Entity } from '../../../api/api';
+import type { Entity } from '../../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
 

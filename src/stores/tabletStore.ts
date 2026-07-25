@@ -5,18 +5,20 @@ import {
   createTablet,
   updateTablet,
   deleteTablet,
+  type Tablet,
+  type CreateTabletRequest,
+  type UpdateTabletRequest,
+} from '../api/api.tablets';
+import {
   fetchAllTabletTypes,
   fetchTabletTypeById,
   createTabletType,
   updateTabletType,
   deleteTabletType,
-  type Tablet,
-  type CreateTabletRequest,
-  type UpdateTabletRequest,
   type TabletType,
   type CreateTabletTypeRequest,
   type UpdateTabletTypeRequest,
-} from '../api/api';
+} from '../api/api.tabletTypes';
 
 interface TabletState {
   // Tablets

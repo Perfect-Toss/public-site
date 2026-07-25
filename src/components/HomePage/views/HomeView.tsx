@@ -3,9 +3,8 @@ import '../../../styles/page.css';
 import { faCircle, faPlay } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
 
-import type { Entity } from '../../../api/api';
+import { fetchEntities, type Entity } from '../../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { fetchEntities } from '../../../api/api';
 
 export interface PendingReview {
   id: string;

@@ -2,8 +2,7 @@ import { faEdit, faInfoCircle, faSave, faTimes } from '@fortawesome/free-solid-s
 import { useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Entity, UpdateEntityRequest } from '../../../api/api';
-import { updateEntity } from '../../../api/api';
+import { updateEntity, type Entity, type UpdateEntityRequest } from '../../../api/api.entities';
 import { useOutletContext } from 'react-router-dom';
 import type { OrganizationPageContext } from '../OrganizationPage';
 

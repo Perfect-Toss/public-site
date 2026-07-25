@@ -6,9 +6,8 @@ import { useCallback, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
-import { createUser, fetchAllUsers, type CreateUserDto } from '../../api/api';
+import { createUser, fetchAllUsers, type CreateUserDto, type User } from '../../api/api.users';
 import { usePageData } from '../../hooks/usePageData';
-import type { User } from '../../api/api';
 
 function AddUserPage() {
   const navigate = useNavigate();

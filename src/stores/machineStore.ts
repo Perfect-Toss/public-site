@@ -8,7 +8,7 @@ import {
   type Machine,
   type CreateMachineRequest,
   type UpdateMachineRequest,
-} from '../api/api';
+} from '../api/api.machines';
 
 interface MachineState {
   machines: Machine[];

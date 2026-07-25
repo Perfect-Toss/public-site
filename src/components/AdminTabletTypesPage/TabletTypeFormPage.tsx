@@ -18,7 +18,7 @@ import {
   updateTabletType,
   type CreateTabletTypeRequest,
   type UpdateTabletTypeRequest,
-} from '../../api/api';
+} from '../../api/api.tabletTypes';
 
 function TabletTypeFormPage() {
   const { id } = useParams<{ id: string }>();
