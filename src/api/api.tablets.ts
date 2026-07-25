@@ -1,6 +1,7 @@
 /**
  * Tablets API functions
  */
+
 import { api } from './index';
 import type { components } from './schema';
 

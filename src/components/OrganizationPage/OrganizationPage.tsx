@@ -1,6 +1,7 @@
 import '../../styles/page.css';
 import './OrganizationPage.css';
 
+import { NavLink, Outlet, useParams } from 'react-router-dom';
 import {
   faBuildingUser,
   faChevronLeft,
@@ -9,11 +10,11 @@ import {
   faSpinner,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
-import { NavLink, Outlet, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
+import type { Entity } from '../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { fetchEntityById, type Entity } from '../../api/api.entities';
+import { useEntityStore } from '../../stores/entityStore';
 import { useNavigate } from 'react-router-dom';
 
 // TODO: Replace with real role check from AuthContext / current user API
@@ -36,11 +37,13 @@ function OrganizationPage() {
   // TODO: Replace with real role check
   const isAdmin = MOCK_IS_ADMIN;
 
+  const { loadEntityById } = useEntityStore();
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     setError(null);
-    fetchEntityById(id)
+    loadEntityById(id)
       .then((entity) => {
         setOrganization(entity);
       })
@@ -48,7 +51,7 @@ function OrganizationPage() {
         setError('Failed to load organization. Please try again.');
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, loadEntityById]);
 
   const handleUpdated = (updated: Entity) => {
     setOrganization(updated);

@@ -15,19 +15,14 @@ import {
   faTrash,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
+import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../../utils/user';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  ROLES,
-  deleteUserById,
-  fetchAllUsers,
-  type User,
-} from '../../api/api.users';
-import { usePageData } from '../../hooks/usePageData';
+import type { User } from '../../api/api.users';
 import { formatDate } from '../../utils/format';
-import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../../utils/user';
+import { useNavigate } from 'react-router-dom';
+import { useUserStore } from '../../stores/userStore';
 
 /* ─── Component ───────────────────────────────────────────────────── */
 
@@ -38,14 +33,14 @@ function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState<string[]>([]);
   const [roleFilterOpen, setRoleFilterOpen] = useState(false);
   const navigate = useNavigate();
-  const { data: users, loading, error, load } = usePageData<User[]>([]);
+  const { users, usersLoading: loading, usersError: error, loadUsers, deleteUser } = useUserStore();
 
   /** All roles defined in the API schema */
-  const allRoles = ROLES;
+  const allRoles = ['Athlete','Coach','EntityAdmin','OrganizationAdmin','Admin','ServiceAccount','AlphaTester','BetaTester','SuperUser'] as const;
 
   useEffect(() => {
-    load(fetchAllUsers);
-  }, [load]);
+    loadUsers();
+  }, [loadUsers]);
 
   /** Returns a numeric value for sorting by status */
   function statusValue(user: User): number {
@@ -118,17 +113,15 @@ function AdminUsersPage() {
     if (!deleteConfirm) return;
     setDeleteSubmitting(true);
     try {
-      const result = await deleteUserById(deleteConfirm.id);
-      if (result) {
-        setDeleteConfirm(null);
-        load(fetchAllUsers);
-      }
+      await deleteUser(deleteConfirm.id);
+      setDeleteConfirm(null);
     } catch (err) {
       console.error('Failed to delete user:', err);
+      setDeleteConfirm(null);
     } finally {
       setDeleteSubmitting(false);
     }
-  }, [deleteConfirm, load]);
+  }, [deleteConfirm, deleteUser]);
 
   /* ─── Render Helpers ───────────────────────────────────────── */
 
@@ -262,7 +255,7 @@ function AdminUsersPage() {
                               </button>
                             </div>
                           )}
-                          {allRoles.length === 0 && (
+                          {allRoles.length < 1 && (
                             <div className="roles-filter-empty">No roles available</div>
                           )}
                         </div>

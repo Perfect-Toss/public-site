@@ -2,30 +2,27 @@ import '../../styles/page.css';
 import '../../styles/admin-form.css';
 import './AdminMachinesPage.css';
 
+import type { CreateMachineRequest, UpdateMachineRequest } from '../../api/api.machines';
 import {
   faArrowLeft,
-  faSpinner,
   faCheck,
+  faSpinner,
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  createMachine,
-  fetchMachineById,
-  updateMachine,
-  type CreateMachineRequest,
-  type UpdateMachineRequest,
-} from '../../api/api.machines';
-import { fetchAllTablets, type Tablet } from '../../api/api.tablets';
-import { usePageData } from '../../hooks/usePageData';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useMachineStore } from '../../stores/machineStore';
+import { useTabletStore } from '../../stores/tabletStore';
 
 function MachineFormPage() {
   const { id } = useParams<{ id: string }>();
   const isEditing = Boolean(id);
   const navigate = useNavigate();
+
+  const { createMachine, updateMachine, loadMachineById } = useMachineStore();
+  const { tablets, loadTablets } = useTabletStore();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -41,17 +38,15 @@ function MachineFormPage() {
   const [result, setResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loadingEntity, setLoadingEntity] = useState(false);
 
-  const { data: tablets, load: loadTablets } = usePageData<Tablet[]>([]);
-
   useEffect(() => {
-    loadTablets(fetchAllTablets);
+    loadTablets();
   }, [loadTablets]);
 
   // Load machine data for editing
   useEffect(() => {
     if (id) {
       setLoadingEntity(true);
-      fetchMachineById(id)
+      loadMachineById(id)
         .then((machine) => {
           if (machine) {
             setFormData({
@@ -71,7 +66,7 @@ function MachineFormPage() {
         })
         .finally(() => setLoadingEntity(false));
     }
-  }, [id]);
+  }, [id, loadMachineById]);
 
   const handleSubmit = useCallback(async () => {
     if (!formData.name.trim() || !formData.machineId.trim()) return;
@@ -114,7 +109,7 @@ function MachineFormPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [formData, isEditing, id, navigate]);
+  }, [formData, isEditing, id, navigate, createMachine, updateMachine]);
 
   if (loadingEntity) {
     return (

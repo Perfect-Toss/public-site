@@ -2,25 +2,19 @@ import '../../styles/page.css';
 import '../../styles/admin-form.css';
 import './AdminTabletsPage.css';
 
+import type { CreateTabletRequest, UpdateTabletRequest } from '../../api/api.tablets';
 import {
   faArrowLeft,
-  faSpinner,
   faCheck,
+  faSpinner,
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  createTablet,
-  fetchTabletById,
-  updateTablet,
-  type CreateTabletRequest,
-  type UpdateTabletRequest,
-} from '../../api/api.tablets';
-import { fetchAllTabletTypes, type TabletType } from '../../api/api.tabletTypes';
-import { fetchServiceAccounts, type User } from '../../api/api.users';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useTabletStore } from '../../stores/tabletStore';
+import { useUserStore } from '../../stores/userStore';
 
 function TabletFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -41,30 +35,19 @@ function TabletFormPage() {
   const [result, setResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loadingEntity, setLoadingEntity] = useState(false);
 
-  const [serviceAccounts, setServiceAccounts] = useState<User[]>([]);
-  const [serviceAccountsLoading, setServiceAccountsLoading] = useState(false);
-  const [tabletTypes, setTabletTypes] = useState<TabletType[]>([]);
-  const [tabletTypesLoading, setTabletTypesLoading] = useState(false);
+  const { tabletTypes, tabletTypesLoading, loadTabletTypes, loadTabletById, createTablet, updateTablet } = useTabletStore();
+  const { serviceAccounts, serviceAccountsLoading, loadServiceAccounts } = useUserStore();
 
   useEffect(() => {
-    setServiceAccountsLoading(true);
-    fetchServiceAccounts()
-      .then(setServiceAccounts)
-      .catch(() => setServiceAccounts([]))
-      .finally(() => setServiceAccountsLoading(false));
-
-    setTabletTypesLoading(true);
-    fetchAllTabletTypes()
-      .then(setTabletTypes)
-      .catch(() => setTabletTypes([]))
-      .finally(() => setTabletTypesLoading(false));
-  }, []);
+    loadTabletTypes();
+    loadServiceAccounts();
+  }, [loadTabletTypes, loadServiceAccounts]);
 
   // Load tablet data for editing
   useEffect(() => {
     if (id) {
       setLoadingEntity(true);
-      fetchTabletById(id)
+      loadTabletById(id)
         .then((tablet) => {
           if (tablet) {
             setFormData({
@@ -84,7 +67,7 @@ function TabletFormPage() {
         })
         .finally(() => setLoadingEntity(false));
     }
-  }, [id]);
+  }, [id, loadTabletById]);
 
   const handleSubmit = useCallback(async () => {
     if (!formData.name.trim()) return;
@@ -129,7 +112,7 @@ function TabletFormPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [formData, isEditing, id, navigate]);
+  }, [formData, isEditing, id, navigate, createTablet, updateTablet]);
 
   if (loadingEntity) {
     return (

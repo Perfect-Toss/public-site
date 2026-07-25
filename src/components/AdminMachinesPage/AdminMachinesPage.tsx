@@ -12,17 +12,13 @@ import {
   faSpinner,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  deleteMachine,
-  fetchAllMachines,
-  type Machine,
-} from '../../api/api.machines';
-import { usePageData } from '../../hooks/usePageData';
+import type { Machine } from '../../api/api.machines';
 import { formatDate } from '../../utils/format';
+import { useMachineStore } from '../../stores/machineStore';
+import { useNavigate } from 'react-router-dom';
 
 /* ─── Helpers ─────────────────────────────────────────────────────── */
 
@@ -50,14 +46,14 @@ function AdminMachinesPage() {
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDir>('asc');
 
-  const { data: machines, loading, error, load } = usePageData<Machine[]>([]);
+  const { machines, loading, error, loadMachines, deleteMachine } = useMachineStore();
 
   // ── Delete confirm state ────────────────────────────────────────
-  const [deleteTarget, setDeleteTarget] = useState<Machine | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<import('../../api/api.machines').Machine | null>(null);
 
   useEffect(() => {
-    load(fetchAllMachines);
-  }, [load]);
+    loadMachines();
+  }, [loadMachines]);
 
   /* ─── Sorting & Filtering ─────────────────────────────────────── */
 
@@ -123,12 +119,11 @@ function AdminMachinesPage() {
     try {
       await deleteMachine(deleteTarget.id);
       setDeleteTarget(null);
-      load(fetchAllMachines);
     } catch (err) {
       console.error('Failed to delete machine:', err);
       setDeleteTarget(null);
     }
-  }, [deleteTarget, load]);
+  }, [deleteTarget, deleteMachine]);
 
   /* ─── Render ──────────────────────────────────────────────────── */
 

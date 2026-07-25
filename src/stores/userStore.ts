@@ -7,9 +7,13 @@ import {
   deleteUserById,
   fetchServiceAccounts,
   createServiceAccount,
+  createAthletes,
+  createCoaches,
   type User,
   type CreateUserDto,
   type UpdateUserDto,
+  type CreateAthletesDto,
+  type CreateCoachesDto,
 } from '../api/api.users';
 
 interface UserState {
@@ -32,6 +36,10 @@ interface UserState {
 
   loadServiceAccounts: () => Promise<void>;
   createServiceAccount: (data: CreateUserDto) => Promise<User | null>;
+
+  // Batch creation
+  createAthletes: (data: CreateAthletesDto) => Promise<User[]>;
+  createCoaches: (data: CreateCoachesDto) => Promise<User[]>;
 
   // Convenience lookups
   getServiceAccountName: (id: string | null | undefined) => string | undefined;
@@ -115,6 +123,22 @@ export const useUserStore = create<UserState>((set, get) => ({
       return result?.data ?? null;
     } catch {
       return null;
+    }
+  },
+
+  createAthletes: async (data) => {
+    try {
+      return await createAthletes(data);
+    } catch {
+      return [];
+    }
+  },
+
+  createCoaches: async (data) => {
+    try {
+      return await createCoaches(data);
+    } catch {
+      return [];
     }
   },
 

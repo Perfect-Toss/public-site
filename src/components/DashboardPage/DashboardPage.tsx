@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import type { EventLogUserSummary } from '../../api/api.eventLogs';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { fetchEventLogSummary } from '../../api/api.eventLogs';
+import { useEventLogStore } from '../../stores/eventLogStore';
 
 const MONTH_NAMES = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -29,27 +29,11 @@ function getDisplayName(row: EventLogUserSummary): string {
 }
 
 function DashboardPage() {
-  const [summaryData, setSummaryData] = useState<EventLogUserSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { summary: summaryData, summaryLoading: loading, summaryError: error, loadSummary } = useEventLogStore();
 
   useEffect(() => {
     loadSummary();
-  }, []);
-
-  async function loadSummary() {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchEventLogSummary();
-      setSummaryData(data);
-    } catch (err) {
-      console.error('Failed to load event log summary:', err);
-      setError('Failed to load dashboard data. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [loadSummary]);
 
   const allMonths = useMemo(() => {
     const monthSet = new Set<string>();

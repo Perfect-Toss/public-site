@@ -1,9 +1,10 @@
-import { deleteEntity, updateEntity, type Entity, type UpdateEntityRequest } from '../../../api/api.entities';
 import { faEdit, faSave, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
+import type { UpdateEntityRequest } from '../../../api/api.entities';
+import { useEntityStore } from '../../../stores/entityStore';
 import { useState } from 'react';
 
 function SettingsView() {
@@ -13,6 +14,8 @@ function SettingsView() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const { updateEntity, deleteEntity } = useEntityStore();
 
   const [form, setForm] = useState<UpdateEntityRequest>({
     name: organization.name ?? '',
@@ -33,8 +36,8 @@ function SettingsView() {
     setSaving(true);
     setSaveError(null);
     try {
-      const updated = await updateEntity(organization.id, form);
-      if (updated) onUpdated(updated as Entity);
+      await updateEntity(organization.id, form);
+      onUpdated({ ...organization, ...form });
       setEditing(false);
     } catch {
       setSaveError('Failed to save. Please try again.');

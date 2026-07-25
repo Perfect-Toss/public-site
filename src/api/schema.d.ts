@@ -2722,7 +2722,7 @@ export interface components {
              */
             ownerId: string;
             /** @description Gets the label or title of the video. */
-            label: string | null;
+            label?: string | null;
             /**
              * Format: byte
              * @description Gets the optional thumbnail image data.
@@ -2742,7 +2742,7 @@ export interface components {
              * Format: double
              * @description Gets the aspect ratio of the video.
              */
-            aspectRatio: number;
+            aspectRatio?: number | null;
             deviceOrientation: components["schemas"]["DeviceOrientation"];
             /** @description Gets the optional list of associated entity identifiers. */
             associatedEntityIds?: string[] | null;
@@ -3342,7 +3342,7 @@ export interface components {
         /** @description Request model for updating an existing video metadata record. */
         UpdateVideoRequest: {
             /** @description Gets the label or title of the video. */
-            label: string | null;
+            label?: string | null;
             /**
              * Format: byte
              * @description Gets the optional thumbnail image data.
@@ -3362,7 +3362,7 @@ export interface components {
              * Format: double
              * @description Gets the aspect ratio of the video.
              */
-            aspectRatio: number;
+            aspectRatio?: number | null;
             deviceOrientation: components["schemas"]["DeviceOrientation"];
             /** @description Gets the optional list of associated entity identifiers. */
             associatedEntityIds?: string[] | null;

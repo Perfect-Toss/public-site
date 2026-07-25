@@ -8,29 +8,24 @@ import {
   faSpinner,
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState } from 'react';
+
+import type { CreateEntityRequest } from '../../api/api.entities';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useEntityStore } from '../../stores/entityStore';
 import { useNavigate } from 'react-router-dom';
-import {
-  type CreateEntityRequest,
-  type Entity,
-  createEntity,
-  fetchAllEntities,
-} from '../../api/api.entities';
-import { usePageData } from '../../hooks/usePageData';
 
 function AdminAddOrganizationPage() {
   const navigate = useNavigate();
-  const { data: organizations, load } = usePageData<Entity[]>([]);
+  const { entities: organizations, loadEntities, createEntity } = useEntityStore();
 
   const [form, setForm] = useState({ name: '', description: '', entityType: '', parentEntityId: '' });
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
-    load(fetchAllEntities);
-  }, [load]);
+    loadEntities();
+  }, [loadEntities]);
 
   const handleSubmit = useCallback(async () => {
     if (!form.name.trim()) return;
@@ -50,7 +45,7 @@ function AdminAddOrganizationPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [form, navigate]);
+  }, [form, navigate, createEntity]);
 
   return (
     <div className="admin-add-org-page">

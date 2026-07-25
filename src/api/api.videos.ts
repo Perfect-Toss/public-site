@@ -3,6 +3,7 @@
  * 
  * These endpoints are new additions from the updated OpenAPI schema.
  */
+
 import { api } from './index';
 import type { components } from './schema';
 

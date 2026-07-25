@@ -2,23 +2,18 @@ import '../../styles/page.css';
 import '../../styles/admin-form.css';
 import './AdminTabletTypesPage.css';
 
+import type { CreateTabletTypeRequest, UpdateTabletTypeRequest } from '../../api/api.tabletTypes';
 import {
   faArrowLeft,
-  faSpinner,
   faCheck,
+  faSpinner,
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  createTabletType,
-  fetchTabletTypeById,
-  updateTabletType,
-  type CreateTabletTypeRequest,
-  type UpdateTabletTypeRequest,
-} from '../../api/api.tabletTypes';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useTabletStore } from '../../stores/tabletStore';
 
 function TabletTypeFormPage() {
   const { id } = useParams<{ id: string }>();
@@ -36,11 +31,13 @@ function TabletTypeFormPage() {
   const [result, setResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loadingEntity, setLoadingEntity] = useState(false);
 
+  const { loadTabletTypeById, createTabletType, updateTabletType } = useTabletStore();
+
   // Load tablet type data for editing
   useEffect(() => {
     if (id) {
       setLoadingEntity(true);
-      fetchTabletTypeById(id)
+      loadTabletTypeById(id)
         .then((type) => {
           if (type) {
             setFormData({
@@ -57,7 +54,7 @@ function TabletTypeFormPage() {
         })
         .finally(() => setLoadingEntity(false));
     }
-  }, [id]);
+  }, [id, loadTabletTypeById]);
 
   const handleSubmit = useCallback(async () => {
     if (!formData.model.trim()) return;
@@ -98,7 +95,7 @@ function TabletTypeFormPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [formData, isEditing, id, navigate]);
+  }, [formData, isEditing, id, navigate, createTabletType, updateTabletType]);
 
   if (loadingEntity) {
     return (
