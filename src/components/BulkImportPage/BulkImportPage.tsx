@@ -1,14 +1,12 @@
 import '../../styles/page.css';
 import '../AdminUsersPage/AdminUsersPage.css';
 
-import { createAthletes, createCoaches, fetchAllUsers } from '../../api/api.users';
 import { faCheckCircle, faChevronLeft, faFileImport, faSpinner, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { User } from '../../api/api.users';
 import { useNavigate } from 'react-router-dom';
-import { usePageData } from '../../hooks/usePageData';
+import { useUserStore } from '../../stores/userStore';
 
 /* ─── Bulk CSV Parser ─────────────────────────────────────────────── */
 
@@ -51,7 +49,7 @@ function parseCsvUsers(raw: string): { firstName?: string; lastName?: string; em
 
 function BulkImportPage() {
   const navigate = useNavigate();
-  const { load } = usePageData<User[]>([]);
+  const { createAthletes, createCoaches, loadUsers } = useUserStore();
 
   const [bulkType, setBulkType] = useState<'athletes' | 'coaches'>('athletes');
   const [bulkCsv, setBulkCsv] = useState('');
@@ -81,13 +79,13 @@ function BulkImportPage() {
         message: `Successfully imported ${parsed.length} ${bulkType}.`,
       });
       setBulkCsv('');
-      load(fetchAllUsers);
+      loadUsers();
     } catch (err) {
       setBulkResult({ type: 'error', message: err instanceof Error ? err.message : 'Bulk import failed.' });
     } finally {
       setBulkSubmitting(false);
     }
-  }, [bulkCsv, bulkType, load]);
+  }, [bulkCsv, bulkType, createAthletes, createCoaches, loadUsers]);
 
   return (
     <div className="admin-users-page">

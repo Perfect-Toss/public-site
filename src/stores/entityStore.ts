@@ -5,6 +5,8 @@ import {
   createEntity,
   updateEntity,
   deleteEntity,
+  fetchChildEntities,
+  fetchEntitiesForUser,
   fetchEntityUsers,
   addUserToEntity,
   removeUserFromEntity,
@@ -14,17 +16,34 @@ import {
 } from '../api/api.entities';
 import type { User, Roles } from '../api/api.users';
 
+/** Rebuild a hierarchy map from a flat entity list. */
+function buildEntityMap(flat: Entity[]): Record<string, Entity[]> {
+  const map: Record<string, Entity[]> = { root: [] };
+  for (const entity of flat) {
+    const key = entity.parentEntityId ?? 'root';
+    if (!map[key]) map[key] = [];
+    map[key].push(entity);
+  }
+  return map;
+}
+
 interface EntityState {
+  /** Flat list of all entities (e.g. for dropdowns). */
   entities: Entity[];
+  /** Entities keyed by parent ID. `'root'` = entities without a parent. */
+  entityMap: Record<string, Entity[]>;
   loading: boolean;
   error: string | null;
   entityUsers: Record<string, User[]>;
 
+  /** Fetch all entities and build the hierarchy map. */
   loadEntities: () => Promise<void>;
   loadEntityById: (id: string) => Promise<Entity | null>;
   createEntity: (data: CreateEntityRequest) => Promise<Entity | null>;
   updateEntity: (id: string, data: UpdateEntityRequest) => Promise<void>;
   deleteEntity: (id: string) => Promise<void>;
+  loadChildEntities: (parentId: string) => Promise<Entity[]>;
+  loadEntitiesForUser: (userId: string) => Promise<Entity[]>;
   loadEntityUsers: (entityId: string) => Promise<void>;
   addUserToEntity: (entityId: string, userId: string, roles: { roles: Roles[] | null }) => Promise<boolean>;
   removeUserFromEntity: (entityId: string, userId: string) => Promise<boolean>;
@@ -32,6 +51,7 @@ interface EntityState {
 
 export const useEntityStore = create<EntityState>((set, get) => ({
   entities: [],
+  entityMap: {},
   loading: false,
   error: null,
   entityUsers: {},
@@ -40,7 +60,7 @@ export const useEntityStore = create<EntityState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const data = await fetchAllEntities();
-      set({ entities: data, loading: false });
+      set({ entities: data, entityMap: buildEntityMap(data), loading: false });
     } catch (err) {
       set({
         error: err instanceof Error ? err.message : 'Failed to load entities',
@@ -54,6 +74,22 @@ export const useEntityStore = create<EntityState>((set, get) => ({
       return await fetchEntityById(id);
     } catch {
       return null;
+    }
+  },
+
+  loadChildEntities: async (parentId) => {
+    try {
+      return await fetchChildEntities(parentId);
+    } catch {
+      return [];
+    }
+  },
+
+  loadEntitiesForUser: async (userId) => {
+    try {
+      return await fetchEntitiesForUser(userId);
+    } catch {
+      return [];
     }
   },
 

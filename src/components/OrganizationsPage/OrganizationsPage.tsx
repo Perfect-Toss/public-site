@@ -2,21 +2,21 @@ import '../../styles/page.css';
 import './OrganizationsPage.css';
 
 import { faBuilding, faPlus, faSearch, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useEffect, useState } from 'react';
+import { useEntityStore } from '../../stores/entityStore';
 import { useNavigate } from 'react-router-dom';
-import { fetchEntities, type Entity } from '../../api/api.entities';
-import { usePageData } from '../../hooks/usePageData';
 
 function OrganizationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: organizations, loading, error, load } = usePageData<Entity[]>([]);
   const navigate = useNavigate();
+  const { entityMap, loading, error, loadEntities } = useEntityStore();
+  const organizations = useMemo(() => entityMap['root'] ?? [], [entityMap]);
 
   useEffect(() => {
-    load(fetchEntities);
-  }, [load]);
+    loadEntities();
+  }, [loadEntities]);
 
   // TODO: Replace with actual user role from API/AuthContext
   const canCreateOrganization = true; // Will check for EntityAdmin, Admin, or SuperUser roles

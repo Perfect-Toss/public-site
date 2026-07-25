@@ -1,16 +1,19 @@
 import { faEdit, faInfoCircle, faSave, faTimes } from '@fortawesome/free-solid-svg-icons';
-import { useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { updateEntity, type Entity, type UpdateEntityRequest } from '../../../api/api.entities';
-import { useOutletContext } from 'react-router-dom';
 import type { OrganizationPageContext } from '../OrganizationPage';
+import type { UpdateEntityRequest } from '../../../api/api.entities';
+import { useEntityStore } from '../../../stores/entityStore';
+import { useOutletContext } from 'react-router-dom';
+import { useState } from 'react';
 
 function OverviewView() {
   const { organization, isAdmin, onUpdated } = useOutletContext<OrganizationPageContext>();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  const { updateEntity } = useEntityStore();
 
   const [form, setForm] = useState<UpdateEntityRequest>({
     name: organization.name ?? '',
@@ -38,10 +41,8 @@ function OverviewView() {
     setSaving(true);
     setSaveError(null);
     try {
-      const updated = await updateEntity(organization.id, form);
-      if (updated) {
-        onUpdated(updated as Entity);
-      }
+      await updateEntity(organization.id, form);
+      onUpdated({ ...organization, ...form });
       setEditing(false);
     } catch {
       setSaveError('Failed to save changes. Please try again.');

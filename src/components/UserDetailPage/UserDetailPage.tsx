@@ -1,6 +1,7 @@
 import '../../styles/page.css';
 import './UserDetailPage.css';
 
+import type { Roles, UpdateUserDto, User } from '../../api/api.users';
 import {
   faArrowLeft,
   faBuilding,
@@ -13,15 +14,16 @@ import {
   faTrash,
   faUser,
 } from '@fortawesome/free-solid-svg-icons';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../../utils/user';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchUserById, ROLES, updateUser, type Roles, type UpdateUserDto, type User } from '../../api/api.users';
-import { fetchEntitiesForUser, type Entity } from '../../api/api.entities';
-import { useAuth } from '../../contexts/useAuth';
+
+import type { Entity } from '../../api/api.entities';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatDate } from '../../utils/format';
-import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../../utils/user';
+import { useAuth } from '../../contexts/useAuth';
+import { useEntityStore } from '../../stores/entityStore';
+import { useUserStore } from '../../stores/userStore';
 
 /* ─── Component ───────────────────────────────────────────────────── */
 
@@ -46,29 +48,31 @@ function UserDetailPage() {
 
   const [entities, setEntities] = useState<Entity[]>([]);
   const [entitiesLoading, setEntitiesLoading] = useState(false);
+  const { loadUserById, updateUser } = useUserStore();
+  const { loadEntitiesForUser } = useEntityStore();
 
   useEffect(() => {
     if (!id) return;
     setLoading(true);
     setError(null);
-    fetchUserById(id)
+    loadUserById(id)
       .then(setUser)
       .catch((err) => {
         console.error('Failed to load user:', err);
         setError('Could not load user details.');
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, loadUserById]);
 
   // Load associated entities when user is available
   useEffect(() => {
     if (!user?.id) return;
     setEntitiesLoading(true);
-    fetchEntitiesForUser(user.id)
+    loadEntitiesForUser(user.id)
       .then(setEntities)
       .catch((err) => console.error('Failed to load user entities:', err))
       .finally(() => setEntitiesLoading(false));
-  }, [user?.id]);
+  }, [user?.id, loadEntitiesForUser]);
 
   // Populate edit form when user loads or editing starts
   useEffect(() => {
@@ -113,7 +117,7 @@ function UserDetailPage() {
       };
       await updateUser(dto);
       // Refresh user data
-      const updated = await fetchUserById(user.id);
+      const updated = await loadUserById(user.id);
       setUser(updated);
       setIsEditing(false);
     } catch (err) {
@@ -121,7 +125,7 @@ function UserDetailPage() {
     } finally {
       setSaving(false);
     }
-  }, [user, editForm]);
+  }, [user, editForm, updateUser, loadUserById]);
 
   const buildSafeThumbnailDto = useCallback((overrides: { thumbnailImage: string | null }) => ({
     id: user!.id,
@@ -142,7 +146,7 @@ function UserDetailPage() {
         const result = reader.result as string;
         const base64 = result.split(',')[1];
         await updateUser(buildSafeThumbnailDto({ thumbnailImage: base64 }));
-        const updated = await fetchUserById(user.id);
+        const updated = await loadUserById(user.id);
         setUser(updated);
       };
       reader.readAsDataURL(file);
@@ -151,21 +155,21 @@ function UserDetailPage() {
     } finally {
       setThumbnailSaving(false);
     }
-  }, [user, buildSafeThumbnailDto]);
+  }, [user, buildSafeThumbnailDto, updateUser, loadUserById]);
 
   const handleThumbnailRemove = useCallback(async () => {
     if (!user?.id) return;
     setThumbnailSaving(true);
     try {
       await updateUser(buildSafeThumbnailDto({ thumbnailImage: '' }));
-      const updated = await fetchUserById(user.id);
+      const updated = await loadUserById(user.id);
       setUser(updated);
     } catch (err) {
       console.error('Failed to remove thumbnail:', err);
     } finally {
       setThumbnailSaving(false);
     }
-  }, [user, buildSafeThumbnailDto]);
+  }, [user, buildSafeThumbnailDto, loadUserById, updateUser]);
 
   return (
     <div className="user-detail-page">
@@ -307,7 +311,7 @@ function UserDetailPage() {
                           <>
                             <div className="multi-select-backdrop" onClick={() => setRoleDropdownOpen(false)} />
                             <div className="multi-select-dropdown">
-                              {ROLES.filter((r) => r !== 'ServiceAccount').map((role) => (
+                              {(['Athlete','Coach','EntityAdmin','OrganizationAdmin','Admin','AlphaTester','BetaTester','SuperUser'] as const).map((role) => (
                                 <label
                                   key={role}
                                   className={`multi-select-option ${editForm.roles.includes(role) ? 'selected' : ''}`}

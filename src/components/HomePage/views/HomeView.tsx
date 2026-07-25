@@ -1,10 +1,10 @@
 import '../../../styles/page.css';
 
 import { faCircle, faPlay } from '@fortawesome/free-solid-svg-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { fetchEntities, type Entity } from '../../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useEntityStore } from '../../../stores/entityStore';
 
 export interface PendingReview {
   id: string;
@@ -22,30 +22,25 @@ export interface TrendingContent {
 }
 
 function HomeView() {
-  const [organizations, setOrganizations] = useState<Entity[]>([]);
   const [pendingReviews] = useState<PendingReview[]>([]);
   const [trendingContent] = useState<TrendingContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const { entityMap, loading: storeLoading, error: storeError, loadEntities } = useEntityStore();
+  const organizations = useMemo(() => entityMap['root'] ?? [], [entityMap]);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const orgsData = await fetchEntities();
-      setOrganizations(orgsData);
-      // TODO: Fetch pending reviews and trending content when endpoints are available
-    } catch (err) {
-      console.error('Failed to load data:', err);
-      setError('Failed to load data. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    loadEntities();
+  }, [loadEntities]);
+
+  useEffect(() => {
+    setLoading(storeLoading);
+  }, [storeLoading]);
+
+  useEffect(() => {
+    setError(storeError);
+  }, [storeError]);
   return (
     <>
       {/* Loading State */}
@@ -60,7 +55,7 @@ function HomeView() {
       {error && (
         <div className="error-container">
           <p>{error}</p>
-          <button onClick={loadData} className="retry-button">Retry</button>
+          <button onClick={() => loadEntities()} className="retry-button">Retry</button>
         </div>
       )}
 

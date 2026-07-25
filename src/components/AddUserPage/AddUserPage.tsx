@@ -1,17 +1,17 @@
 import '../../styles/page.css';
 import '../AdminUsersPage/AdminUsersPage.css';
 
-import { faCheckCircle, faPlus, faSpinner, faTimesCircle, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faChevronLeft, faPlus, faSpinner, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useState } from 'react';
 
+import type { CreateUserDto } from '../../api/api.users';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useNavigate } from 'react-router-dom';
-import { createUser, fetchAllUsers, type CreateUserDto, type User } from '../../api/api.users';
-import { usePageData } from '../../hooks/usePageData';
+import { useUserStore } from '../../stores/userStore';
 
 function AddUserPage() {
   const navigate = useNavigate();
-  const { load } = usePageData<User[]>([]);
+  const { createUser, loadUsers } = useUserStore();
 
   const [addForm, setAddForm] = useState({ firstName: '', lastName: '', email: '' });
   const [addSubmitting, setAddSubmitting] = useState(false);
@@ -30,13 +30,13 @@ function AddUserPage() {
       await createUser(dto);
       setAddResult({ type: 'success', message: 'User created successfully!' });
       setAddForm({ firstName: '', lastName: '', email: '' });
-      load(fetchAllUsers);
+      loadUsers();
     } catch (err) {
       setAddResult({ type: 'error', message: err instanceof Error ? err.message : 'Failed to create user.' });
     } finally {
       setAddSubmitting(false);
     }
-  }, [addForm, load]);
+  }, [addForm, createUser, loadUsers]);
 
   return (
     <div className="admin-users-page">

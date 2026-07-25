@@ -10,17 +10,13 @@ import {
   faTablet,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  deleteTabletType,
-  fetchAllTabletTypes,
-  type TabletType,
-} from '../../api/api.tabletTypes';
-import { usePageData } from '../../hooks/usePageData';
+import type { TabletType } from '../../api/api.tabletTypes';
 import { formatDate } from '../../utils/format';
+import { useNavigate } from 'react-router-dom';
+import { useTabletStore } from '../../stores/tabletStore';
 
 /* ─── Helpers ─────────────────────────────────────────────────────── */
 
@@ -35,14 +31,14 @@ function AdminTabletTypesPage() {
   const [sortColumn, setSortColumn] = useState<SortColumn>('model');
   const [sortDirection, setSortDirection] = useState<SortDir>('asc');
 
-  const { data: tabletTypes, loading, error, load } = usePageData<TabletType[]>([]);
+  const { tabletTypes, tabletTypesLoading: loading, tabletTypesError: error, loadTabletTypes, deleteTabletType } = useTabletStore();
 
   // ── Delete confirm state ────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<TabletType | null>(null);
 
   useEffect(() => {
-    load(fetchAllTabletTypes);
-  }, [load]);
+    loadTabletTypes();
+  }, [loadTabletTypes]);
 
   /* ─── Sorting & Filtering ─────────────────────────────────────── */
 
@@ -109,12 +105,11 @@ function AdminTabletTypesPage() {
     try {
       await deleteTabletType(deleteTarget.id);
       setDeleteTarget(null);
-      load(fetchAllTabletTypes);
     } catch (err) {
       console.error('Failed to delete tablet type:', err);
       setDeleteTarget(null);
     }
-  }, [deleteTarget, load]);
+  }, [deleteTarget, deleteTabletType]);
 
   /* ─── Render ──────────────────────────────────────────────────── */
 

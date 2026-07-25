@@ -1,6 +1,7 @@
 import '../../styles/page.css';
 import './AdminOrganizationsPage.css';
 
+import { Link, useNavigate } from 'react-router-dom';
 import {
   faBuilding,
   faChevronDown,
@@ -12,17 +13,12 @@ import {
   faTimes,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  type Entity,
-  deleteEntity,
-  fetchAllEntities,
-} from '../../api/api.entities';
-import { usePageData } from '../../hooks/usePageData';
+
+import type { Entity } from '../../api/api.entities';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatDate } from '../../utils/format';
+import { useEntityStore } from '../../stores/entityStore';
 
 /* ─── Component ───────────────────────────────────────────────────── */
 
@@ -30,11 +26,11 @@ function AdminOrganizationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedOrgs, setExpandedOrgs] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
-  const { data: organizations, loading, error, load } = usePageData<Entity[]>([]);
+  const { entityMap, entities: organizations, loading, error, loadEntities, deleteEntity } = useEntityStore();
 
   useEffect(() => {
-    load(fetchAllEntities);
-  }, [load]);
+    loadEntities();
+  }, [loadEntities]);
 
   // ── Delete confirmation ────────────────────────────────────────
 
@@ -43,29 +39,24 @@ function AdminOrganizationsPage() {
 
   /* ─── Build hierarchy ─────────────────────────────────────── */
 
-  /** Map of parentEntityId → child orgs, built from the flat list. */
+  /** Hierarchy derived from entityMap + sort by name. */
   const orgTree = useMemo(() => {
-    const childrenMap = new Map<string, Entity[]>();
-    const rootOrgs: Entity[] = [];
+    const childrenMap = new Map<string, typeof organizations>();
+    const rootOrgs: typeof organizations = [];
 
-    for (const org of organizations) {
-      if (org.parentEntityId) {
-        const existing = childrenMap.get(org.parentEntityId) ?? [];
-        existing.push(org);
-        childrenMap.set(org.parentEntityId, existing);
+    for (const [parentKey, children] of Object.entries(entityMap)) {
+      const sorted = [...children].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+      if (parentKey === 'root') {
+        rootOrgs.push(...sorted);
       } else {
-        rootOrgs.push(org);
+        childrenMap.set(parentKey, sorted);
       }
     }
 
-    // Sort children by name for consistent ordering
-    for (const [, children] of childrenMap) {
-      children.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
-    }
     rootOrgs.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
 
     return { childrenMap, rootOrgs };
-  }, [organizations]);
+  }, [entityMap]);
 
   /** Flatten the tree into a depth-annotated row list, respecting expansion state. */
   interface FlatRow {
@@ -150,13 +141,12 @@ function AdminOrganizationsPage() {
     try {
       await deleteEntity(deleteConfirm.id);
       setDeleteConfirm(null);
-      load(fetchAllEntities);
     } catch (err) {
       console.error('Failed to delete organization:', err);
     } finally {
       setDeleteSubmitting(false);
     }
-  }, [deleteConfirm, load]);
+  }, [deleteConfirm, deleteEntity]);
 
   /* ─── Render ───────────────────────────────────────────────── */
 

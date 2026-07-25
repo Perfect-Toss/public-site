@@ -1,5 +1,3 @@
-import { addUserToEntity, fetchEntityUsers, removeUserFromEntity } from '../../../api/api.entities';
-import { fetchAllUsers } from '../../../api/api.users';
 import { faPlus, faSpinner, faTrash, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
@@ -7,13 +5,14 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
 import type { User } from '../../../api/api.users';
+import { useEntityStore } from '../../../stores/entityStore';
+import { useUserStore } from '../../../stores/userStore';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 function MembersView() {
   const { organization, isAdmin } = useOutletContext<OrganizationPageContext>();
   const navigate = useNavigate();
 
-  const [members, setMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,31 +23,44 @@ function MembersView() {
   const [userSearch, setUserSearch] = useState('');
   const [adding, setAdding] = useState(false);
 
+  const { entityUsers, loadEntityUsers, addUserToEntity, removeUserFromEntity } = useEntityStore();
+  const { users, loadUsers } = useUserStore();
+
   const loadMembers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const users = await fetchEntityUsers(organization.id);
-      setMembers(users as User[]);
+      await loadEntityUsers(organization.id);
     } catch {
       setError('Failed to load members.');
     } finally {
       setLoading(false);
     }
-  }, [organization.id]);
+  }, [organization.id, loadEntityUsers]);
 
   useEffect(() => {
     if (!organization.id) return;
     loadMembers();
   }, [organization.id, loadMembers]);
 
+  // Load all users for the add-member search
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
+  useEffect(() => {
+    setAllUsers(users);
+  }, [users]);
+
+  // Derive members list from entity users store
+  const members = entityUsers[organization.id] ?? [];
+
   async function handleOpenAddForm() {
     setShowAddForm(true);
     setUserSearch('');
     setSelectedUserIds(new Set());
     if (allUsers.length === 0) {
-      const users = await fetchAllUsers();
-      setAllUsers(users as User[]);
+      loadUsers();
     }
   }
 
@@ -74,7 +86,6 @@ function MembersView() {
     if (!confirm('Remove this member from the organization?')) return;
     try {
       await removeUserFromEntity(organization.id, userId);
-      setMembers((prev) => prev.filter((u) => u.id !== userId));
     } catch {
       // TODO: show toast
     }

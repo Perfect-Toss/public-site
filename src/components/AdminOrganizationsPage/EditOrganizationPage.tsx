@@ -8,24 +8,18 @@ import {
   faSpinner,
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  type Entity,
-  type UpdateEntityRequest,
-  fetchAllEntities,
-  fetchEntityById,
-  updateEntity,
-} from '../../api/api.entities';
-import { usePageData } from '../../hooks/usePageData';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import type { UpdateEntityRequest } from '../../api/api.entities';
+import { useEntityStore } from '../../stores/entityStore';
 
 function EditOrganizationPage() {
   const { orgId } = useParams<{ orgId: string }>();
   const navigate = useNavigate();
 
-  const { data: organizations, load: loadOrganizations } = usePageData<Entity[]>([]);
+  const { entities: organizations, loadEntities, loadEntityById, updateEntity } = useEntityStore();
 
   const [editForm, setEditForm] = useState({ name: '', description: '', entityType: '', parentEntityId: '' });
   const [submitting, setSubmitting] = useState(false);
@@ -33,13 +27,13 @@ function EditOrganizationPage() {
   const [loadingEntity, setLoadingEntity] = useState(false);
 
   useEffect(() => {
-    loadOrganizations(fetchAllEntities);
-  }, [loadOrganizations]);
+    loadEntities();
+  }, [loadEntities]);
 
   useEffect(() => {
     if (orgId) {
       setLoadingEntity(true);
-      fetchEntityById(orgId)
+      loadEntityById(orgId)
         .then((org) => {
           if (org) {
             setEditForm({
@@ -55,7 +49,7 @@ function EditOrganizationPage() {
         })
         .finally(() => setLoadingEntity(false));
     }
-  }, [orgId]);
+  }, [orgId, loadEntityById]);
 
   const handleSubmit = useCallback(async () => {
     if (!orgId || !editForm.name.trim()) return;
@@ -78,7 +72,7 @@ function EditOrganizationPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [orgId, editForm, navigate]);
+  }, [orgId, editForm, navigate, updateEntity]);
 
   if (loadingEntity) {
     return (

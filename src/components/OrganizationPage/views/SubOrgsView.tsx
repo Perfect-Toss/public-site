@@ -1,4 +1,3 @@
-import { createEntity, fetchChildEntities } from '../../../api/api.entities';
 import { faBuilding, faPlus, faSitemap, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
@@ -6,6 +5,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import type { Entity } from '../../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
+import { useEntityStore } from '../../../stores/entityStore';
 
 function SubOrgsView() {
   const { organization, isAdmin } = useOutletContext<OrganizationPageContext>();
@@ -22,15 +22,17 @@ function SubOrgsView() {
   const [newDescription, setNewDescription] = useState('');
   const [newType, setNewType] = useState('');
 
+  const { loadChildEntities, createEntity } = useEntityStore();
+
   useEffect(() => {
     if (!organization.id) return;
     setLoading(true);
     setError(null);
-    fetchChildEntities(organization.id)
+    loadChildEntities(organization.id)
       .then(setSubOrgs)
       .catch(() => setError('Failed to load sub-organizations.'))
       .finally(() => setLoading(false));
-  }, [organization.id]);
+  }, [organization.id, loadChildEntities]);
 
   async function handleCreate() {
     if (!newName.trim() || !organization.id) return;
