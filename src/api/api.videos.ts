@@ -52,7 +52,7 @@ export async function fetchVideoById(id: string) {
     throw new Error('Failed to fetch video');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -68,7 +68,7 @@ export async function createVideo(videoData: CreateVideoRequest) {
     throw new Error('Failed to create video');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -85,14 +85,14 @@ export async function updateVideo(id: string, videoData: UpdateVideoRequest) {
     throw new Error('Failed to update video');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
  * Delete a video metadata record
  */
 export async function deleteVideo(id: string) {
-  const { data, error } = await api.DELETE('/api/v1/videos/{id}', {
+  const { error } = await api.DELETE('/api/v1/videos/{id}', {
     params: { path: { id } },
   });
 
@@ -101,7 +101,7 @@ export async function deleteVideo(id: string) {
     throw new Error('Failed to delete video');
   }
 
-  return data?.succeeded || false;
+  return true;
 }
 
 /**
@@ -133,7 +133,7 @@ export async function requestUploadToken(id: string) {
     throw new Error('Failed to request upload token');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -149,14 +149,14 @@ export async function requestDownloadToken(id: string) {
     throw new Error('Failed to request download token');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
  * Confirm that a video file has been uploaded to Azure Blob Storage
  */
 export async function confirmUploadComplete(id: string) {
-  const { data, error } = await api.POST('/api/v1/videos/{id}/upload-complete', {
+  const { error } = await api.POST('/api/v1/videos/{id}/upload-complete', {
     params: { path: { id } },
   });
 
@@ -165,14 +165,14 @@ export async function confirmUploadComplete(id: string) {
     throw new Error('Failed to confirm upload complete');
   }
 
-  return data?.succeeded || false;
+  return true;
 }
 
 /**
  * Transfer video ownership to another user
  */
 export async function transferVideoOwnership(id: string, newOwnerId: string) {
-  const { data, error } = await api.PUT('/api/v1/videos/{id}/owner', {
+  const { error } = await api.PUT('/api/v1/videos/{id}/owner', {
     params: { path: { id } },
     body: { newOwnerId },
   });
@@ -182,7 +182,7 @@ export async function transferVideoOwnership(id: string, newOwnerId: string) {
     throw new Error('Failed to transfer video ownership');
   }
 
-  return data?.succeeded || false;
+  return true;
 }
 
 // ============================================================================
@@ -193,7 +193,7 @@ export async function transferVideoOwnership(id: string, newOwnerId: string) {
  * Bulk-set video access for users and entities
  */
 export async function setVideoAccess(videoId: string, access: SetVideoAccessRequest) {
-  const { data, error } = await api.PUT('/api/v1/videoaccess/{videoId}/access', {
+  const { error } = await api.PUT('/api/v1/videoaccess/{videoId}/access', {
     params: { path: { videoId } },
     body: access,
   });
@@ -203,14 +203,14 @@ export async function setVideoAccess(videoId: string, access: SetVideoAccessRequ
     throw new Error('Failed to set video access');
   }
 
-  return data?.succeeded || false;
+  return true;
 }
 
 /**
  * Share a video with a specific user or entity
  */
 export async function shareVideo(videoId: string, shareRequest: ShareVideoRequest) {
-  const { data, error } = await api.POST('/api/v1/videoaccess/{videoId}/access', {
+  const { error } = await api.POST('/api/v1/videoaccess/{videoId}/access', {
     params: { path: { videoId } },
     body: shareRequest,
   });
@@ -220,14 +220,14 @@ export async function shareVideo(videoId: string, shareRequest: ShareVideoReques
     throw new Error('Failed to share video');
   }
 
-  return data?.succeeded || false;
+  return true;
 }
 
 /**
  * Remove a user's access to a video
  */
 export async function removeVideoUserAccess(videoId: string, userId: string) {
-  const { data, error } = await api.DELETE('/api/v1/videoaccess/{videoId}/access/user/{userId}', {
+  const { error } = await api.DELETE('/api/v1/videoaccess/{videoId}/access/user/{userId}', {
     params: { path: { videoId, userId } },
   });
 
@@ -236,14 +236,14 @@ export async function removeVideoUserAccess(videoId: string, userId: string) {
     throw new Error('Failed to remove video user access');
   }
 
-  return data?.succeeded || false;
+  return true;
 }
 
 /**
  * Remove an entity's access to a video
  */
 export async function removeVideoEntityAccess(videoId: string, entityId: string) {
-  const { data, error } = await api.DELETE('/api/v1/videoaccess/{videoId}/access/entity/{entityId}', {
+  const { error } = await api.DELETE('/api/v1/videoaccess/{videoId}/access/entity/{entityId}', {
     params: { path: { videoId, entityId } },
   });
 
@@ -252,7 +252,7 @@ export async function removeVideoEntityAccess(videoId: string, entityId: string)
     throw new Error('Failed to remove video entity access');
   }
 
-  return data?.succeeded || false;
+  return true;
 }
 
 /**
@@ -268,7 +268,7 @@ export async function fetchVideoUsers(videoId: string) {
     throw new Error('Failed to fetch video users');
   }
 
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -284,7 +284,7 @@ export async function fetchVideoEntities(videoId: string) {
     throw new Error('Failed to fetch video entities');
   }
 
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -300,5 +300,5 @@ export async function fetchVideoEntityUsers(videoId: string) {
     throw new Error('Failed to fetch video entity users');
   }
 
-  return data?.data || [];
+  return data || [];
 }

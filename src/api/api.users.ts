@@ -36,7 +36,7 @@ export async function fetchAllUsers() {
     throw new Error('Failed to fetch all users');
   }
   
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -82,7 +82,7 @@ export async function fetchServiceAccounts() {
     throw new Error('Failed to fetch service accounts');
   }
   
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -98,7 +98,7 @@ export async function fetchUserById(id: string) {
     throw new Error('Failed to fetch user');
   }
   
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -160,7 +160,7 @@ export async function createAthletes(athletesData: CreateAthletesDto) {
     throw new Error('Failed to create athletes');
   }
   
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -176,7 +176,7 @@ export async function createCoaches(coachesData: CreateCoachesDto) {
     throw new Error('Failed to create coaches');
   }
   
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -190,14 +190,14 @@ export async function syncUsers() {
     throw new Error('Failed to sync users');
   }
   
-  return data?.data || [];
+  return data || [];
 }
 
 /**
  * Delete a user by their identifier (requires super user authorization)
  */
 export async function deleteUserById(id: string) {
-  const { data, error } = await api.DELETE('/api/v1/users/{id}', {
+  const { error } = await api.DELETE('/api/v1/users/{id}', {
     params: { path: { id } },
   });
 
@@ -206,5 +206,5 @@ export async function deleteUserById(id: string) {
     throw new Error('Failed to delete user');
   }
 
-  return data?.succeeded ?? false;
+  return true;
 }

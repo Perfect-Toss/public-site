@@ -83,7 +83,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   createUser: async (data) => {
     try {
       const result = await createUser(data);
-      return result?.data ?? null;
+      return result ?? null;
     } catch {
       return null;
     }
@@ -120,7 +120,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   createServiceAccount: async (data) => {
     try {
       const result = await createServiceAccount(data);
-      return result?.data ?? null;
+      return result ?? null;
     } catch {
       return null;
     }
