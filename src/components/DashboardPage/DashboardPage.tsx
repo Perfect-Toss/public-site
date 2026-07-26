@@ -1,8 +1,8 @@
 import '../../styles/page.css';
 import './DashboardPage.css';
 
+import React, { useEffect, useMemo, useState } from 'react';
 import { faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
-import { useEffect, useMemo, useState } from 'react';
 
 import type { EventLogUserSummary } from '../../api/api.eventLogs';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -156,10 +156,10 @@ function DashboardPage() {
               </tr>
               <tr>
                 {allMonths.map((key) => (
-                  <>
+                  <React.Fragment key={key}>
                     <th key={`${key}-v`} className="th-sub">Videos</th>
                     <th key={`${key}-d`} className="th-sub">Days Used</th>
-                  </>
+                  </React.Fragment>
                 ))}
               </tr>
             </thead>
@@ -188,14 +188,14 @@ function DashboardPage() {
                       {allMonths.map((mk) => {
                         const entry = monthMap?.get(mk);
                         return (
-                          <>
+                          <React.Fragment key={mk}>
                             <td key={`${mk}-v`} className="td-num td-month-start">
                               {entry != null ? entry.videosCaptured : '-'}
                             </td>
                             <td key={`${mk}-d`} className="td-num">
                               {entry != null ? entry.daysUsed : '-'}
                             </td>
-                          </>
+                          </React.Fragment>
                         );
                       })}
                     </tr>
