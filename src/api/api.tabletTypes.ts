@@ -20,7 +20,7 @@ export async function fetchAllTabletTypes(): Promise<TabletType[]> {
     throw new Error('Failed to fetch tablet types');
   }
 
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -36,7 +36,7 @@ export async function fetchTabletTypeById(id: string): Promise<TabletType | null
     throw new Error('Failed to fetch tablet type');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -52,7 +52,7 @@ export async function createTabletType(typeData: CreateTabletTypeRequest): Promi
     throw new Error('Failed to create tablet type');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -69,14 +69,14 @@ export async function updateTabletType(id: string, typeData: UpdateTabletTypeReq
     throw new Error('Failed to update tablet type');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
  * Delete a tablet type (requires admin authorization)
  */
 export async function deleteTabletType(id: string): Promise<boolean> {
-  const { data, error } = await api.DELETE('/api/v1/tablets/types/{id}', {
+  const { error } = await api.DELETE('/api/v1/tablets/types/{id}', {
     params: { path: { id } },
   });
 
@@ -85,5 +85,5 @@ export async function deleteTabletType(id: string): Promise<boolean> {
     throw new Error('Failed to delete tablet type');
   }
 
-  return data?.succeeded || false;
+  return true;
 }

@@ -22,7 +22,7 @@ export async function fetchAllMachines(): Promise<Machine[]> {
     throw new Error('Failed to fetch machines');
   }
 
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -38,7 +38,7 @@ export async function fetchMachineById(id: string): Promise<Machine | null> {
     throw new Error('Failed to fetch machine');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -54,7 +54,7 @@ export async function createMachine(machineData: CreateMachineRequest): Promise<
     throw new Error('Failed to create machine');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -71,14 +71,14 @@ export async function updateMachine(id: string, machineData: UpdateMachineReques
     throw new Error('Failed to update machine');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
  * Delete a machine (requires admin authorization)
  */
 export async function deleteMachine(id: string): Promise<boolean> {
-  const { data, error } = await api.DELETE('/api/v1/machines/{id}', {
+  const { error } = await api.DELETE('/api/v1/machines/{id}', {
     params: { path: { id } },
   });
 
@@ -87,7 +87,7 @@ export async function deleteMachine(id: string): Promise<boolean> {
     throw new Error('Failed to delete machine');
   }
 
-  return data?.succeeded || false;
+  return true;
 }
 
 /**
@@ -104,5 +104,5 @@ export async function updateMachineInfo(id: string, infoData: UpdateMachineInfoR
     throw new Error('Failed to update machine info');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }

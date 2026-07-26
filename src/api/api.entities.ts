@@ -21,7 +21,7 @@ export async function fetchEntities() {
     throw new Error('Failed to fetch entities');
   }
   
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -35,7 +35,7 @@ export async function fetchAllEntities() {
     throw new Error('Failed to fetch all entities');
   }
   
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -51,7 +51,7 @@ export async function fetchEntityById(id: string) {
     throw new Error('Failed to fetch entity');
   }
   
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -67,7 +67,7 @@ export async function fetchEntitiesByType(entityType: string) {
     throw new Error('Failed to fetch entities by type');
   }
   
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -83,7 +83,7 @@ export async function fetchChildEntities(parentEntityId: string) {
     throw new Error('Failed to fetch child entities');
   }
   
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -99,7 +99,7 @@ export async function createEntity(entityData: CreateEntityRequest) {
     throw new Error('Failed to create entity');
   }
   
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -116,14 +116,14 @@ export async function updateEntity(id: string, entityData: UpdateEntityRequest) 
     throw new Error('Failed to update entity');
   }
   
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
  * Delete an entity
  */
 export async function deleteEntity(id: string) {
-  const { data, error } = await api.DELETE('/api/v1/entities/{id}', {
+  const { error } = await api.DELETE('/api/v1/entities/{id}', {
     params: { path: { id } },
   });
   
@@ -132,7 +132,7 @@ export async function deleteEntity(id: string) {
     throw new Error('Failed to delete entity');
   }
   
-  return data?.succeeded || false;
+  return true;
 }
 
 /**
@@ -148,7 +148,7 @@ export async function fetchEntityUsers(entityId: string) {
     throw new Error('Failed to fetch entity users');
   }
 
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -159,7 +159,7 @@ export async function addUserToEntity(
   userId: string, 
   roles: AddUserToEntityRequest
 ) {
-  const { data, error } = await api.POST('/api/v1/entities/{entityId}/users/{userId}', {
+  const { error } = await api.POST('/api/v1/entities/{entityId}/users/{userId}', {
     params: { path: { entityId, userId } },
     body: roles,
   });
@@ -169,14 +169,14 @@ export async function addUserToEntity(
     throw new Error('Failed to add user to entity');
   }
   
-  return data?.succeeded || false;
+  return true;
 }
 
 /**
  * Remove a user from an entity
  */
 export async function removeUserFromEntity(entityId: string, userId: string) {
-  const { data, error } = await api.DELETE('/api/v1/entities/{entityId}/users/{userId}', {
+  const { error } = await api.DELETE('/api/v1/entities/{entityId}/users/{userId}', {
     params: { path: { entityId, userId } },
   });
   
@@ -185,7 +185,7 @@ export async function removeUserFromEntity(entityId: string, userId: string) {
     throw new Error('Failed to remove user from entity');
   }
   
-  return data?.succeeded || false;
+  return true;
 }
 
 /**
@@ -201,7 +201,7 @@ export async function fetchEntitiesForUser(userId: string): Promise<Entity[]> {
     throw new Error('Failed to fetch user entities');
   }
 
-  return data?.data || [];
+  return data || [];
 }
 
 /**

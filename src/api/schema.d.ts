@@ -68,9 +68,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EntityIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EntityIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["Entity"][];
+                        "application/json": components["schemas"]["Entity"][];
+                        "text/json": components["schemas"]["Entity"][];
                     };
                 };
             };
@@ -99,9 +99,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EntityGenericResponse"];
-                        "application/json": components["schemas"]["EntityGenericResponse"];
-                        "text/json": components["schemas"]["EntityGenericResponse"];
+                        "text/plain": components["schemas"]["Entity"];
+                        "application/json": components["schemas"]["Entity"];
+                        "text/json": components["schemas"]["Entity"];
                     };
                 };
             };
@@ -135,9 +135,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EntityIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EntityIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["Entity"][];
+                        "application/json": components["schemas"]["Entity"][];
+                        "text/json": components["schemas"]["Entity"][];
                     };
                 };
             };
@@ -176,9 +176,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EntityGenericResponse"];
-                        "application/json": components["schemas"]["EntityGenericResponse"];
-                        "text/json": components["schemas"]["EntityGenericResponse"];
+                        "text/plain": components["schemas"]["Entity"];
+                        "application/json": components["schemas"]["Entity"];
+                        "text/json": components["schemas"]["Entity"];
                     };
                 };
             };
@@ -217,9 +217,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EntityIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EntityIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["Entity"][];
+                        "application/json": components["schemas"]["Entity"][];
+                        "text/json": components["schemas"]["Entity"][];
                     };
                 };
             };
@@ -258,9 +258,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EntityIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EntityIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["Entity"][];
+                        "application/json": components["schemas"]["Entity"][];
+                        "text/json": components["schemas"]["Entity"][];
                     };
                 };
             };
@@ -307,9 +307,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EntityGenericResponse"];
-                        "application/json": components["schemas"]["EntityGenericResponse"];
-                        "text/json": components["schemas"]["EntityGenericResponse"];
+                        "text/plain": components["schemas"]["Entity"];
+                        "application/json": components["schemas"]["Entity"];
+                        "text/json": components["schemas"]["Entity"];
                     };
                 };
             };
@@ -333,11 +333,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -372,9 +368,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EntityIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EntityIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EntityIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["Entity"][];
+                        "application/json": components["schemas"]["Entity"][];
+                        "text/json": components["schemas"]["Entity"][];
                     };
                 };
             };
@@ -413,9 +409,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["User"][];
+                        "application/json": components["schemas"]["User"][];
+                        "text/json": components["schemas"]["User"][];
                     };
                 };
             };
@@ -464,11 +460,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -492,11 +484,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -537,9 +525,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EventLogGenericResponse"];
-                        "application/json": components["schemas"]["EventLogGenericResponse"];
-                        "text/json": components["schemas"]["EventLogGenericResponse"];
+                        "text/plain": components["schemas"]["EventLog"];
+                        "application/json": components["schemas"]["EventLog"];
+                        "text/json": components["schemas"]["EventLog"];
                     };
                 };
             };
@@ -582,9 +570,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EventLogIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["EventLog"][];
+                        "application/json": components["schemas"]["EventLog"][];
+                        "text/json": components["schemas"]["EventLog"][];
                     };
                 };
             };
@@ -663,9 +651,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["StringIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["StringIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["StringIEnumerableGenericResponse"];
+                        "text/plain": string[];
+                        "application/json": string[];
+                        "text/json": string[];
                     };
                 };
             };
@@ -704,9 +692,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["DateTimeOffsetNullableGenericResponse"];
-                        "application/json": components["schemas"]["DateTimeOffsetNullableGenericResponse"];
-                        "text/json": components["schemas"]["DateTimeOffsetNullableGenericResponse"];
+                        "text/plain": string | null;
+                        "application/json": string | null;
+                        "text/json": string | null;
                     };
                 };
             };
@@ -746,9 +734,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["EventLogUserSummaryIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["EventLogUserSummaryIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["EventLogUserSummaryIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["EventLogUserSummary"][];
+                        "application/json": components["schemas"]["EventLogUserSummary"][];
+                        "text/json": components["schemas"]["EventLogUserSummary"][];
                     };
                 };
             };
@@ -784,9 +772,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["MachineIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["MachineIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["MachineIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["Machine"][];
+                        "application/json": components["schemas"]["Machine"][];
+                        "text/json": components["schemas"]["Machine"][];
                     };
                 };
             };
@@ -815,9 +803,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["MachineGenericResponse"];
-                        "application/json": components["schemas"]["MachineGenericResponse"];
-                        "text/json": components["schemas"]["MachineGenericResponse"];
+                        "text/plain": components["schemas"]["Machine"];
+                        "application/json": components["schemas"]["Machine"];
+                        "text/json": components["schemas"]["Machine"];
                     };
                 };
             };
@@ -854,9 +842,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["MachineGenericResponse"];
-                        "application/json": components["schemas"]["MachineGenericResponse"];
-                        "text/json": components["schemas"]["MachineGenericResponse"];
+                        "text/plain": components["schemas"]["Machine"];
+                        "application/json": components["schemas"]["Machine"];
+                        "text/json": components["schemas"]["Machine"];
                     };
                 };
             };
@@ -903,9 +891,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["MachineGenericResponse"];
-                        "application/json": components["schemas"]["MachineGenericResponse"];
-                        "text/json": components["schemas"]["MachineGenericResponse"];
+                        "text/plain": components["schemas"]["Machine"];
+                        "application/json": components["schemas"]["Machine"];
+                        "text/json": components["schemas"]["Machine"];
                     };
                 };
             };
@@ -929,11 +917,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -976,9 +960,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["MachineInfoGenericResponse"];
-                        "application/json": components["schemas"]["MachineInfoGenericResponse"];
-                        "text/json": components["schemas"]["MachineInfoGenericResponse"];
+                        "text/plain": components["schemas"]["MachineInfo"];
+                        "application/json": components["schemas"]["MachineInfo"];
+                        "text/json": components["schemas"]["MachineInfo"];
                     };
                 };
             };
@@ -1013,9 +997,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["MetaResponseGenericResponse"];
-                        "application/json": components["schemas"]["MetaResponseGenericResponse"];
-                        "text/json": components["schemas"]["MetaResponseGenericResponse"];
+                        "text/plain": components["schemas"]["MetaResponse"];
+                        "application/json": components["schemas"]["MetaResponse"];
+                        "text/json": components["schemas"]["MetaResponse"];
                     };
                 };
             };
@@ -1051,9 +1035,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["StringGenericResponse"];
-                        "application/json": components["schemas"]["StringGenericResponse"];
-                        "text/json": components["schemas"]["StringGenericResponse"];
+                        "text/plain": string;
+                        "application/json": string;
+                        "text/json": string;
                     };
                 };
             };
@@ -1089,9 +1073,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["TabletIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["TabletIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["TabletIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["Tablet"][];
+                        "application/json": components["schemas"]["Tablet"][];
+                        "text/json": components["schemas"]["Tablet"][];
                     };
                 };
             };
@@ -1120,9 +1104,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["TabletGenericResponse"];
-                        "application/json": components["schemas"]["TabletGenericResponse"];
-                        "text/json": components["schemas"]["TabletGenericResponse"];
+                        "text/plain": components["schemas"]["Tablet"];
+                        "application/json": components["schemas"]["Tablet"];
+                        "text/json": components["schemas"]["Tablet"];
                     };
                 };
             };
@@ -1159,9 +1143,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["TabletGenericResponse"];
-                        "application/json": components["schemas"]["TabletGenericResponse"];
-                        "text/json": components["schemas"]["TabletGenericResponse"];
+                        "text/plain": components["schemas"]["Tablet"];
+                        "application/json": components["schemas"]["Tablet"];
+                        "text/json": components["schemas"]["Tablet"];
                     };
                 };
             };
@@ -1192,9 +1176,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["TabletGenericResponse"];
-                        "application/json": components["schemas"]["TabletGenericResponse"];
-                        "text/json": components["schemas"]["TabletGenericResponse"];
+                        "text/plain": components["schemas"]["Tablet"];
+                        "application/json": components["schemas"]["Tablet"];
+                        "text/json": components["schemas"]["Tablet"];
                     };
                 };
             };
@@ -1218,11 +1202,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -1254,9 +1234,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["TabletTypeIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["TabletTypeIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["TabletTypeIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["TabletType"][];
+                        "application/json": components["schemas"]["TabletType"][];
+                        "text/json": components["schemas"]["TabletType"][];
                     };
                 };
             };
@@ -1285,9 +1265,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["TabletTypeGenericResponse"];
-                        "application/json": components["schemas"]["TabletTypeGenericResponse"];
-                        "text/json": components["schemas"]["TabletTypeGenericResponse"];
+                        "text/plain": components["schemas"]["TabletType"];
+                        "application/json": components["schemas"]["TabletType"];
+                        "text/json": components["schemas"]["TabletType"];
                     };
                 };
             };
@@ -1324,9 +1304,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["TabletTypeGenericResponse"];
-                        "application/json": components["schemas"]["TabletTypeGenericResponse"];
-                        "text/json": components["schemas"]["TabletTypeGenericResponse"];
+                        "text/plain": components["schemas"]["TabletType"];
+                        "application/json": components["schemas"]["TabletType"];
+                        "text/json": components["schemas"]["TabletType"];
                     };
                 };
             };
@@ -1357,9 +1337,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["TabletTypeGenericResponse"];
-                        "application/json": components["schemas"]["TabletTypeGenericResponse"];
-                        "text/json": components["schemas"]["TabletTypeGenericResponse"];
+                        "text/plain": components["schemas"]["TabletType"];
+                        "application/json": components["schemas"]["TabletType"];
+                        "text/json": components["schemas"]["TabletType"];
                     };
                 };
             };
@@ -1383,11 +1363,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -1419,9 +1395,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["User"][];
+                        "application/json": components["schemas"]["User"][];
+                        "text/json": components["schemas"]["User"][];
                     };
                 };
             };
@@ -1450,9 +1426,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserGenericResponse"];
-                        "application/json": components["schemas"]["UserGenericResponse"];
-                        "text/json": components["schemas"]["UserGenericResponse"];
+                        "text/plain": components["schemas"]["User"];
+                        "application/json": components["schemas"]["User"];
+                        "text/json": components["schemas"]["User"];
                     };
                 };
             };
@@ -1483,9 +1459,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserGenericResponse"];
-                        "application/json": components["schemas"]["UserGenericResponse"];
-                        "text/json": components["schemas"]["UserGenericResponse"];
+                        "text/plain": components["schemas"]["User"];
+                        "application/json": components["schemas"]["User"];
+                        "text/json": components["schemas"]["User"];
                     };
                 };
             };
@@ -1515,9 +1491,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["User"][];
+                        "application/json": components["schemas"]["User"][];
+                        "text/json": components["schemas"]["User"][];
                     };
                 };
             };
@@ -1556,9 +1532,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserGenericResponse"];
-                        "application/json": components["schemas"]["UserGenericResponse"];
-                        "text/json": components["schemas"]["UserGenericResponse"];
+                        "text/plain": components["schemas"]["User"];
+                        "application/json": components["schemas"]["User"];
+                        "text/json": components["schemas"]["User"];
                     };
                 };
             };
@@ -1583,11 +1559,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -1619,9 +1591,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserGenericResponse"];
-                        "application/json": components["schemas"]["UserGenericResponse"];
-                        "text/json": components["schemas"]["UserGenericResponse"];
+                        "text/plain": components["schemas"]["User"];
+                        "application/json": components["schemas"]["User"];
+                        "text/json": components["schemas"]["User"];
                     };
                 };
             };
@@ -1705,9 +1677,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserGenericResponse"];
-                        "application/json": components["schemas"]["UserGenericResponse"];
-                        "text/json": components["schemas"]["UserGenericResponse"];
+                        "text/plain": components["schemas"]["User"];
+                        "application/json": components["schemas"]["User"];
+                        "text/json": components["schemas"]["User"];
                     };
                 };
             };
@@ -1750,9 +1722,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["User"][];
+                        "application/json": components["schemas"]["User"][];
+                        "text/json": components["schemas"]["User"][];
                     };
                 };
             };
@@ -1795,9 +1767,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["User"][];
+                        "application/json": components["schemas"]["User"][];
+                        "text/json": components["schemas"]["User"][];
                     };
                 };
             };
@@ -1837,9 +1809,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["UserIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["UserIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["User"][];
+                        "application/json": components["schemas"]["User"][];
+                        "text/json": components["schemas"]["User"][];
                     };
                 };
             };
@@ -1871,11 +1843,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -1920,11 +1888,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -1953,11 +1917,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -1997,11 +1957,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -2040,11 +1996,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -2079,9 +2031,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["VideoUserAccessResultIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["VideoUserAccessResultIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["VideoUserAccessResultIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["VideoUserAccessResult"][];
+                        "application/json": components["schemas"]["VideoUserAccessResult"][];
+                        "text/json": components["schemas"]["VideoUserAccessResult"][];
                     };
                 };
             };
@@ -2120,9 +2072,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["VideoEntityAccessResult"][];
+                        "application/json": components["schemas"]["VideoEntityAccessResult"][];
+                        "text/json": components["schemas"]["VideoEntityAccessResult"][];
                     };
                 };
             };
@@ -2164,9 +2116,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
-                        "application/json": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
-                        "text/json": components["schemas"]["VideoEntityAccessResultIEnumerableGenericResponse"];
+                        "text/plain": components["schemas"]["VideoEntityAccessResult"][];
+                        "application/json": components["schemas"]["VideoEntityAccessResult"][];
+                        "text/json": components["schemas"]["VideoEntityAccessResult"][];
                     };
                 };
             };
@@ -2238,9 +2190,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["VideoGenericResponse"];
-                        "application/json": components["schemas"]["VideoGenericResponse"];
-                        "text/json": components["schemas"]["VideoGenericResponse"];
+                        "text/plain": components["schemas"]["Video"];
+                        "application/json": components["schemas"]["Video"];
+                        "text/json": components["schemas"]["Video"];
                     };
                 };
             };
@@ -2277,9 +2229,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["VideoGenericResponse"];
-                        "application/json": components["schemas"]["VideoGenericResponse"];
-                        "text/json": components["schemas"]["VideoGenericResponse"];
+                        "text/plain": components["schemas"]["Video"];
+                        "application/json": components["schemas"]["Video"];
+                        "text/json": components["schemas"]["Video"];
                     };
                 };
             };
@@ -2310,9 +2262,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["VideoGenericResponse"];
-                        "application/json": components["schemas"]["VideoGenericResponse"];
-                        "text/json": components["schemas"]["VideoGenericResponse"];
+                        "text/plain": components["schemas"]["Video"];
+                        "application/json": components["schemas"]["Video"];
+                        "text/json": components["schemas"]["Video"];
                     };
                 };
             };
@@ -2336,11 +2288,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -2426,9 +2374,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SasUrlResponseGenericResponse"];
-                        "application/json": components["schemas"]["SasUrlResponseGenericResponse"];
-                        "text/json": components["schemas"]["SasUrlResponseGenericResponse"];
+                        "text/plain": components["schemas"]["SasUrlResponse"];
+                        "application/json": components["schemas"]["SasUrlResponse"];
+                        "text/json": components["schemas"]["SasUrlResponse"];
                     };
                 };
             };
@@ -2470,9 +2418,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["SasUrlResponseGenericResponse"];
-                        "application/json": components["schemas"]["SasUrlResponseGenericResponse"];
-                        "text/json": components["schemas"]["SasUrlResponseGenericResponse"];
+                        "text/plain": components["schemas"]["SasUrlResponse"];
+                        "application/json": components["schemas"]["SasUrlResponse"];
+                        "text/json": components["schemas"]["SasUrlResponse"];
                     };
                 };
             };
@@ -2513,11 +2461,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -2560,11 +2504,7 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "text/plain": components["schemas"]["GenericResponse"];
-                        "application/json": components["schemas"]["GenericResponse"];
-                        "text/json": components["schemas"]["GenericResponse"];
-                    };
+                    content?: never;
                 };
             };
         };
@@ -2743,18 +2683,16 @@ export interface components {
              * @description Gets the aspect ratio of the video.
              */
             aspectRatio?: number | null;
+            /**
+             * Format: int64
+             * @description Gets the file size of the video in bytes.
+             */
+            sizeInBytes: number;
             deviceOrientation: components["schemas"]["DeviceOrientation"];
             /** @description Gets the optional list of associated entity identifiers. */
             associatedEntityIds?: string[] | null;
             /** @description Gets the optional list of tag identifiers. */
             tagIds?: string[] | null;
-        };
-        DateTimeOffsetNullableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            /** Format: date-time */
-            data?: string | null;
         };
         /** @enum {string} */
         DeviceOrientation: "Unknown" | "Portrait" | "Landscape" | "PortraitUpsideDown" | "LandscapeLeft" | "LandscapeRight";
@@ -2788,18 +2726,6 @@ export interface components {
              */
             entityId: string;
         };
-        EntityGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["Entity"];
-        };
-        EntityIEnumerableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["Entity"][] | null;
-        };
         EventLog: {
             /** Format: uuid */
             id: string;
@@ -2824,29 +2750,14 @@ export interface components {
             userAgent?: string | null;
             sessionId?: string | null;
         };
-        EventLogGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["EventLog"];
-        };
-        EventLogIEnumerableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["EventLog"][] | null;
-        };
         EventLogIEnumerablePagedResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["EventLog"][] | null;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
             /** Format: int32 */
             totalCount?: number;
+            items?: components["schemas"]["EventLog"][] | null;
         };
         EventLogMonthlySummary: {
             /** Format: int32 */
@@ -2909,17 +2820,6 @@ export interface components {
             lastName?: string | null;
             monthlyData?: components["schemas"]["EventLogMonthlySummary"][] | null;
         };
-        EventLogUserSummaryIEnumerableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["EventLogUserSummary"][] | null;
-        };
-        GenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-        };
         /** @description Represents user login credentials. */
         LoginInfo: {
             /** @description Gets or sets the username (email) for authentication. */
@@ -2956,18 +2856,6 @@ export interface components {
             tabletId?: string | null;
             tablet?: components["schemas"]["Tablet"];
         };
-        MachineGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["Machine"];
-        };
-        MachineIEnumerableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["Machine"][] | null;
-        };
         MachineInfo: {
             /** Format: uuid */
             id: string;
@@ -3000,12 +2888,6 @@ export interface components {
             launcherShroud?: string | null;
             elbow?: string | null;
         };
-        MachineInfoGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["MachineInfo"];
-        };
         /** @description Response model containing metadata about the API and current user. */
         MetaResponse: {
             /** @description The API version. */
@@ -3020,14 +2902,8 @@ export interface components {
             /** @description The current user's email address. */
             email?: string | null;
         };
-        MetaResponseGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["MetaResponse"];
-        };
         /** @enum {string} */
-        ReviewStatus: "Unknown" | "ReviewRequested" | "Reviewed";
+        ReviewStatus: "Unknown" | "NotReviewed" | "ReviewRequested" | "Reviewed";
         /** @enum {string} */
         Roles: "Athlete" | "Coach" | "EntityAdmin" | "OrganizationAdmin" | "Admin" | "ServiceAccount" | "AlphaTester" | "BetaTester" | "SuperUser";
         /**
@@ -3041,12 +2917,6 @@ export interface components {
              *     Expires in 5 minutes.
              */
             sasUrl: string | null;
-        };
-        SasUrlResponseGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["SasUrlResponse"];
         };
         /**
          * @description Request model for bulk-setting video access for users and entities.
@@ -3072,18 +2942,6 @@ export interface components {
              */
             entityId?: string | null;
             accessLevel?: components["schemas"]["VideoAccessLevel"];
-        };
-        StringGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: string | null;
-        };
-        StringIEnumerableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: string[] | null;
         };
         Tablet: {
             /** Format: uuid */
@@ -3114,18 +2972,6 @@ export interface components {
             tabletTypeId?: string | null;
             tabletType?: components["schemas"]["TabletType"];
         };
-        TabletGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["Tablet"];
-        };
-        TabletIEnumerableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["Tablet"][] | null;
-        };
         TabletType: {
             /** Format: uuid */
             id: string;
@@ -3148,18 +2994,6 @@ export interface components {
             camera?: string | null;
             /** Format: double */
             price?: number | null;
-        };
-        TabletTypeGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["TabletType"];
-        };
-        TabletTypeIEnumerableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["TabletType"][] | null;
         };
         Tag: {
             /** Format: uuid */
@@ -3370,7 +3204,7 @@ export interface components {
             tagIds?: string[] | null;
         };
         /** @enum {string} */
-        UploadStatus: "Unknown" | "NotUploaded" | "Pending" | "Uploaded" | "Deleted";
+        UploadStatus: "Unknown" | "NotUploaded" | "Pending" | "Uploaded";
         User: {
             /** Format: uuid */
             id: string;
@@ -3412,18 +3246,6 @@ export interface components {
             userId: string;
             accessLevel: components["schemas"]["VideoAccessLevel"];
         };
-        UserGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["User"];
-        };
-        UserIEnumerableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["User"][] | null;
-        };
         Video: {
             /** Format: uuid */
             id: string;
@@ -3452,6 +3274,8 @@ export interface components {
             timestamp?: string;
             /** Format: int32 */
             lengthInSeconds?: number;
+            /** Format: int64 */
+            sizeInBytes?: number;
             /** Format: double */
             aspectRatio?: number | null;
             deviceOrientation?: components["schemas"]["DeviceOrientation"];
@@ -3470,39 +3294,18 @@ export interface components {
             accessLevel: components["schemas"]["VideoAccessLevel"];
             users?: components["schemas"]["VideoUserAccessResult"][] | null;
         };
-        VideoEntityAccessResultIEnumerableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["VideoEntityAccessResult"][] | null;
-        };
-        VideoGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["Video"];
-        };
         VideoIEnumerablePagedResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["Video"][] | null;
             /** Format: int32 */
             pageNumber?: number;
             /** Format: int32 */
             pageSize?: number;
             /** Format: int32 */
             totalCount?: number;
+            items?: components["schemas"]["Video"][] | null;
         };
         VideoUserAccessResult: {
             user: components["schemas"]["User"];
             accessLevel: components["schemas"]["VideoAccessLevel"];
-        };
-        VideoUserAccessResultIEnumerableGenericResponse: {
-            succeeded?: boolean;
-            message?: string | null;
-            errors?: string[] | null;
-            data?: components["schemas"]["VideoUserAccessResult"][] | null;
         };
     };
     responses: never;

@@ -58,7 +58,7 @@ export async function fetchEventLogSummary(): Promise<EventLogUserSummary[]> {
     throw new Error('Failed to fetch event log summary');
   }
 
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -88,7 +88,7 @@ export async function fetchEventLogTypes(): Promise<string[]> {
     throw new Error('Failed to fetch event log types');
   }
 
-  return data?.data ?? [];
+  return data ?? [];
 }
 
 /**

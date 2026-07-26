@@ -20,7 +20,7 @@ export async function fetchAllTablets(): Promise<Tablet[]> {
     throw new Error('Failed to fetch tablets');
   }
 
-  return data?.data || [];
+  return data || [];
 }
 
 /**
@@ -36,7 +36,7 @@ export async function fetchTabletById(id: string): Promise<Tablet | null> {
     throw new Error('Failed to fetch tablet');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -52,7 +52,7 @@ export async function createTablet(tabletData: CreateTabletRequest): Promise<Tab
     throw new Error('Failed to create tablet');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
@@ -69,14 +69,14 @@ export async function updateTablet(id: string, tabletData: UpdateTabletRequest):
     throw new Error('Failed to update tablet');
   }
 
-  return data?.data || null;
+  return data ?? null;
 }
 
 /**
  * Delete a tablet (requires admin authorization)
  */
 export async function deleteTablet(id: string): Promise<boolean> {
-  const { data, error } = await api.DELETE('/api/v1/tablets/{id}', {
+  const { error } = await api.DELETE('/api/v1/tablets/{id}', {
     params: { path: { id } },
   });
 
@@ -85,5 +85,5 @@ export async function deleteTablet(id: string): Promise<boolean> {
     throw new Error('Failed to delete tablet');
   }
 
-  return data?.succeeded || false;
+  return true;
 }
