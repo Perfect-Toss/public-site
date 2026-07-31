@@ -14,8 +14,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useAuth } from '../../contexts/useAuth';
 
 function AccountPage() {
-  const { currentUser } = useAuth();
-  const [avatarUrl, setAvatarUrl] = useState<string>(currentUser?.photoURL || '');
+  const { currentUser, firebaseUser } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string>(firebaseUser?.photoURL || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarClick = () => {
@@ -158,7 +158,7 @@ function AccountPage() {
               </div>
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', fontWeight: '600', marginBottom: '5px' }}>Display Name</label>
-                <p style={{ color: '#666' }}>{currentUser?.displayName || 'Not set'}</p>
+                <p style={{ color: '#666' }}>{firebaseUser?.displayName || 'Not set'}</p>
               </div>
               <button className="secondary-btn">Edit Profile</button>
             </div>

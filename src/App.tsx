@@ -1,6 +1,6 @@
 import './App.css'
 
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import {
   MachinesTabPage,
   TabletTypesTabPage,
@@ -35,10 +35,10 @@ import VideosPage from './components/VideosPage'
 import { useAuth } from './contexts/useAuth'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, initializing } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  if (initializing) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
@@ -54,9 +54,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function LoginRoute({ children }: { children: React.ReactNode }) {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, initializing } = useAuth();
 
-  if (loading) {
+  if (initializing) {
     return (
       <div className="loading-container">
         <div className="loading-spinner"></div>
@@ -65,6 +65,24 @@ function LoginRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (currentUser) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { isAdmin, initializing } = useAuth();
+
+  if (initializing) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 
@@ -94,7 +112,7 @@ function AppContent() {
           <Route path="sub-orgs" element={<SubOrgsView />} />
           <Route path="settings" element={<SettingsView />} />
         </Route>
-        <Route path="admin">
+        <Route path="admin" element={<AdminRoute><Outlet /></AdminRoute>}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="organizations">

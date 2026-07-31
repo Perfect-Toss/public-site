@@ -1,7 +1,5 @@
 /**
  * Videos & Video Access API functions
- * 
- * These endpoints are new additions from the updated OpenAPI schema.
  */
 
 import { api } from './index';
@@ -11,10 +9,8 @@ export type Video = components['schemas']['Video'];
 export type CreateVideoRequest = components['schemas']['CreateVideoRequest'];
 export type UpdateVideoRequest = components['schemas']['UpdateVideoRequest'];
 export type SasUrlResponse = components['schemas']['SasUrlResponse'];
-export type TransferOwnershipRequest = components['schemas']['TransferOwnershipRequest'];
-export type ShareVideoRequest = components['schemas']['ShareVideoRequest'];
 export type SetVideoAccessRequest = components['schemas']['SetVideoAccessRequest'];
-export type VideoAccessLevel = components['schemas']['VideoAccessLevel'];
+export type ShareVideoRequest = components['schemas']['ShareVideoRequest'];
 export type VideoUserAccessResult = components['schemas']['VideoUserAccessResult'];
 export type VideoEntityAccessResult = components['schemas']['VideoEntityAccessResult'];
 export type VideoIEnumerablePagedResponse = components['schemas']['VideoIEnumerablePagedResponse'];
@@ -42,7 +38,7 @@ export async function fetchVideos(pageNumber?: number, pageSize?: number): Promi
 /**
  * Get a specific video metadata record by ID
  */
-export async function fetchVideoById(id: string) {
+export async function fetchVideoById(id: string): Promise<Video | null> {
   const { data, error } = await api.GET('/api/v1/videos/{id}', {
     params: { path: { id } },
   });
@@ -58,7 +54,7 @@ export async function fetchVideoById(id: string) {
 /**
  * Create a new video metadata record
  */
-export async function createVideo(videoData: CreateVideoRequest) {
+export async function createVideo(videoData: CreateVideoRequest): Promise<Video | null> {
   const { data, error } = await api.POST('/api/v1/videos', {
     body: videoData,
   });
@@ -74,7 +70,7 @@ export async function createVideo(videoData: CreateVideoRequest) {
 /**
  * Update an existing video metadata record
  */
-export async function updateVideo(id: string, videoData: UpdateVideoRequest) {
+export async function updateVideo(id: string, videoData: UpdateVideoRequest): Promise<Video | null> {
   const { data, error } = await api.PUT('/api/v1/videos/{id}', {
     params: { path: { id } },
     body: videoData,
@@ -91,7 +87,7 @@ export async function updateVideo(id: string, videoData: UpdateVideoRequest) {
 /**
  * Delete a video metadata record
  */
-export async function deleteVideo(id: string) {
+export async function deleteVideo(id: string): Promise<boolean> {
   const { error } = await api.DELETE('/api/v1/videos/{id}', {
     params: { path: { id } },
   });
@@ -107,7 +103,7 @@ export async function deleteVideo(id: string) {
 /**
  * Get all video metadata records associated with a specific entity
  */
-export async function fetchVideosByEntity(entityId: string, pageNumber?: number, pageSize?: number) {
+export async function fetchVideosByEntity(entityId: string, pageNumber?: number, pageSize?: number): Promise<VideoIEnumerablePagedResponse> {
   const { data, error } = await api.GET('/api/v1/videos/entity/{entityId}', {
     params: { path: { entityId }, query: { pageNumber, pageSize } },
   });
@@ -123,7 +119,7 @@ export async function fetchVideosByEntity(entityId: string, pageNumber?: number,
 /**
  * Generate a time-limited SAS URL for uploading a video file to Azure Blob Storage
  */
-export async function requestUploadToken(id: string) {
+export async function requestUploadToken(id: string): Promise<SasUrlResponse | null> {
   const { data, error } = await api.POST('/api/v1/videos/{id}/request-upload-token', {
     params: { path: { id } },
   });
@@ -139,7 +135,7 @@ export async function requestUploadToken(id: string) {
 /**
  * Generate a time-limited SAS URL for downloading a video file from Azure Blob Storage
  */
-export async function requestDownloadToken(id: string) {
+export async function requestDownloadToken(id: string): Promise<SasUrlResponse | null> {
   const { data, error } = await api.POST('/api/v1/videos/{id}/request-download-token', {
     params: { path: { id } },
   });
@@ -155,7 +151,7 @@ export async function requestDownloadToken(id: string) {
 /**
  * Confirm that a video file has been uploaded to Azure Blob Storage
  */
-export async function confirmUploadComplete(id: string) {
+export async function confirmUploadComplete(id: string): Promise<boolean> {
   const { error } = await api.POST('/api/v1/videos/{id}/upload-complete', {
     params: { path: { id } },
   });
@@ -171,7 +167,7 @@ export async function confirmUploadComplete(id: string) {
 /**
  * Transfer video ownership to another user
  */
-export async function transferVideoOwnership(id: string, newOwnerId: string) {
+export async function transferVideoOwnership(id: string, newOwnerId: string): Promise<boolean> {
   const { error } = await api.PUT('/api/v1/videos/{id}/owner', {
     params: { path: { id } },
     body: { newOwnerId },
@@ -192,7 +188,7 @@ export async function transferVideoOwnership(id: string, newOwnerId: string) {
 /**
  * Bulk-set video access for users and entities
  */
-export async function setVideoAccess(videoId: string, access: SetVideoAccessRequest) {
+export async function setVideoAccess(videoId: string, access: SetVideoAccessRequest): Promise<boolean> {
   const { error } = await api.PUT('/api/v1/videoaccess/{videoId}/access', {
     params: { path: { videoId } },
     body: access,
@@ -209,7 +205,7 @@ export async function setVideoAccess(videoId: string, access: SetVideoAccessRequ
 /**
  * Share a video with a specific user or entity
  */
-export async function shareVideo(videoId: string, shareRequest: ShareVideoRequest) {
+export async function shareVideo(videoId: string, shareRequest: ShareVideoRequest): Promise<boolean> {
   const { error } = await api.POST('/api/v1/videoaccess/{videoId}/access', {
     params: { path: { videoId } },
     body: shareRequest,
@@ -226,7 +222,7 @@ export async function shareVideo(videoId: string, shareRequest: ShareVideoReques
 /**
  * Remove a user's access to a video
  */
-export async function removeVideoUserAccess(videoId: string, userId: string) {
+export async function removeVideoUserAccess(videoId: string, userId: string): Promise<boolean> {
   const { error } = await api.DELETE('/api/v1/videoaccess/{videoId}/access/user/{userId}', {
     params: { path: { videoId, userId } },
   });
@@ -242,7 +238,7 @@ export async function removeVideoUserAccess(videoId: string, userId: string) {
 /**
  * Remove an entity's access to a video
  */
-export async function removeVideoEntityAccess(videoId: string, entityId: string) {
+export async function removeVideoEntityAccess(videoId: string, entityId: string): Promise<boolean> {
   const { error } = await api.DELETE('/api/v1/videoaccess/{videoId}/access/entity/{entityId}', {
     params: { path: { videoId, entityId } },
   });
@@ -258,7 +254,7 @@ export async function removeVideoEntityAccess(videoId: string, entityId: string)
 /**
  * Get all users that have access to a video
  */
-export async function fetchVideoUsers(videoId: string) {
+export async function fetchVideoUsers(videoId: string): Promise<VideoUserAccessResult[]> {
   const { data, error } = await api.GET('/api/v1/videoaccess/{videoId}/access/users', {
     params: { path: { videoId } },
   });
@@ -274,7 +270,7 @@ export async function fetchVideoUsers(videoId: string) {
 /**
  * Get all entities that have access to a video
  */
-export async function fetchVideoEntities(videoId: string) {
+export async function fetchVideoEntities(videoId: string): Promise<VideoEntityAccessResult[]> {
   const { data, error } = await api.GET('/api/v1/videoaccess/{videoId}/access/entities', {
     params: { path: { videoId } },
   });
@@ -290,7 +286,7 @@ export async function fetchVideoEntities(videoId: string) {
 /**
  * Get all users who have access to a video through entity-level sharing
  */
-export async function fetchVideoEntityUsers(videoId: string) {
+export async function fetchVideoEntityUsers(videoId: string): Promise<VideoEntityAccessResult[]> {
   const { data, error } = await api.GET('/api/v1/videoaccess/{videoId}/access/entity-users', {
     params: { path: { videoId } },
   });

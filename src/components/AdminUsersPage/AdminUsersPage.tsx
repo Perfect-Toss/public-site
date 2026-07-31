@@ -19,7 +19,7 @@ import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { User } from '../../api/api.users';
+import { Role, type User } from '../../api/api.users';
 import { formatDate } from '../../utils/format';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../../stores/userStore';
@@ -36,7 +36,7 @@ function AdminUsersPage() {
   const { users, usersLoading: loading, usersError: error, loadUsers, deleteUser } = useUserStore();
 
   /** All roles defined in the API schema */
-  const allRoles = ['Athlete','Coach','EntityAdmin','OrganizationAdmin','Admin','ServiceAccount','AlphaTester','BetaTester','SuperUser'] as const;
+  const allRoles = Object.values(Role);
 
   useEffect(() => {
     loadUsers();
@@ -62,7 +62,7 @@ function AdminUsersPage() {
       // Role filter
       if (roleFilter.length > 0) {
         const userRoles = u.roles ?? [];
-        const hasRole = roleFilter.some((r) => userRoles.includes(r as any));
+        const hasRole = roleFilter.some((r) => userRoles.includes(r as unknown as Role));
         if (!hasRole) return false;
       }
 

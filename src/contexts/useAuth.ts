@@ -1,14 +1,20 @@
 import { createContext, useContext } from 'react';
 
-import { User } from 'firebase/auth';
+import type { User as FirebaseUser } from 'firebase/auth';
+import type { User } from '../api/api.users';
 
-interface AuthContextType {
+export interface AuthContextType {
+  /** The API user profile fetched from /api/v2/users/current (null when not authenticated). */
   currentUser: User | null;
-  loading: boolean;
+  /** The Firebase User object (null when not authenticated). */
+  firebaseUser: FirebaseUser | null;
+  /** Whether auth state is still being determined on initial load. */
+  initializing: boolean;
+  /** Whether the current user has admin-level privileges (derived from `currentUser.roles`). */
   isAdmin: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
@@ -17,5 +23,3 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
-
-export default AuthContext;

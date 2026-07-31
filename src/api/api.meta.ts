@@ -10,7 +10,7 @@ export type MetaResponse = components['schemas']['MetaResponse'];
 /**
  * Get API meta information including version and user info
  */
-export async function fetchMetaInfo() {
+export async function fetchMetaInfo(): Promise<MetaResponse> {
   const { data, error } = await api.GET('/api/v1/meta/info', {});
   
   if (error) {
@@ -18,13 +18,13 @@ export async function fetchMetaInfo() {
     throw new Error('Failed to fetch meta info');
   }
   
-  return data;
+  return data ?? {};
 }
 
 /**
  * Ping the API to check if it's alive
  */
-export async function pingApi() {
+export async function pingApi(): Promise<string> {
   const { data, error } = await api.GET('/api/v1/meta/ping', {});
   
   if (error) {
@@ -32,7 +32,7 @@ export async function pingApi() {
     throw new Error('Failed to ping API');
   }
   
-  return data;
+  return data ?? '';
 }
 
 /** @deprecated Use fetchMetaInfo instead */

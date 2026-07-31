@@ -14,18 +14,17 @@ import {
   faUsers,
   faVideo
 } from '@fortawesome/free-solid-svg-icons';
-import { useEffect, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { STORAGE_KEYS } from '../../utils/constants';
 import { logout } from '../../firebase/auth';
+import { useAuth } from '../../contexts/useAuth';
+import { useEffect } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 function HomePage() {
   const navigate = useNavigate();
-
-  // TODO: Replace with actual admin check from Firebase auth or user context
-  const [isAdmin] = useState(true); // Set to true for testing, will be dynamic in production
+  const { isAdmin } = useAuth();
   const [collapsed, setCollapsed] = useLocalStorage(STORAGE_KEYS.SIDEBAR_COLLAPSED, false);
 
   useEffect(() => {

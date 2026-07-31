@@ -1402,7 +1402,36 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        /** Updates an existing user's profile information. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The user update request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateUserDto"];
+                    "text/json": components["schemas"]["UpdateUserDto"];
+                    "application/*+json": components["schemas"]["UpdateUserDto"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["User"];
+                        "application/json": components["schemas"]["User"];
+                        "text/json": components["schemas"]["User"];
+                    };
+                };
+            };
+        };
         /** Creates a new user account. This endpoint allows anonymous access. */
         post: {
             parameters: {
@@ -1436,36 +1465,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Updates an existing user's profile information. */
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description The user update request. */
-            requestBody?: {
-                content: {
-                    "application/json": components["schemas"]["UpdateUserDto"];
-                    "text/json": components["schemas"]["UpdateUserDto"];
-                    "application/*+json": components["schemas"]["UpdateUserDto"];
-                };
-            };
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "text/plain": components["schemas"]["User"];
-                        "application/json": components["schemas"]["User"];
-                        "text/json": components["schemas"]["User"];
-                    };
-                };
-            };
-        };
+        patch?: never;
         trace?: never;
     };
     "/api/v1/users/serviceaccounts": {
@@ -1575,7 +1575,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Gets the current authenticated user's profile. */
+        /**
+         * Gets the current authenticated user's profile.
+         * @deprecated
+         */
         get: {
             parameters: {
                 query?: never;
@@ -1591,9 +1594,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["User"];
-                        "application/json": components["schemas"]["User"];
-                        "text/json": components["schemas"]["User"];
+                        "text/plain": components["schemas"]["UserGenericResponse"];
+                        "application/json": components["schemas"]["UserGenericResponse"];
+                        "text/json": components["schemas"]["UserGenericResponse"];
                     };
                 };
             };
@@ -1847,6 +1850,44 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/users/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets the current authenticated user's profile. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["User"];
+                        "application/json": components["schemas"]["User"];
+                        "text/json": components["schemas"]["User"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2693,6 +2734,8 @@ export interface components {
             associatedEntityIds?: string[] | null;
             /** @description Gets the optional list of tag identifiers. */
             tagIds?: string[] | null;
+            /** @description Gets the optional list of coach user identifiers assigned to this video. */
+            coachIds?: string[] | null;
         };
         /** @enum {string} */
         DeviceOrientation: "Unknown" | "Portrait" | "Landscape" | "PortraitUpsideDown" | "LandscapeLeft" | "LandscapeRight";
@@ -3202,6 +3245,8 @@ export interface components {
             associatedEntityIds?: string[] | null;
             /** @description Gets the optional list of tag identifiers. */
             tagIds?: string[] | null;
+            /** @description Gets the optional list of coach user identifiers assigned to this video. */
+            coachIds?: string[] | null;
         };
         /** @enum {string} */
         UploadStatus: "Unknown" | "NotUploaded" | "Pending" | "Uploaded";
@@ -3246,6 +3291,12 @@ export interface components {
             userId: string;
             accessLevel: components["schemas"]["VideoAccessLevel"];
         };
+        UserGenericResponse: {
+            succeeded?: boolean;
+            message?: string | null;
+            errors?: string[] | null;
+            data?: components["schemas"]["User"];
+        };
         Video: {
             /** Format: uuid */
             id: string;
@@ -3267,6 +3318,7 @@ export interface components {
             owner?: components["schemas"]["User"];
             associatedEntities?: components["schemas"]["Entity"][] | null;
             tags?: components["schemas"]["Tag"][] | null;
+            coaches?: components["schemas"]["User"][] | null;
             label?: string | null;
             /** Format: byte */
             thumbnail?: string | null;
