@@ -1,14 +1,15 @@
 {
   "name": "perfect-toss-web-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run lint && tsc -b && vite build",
+    "build": "npm run generate:version && npm run lint && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate:api": "node scripts/generate-api-types.mjs"
+    "generate:api": "node scripts/generate-api-types.mjs",
+    "generate:version": "node scripts/generate-version.mjs"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
