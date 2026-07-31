@@ -1,5 +1,6 @@
 import './HomePage.css';
 
+import { APP_VERSION, IS_PRODUCTION, formatVersion } from '../../version';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   faBuilding,
@@ -10,6 +11,7 @@ import {
   faRightFromBracket,
   faSitemap,
   faTabletScreenButton,
+  faTag,
   faUser,
   faUsers,
   faVideo
@@ -154,6 +156,30 @@ function HomePage() {
           <span className="nav-icon"><FontAwesomeIcon icon={faRightFromBracket} /></span>
           {!collapsed && <span>LOGOUT</span>}
         </button>
+
+        {collapsed ? (
+          <div
+            className="sidebar-version collapsed"
+            data-tooltip={
+              IS_PRODUCTION
+                ? formatVersion()
+                : `${formatVersion()} · built ${new Date(APP_VERSION.buildTime).toLocaleString()}`
+            }
+          >
+            <FontAwesomeIcon icon={faTag} />
+          </div>
+        ) : (
+          <div
+            className="sidebar-version"
+            title={
+              IS_PRODUCTION
+                ? undefined
+                : `Built ${new Date(APP_VERSION.buildTime).toLocaleString()}`
+            }
+          >
+            {formatVersion()}
+          </div>
+        )}
 
         <button
           className="sidebar-toggle"
