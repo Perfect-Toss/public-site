@@ -1,34 +1,26 @@
 /**
  * Users API functions
+ *
+ * Types are re-exported directly from the auto-generated schema so that
+ * any schema rename/removal produces a compile-time error at every usage site.
+ * No intermediate models, mappers, or type casts.
  */
 
 import { api } from './index';
 import type { components } from './schema';
+
+export { Role, ROLES, isAdminUser } from '../utils/roles';
 
 export type User = components['schemas']['User'];
 export type CreateUserDto = components['schemas']['CreateUserDto'];
 export type UpdateUserDto = components['schemas']['UpdateUserDto'];
 export type CreateAthletesDto = components['schemas']['CreateAthletesDto'];
 export type CreateCoachesDto = components['schemas']['CreateCoachesDto'];
-export type Roles = components['schemas']['Roles'];
-
-/** Runtime array of all possible role values, matching the Roles schema type. */
-export const ROLES: Roles[] = [
-  'Athlete',
-  'Coach',
-  'EntityAdmin',
-  'OrganizationAdmin',
-  'Admin',
-  'ServiceAccount',
-  'AlphaTester',
-  'BetaTester',
-  'SuperUser',
-];
 
 /**
  * Get all users (requires admin authorization)
  */
-export async function fetchAllUsers() {
+export async function fetchAllUsers(): Promise<User[]> {
   const { data, error } = await api.GET('/api/v1/users', {});
   
   if (error) {
@@ -42,7 +34,7 @@ export async function fetchAllUsers() {
 /**
  * Create a new user
  */
-export async function createUser(userData: CreateUserDto) {
+export async function createUser(userData: CreateUserDto): Promise<User> {
   const { data, error } = await api.POST('/api/v1/users', {
     body: userData,
   });
@@ -52,14 +44,14 @@ export async function createUser(userData: CreateUserDto) {
     throw new Error('Failed to create user');
   }
   
-  return data;
+  return data as User;
 }
 
 /**
  * Update user information
  */
-export async function updateUser(userData: UpdateUserDto) {
-  const { data, error } = await api.PATCH('/api/v1/users', {
+export async function updateUser(userData: UpdateUserDto): Promise<User> {
+  const { data, error } = await api.PUT('/api/v1/users', {
     body: userData,
   });
   
@@ -68,13 +60,13 @@ export async function updateUser(userData: UpdateUserDto) {
     throw new Error('Failed to update user');
   }
   
-  return data;
+  return data as User;
 }
 
 /**
  * Get all service accounts (requires admin authorization)
  */
-export async function fetchServiceAccounts() {
+export async function fetchServiceAccounts(): Promise<User[]> {
   const { data, error } = await api.GET('/api/v1/users/serviceaccounts', {});
   
   if (error) {
@@ -88,7 +80,7 @@ export async function fetchServiceAccounts() {
 /**
  * Get a specific user by ID (requires admin authorization)
  */
-export async function fetchUserById(id: string) {
+export async function fetchUserById(id: string): Promise<User | null> {
   const { data, error } = await api.GET('/api/v1/users/{id}', {
     params: { path: { id } },
   });
@@ -102,24 +94,25 @@ export async function fetchUserById(id: string) {
 }
 
 /**
- * Fetch the currently authenticated user
+ * Fetch the currently authenticated user's profile (v2).
+ * Returns the User object directly, or null if not found.
  */
-export async function fetchCurrentUser() {
-  const { data, error } = await api.GET('/api/v1/users/current', {});
+export async function fetchCurrentUser(): Promise<User | null> {
+  const { data, error } = await api.GET('/api/v2/users/current', {});
   
   if (error) {
     console.error('Failed to fetch current user:', error);
     throw new Error('Failed to fetch current user');
   }
   
-  return data;
+  return data ?? null;
 }
 
 /**
  * Accept or decline terms for a user by email
  */
-export async function acceptUserTerms(email: string, accepted: boolean = true) {
-  const { data, error } = await api.GET('/api/v1/users/accept', {
+export async function acceptUserTerms(email: string, accepted: boolean = true): Promise<void> {
+  const { error } = await api.GET('/api/v1/users/accept', {
     params: { query: { email, accepted } },
   });
   
@@ -127,14 +120,12 @@ export async function acceptUserTerms(email: string, accepted: boolean = true) {
     console.error('Failed to accept user terms:', error);
     throw new Error('Failed to accept user terms');
   }
-  
-  return data;
 }
 
 /**
  * Create a new service account (requires admin authorization)
  */
-export async function createServiceAccount(userData: CreateUserDto) {
+export async function createServiceAccount(userData: CreateUserDto): Promise<User> {
   const { data, error } = await api.POST('/api/v1/users/serviceaccount', {
     body: userData,
   });
@@ -144,13 +135,13 @@ export async function createServiceAccount(userData: CreateUserDto) {
     throw new Error('Failed to create service account');
   }
   
-  return data;
+  return data as User;
 }
 
 /**
  * Batch create athlete accounts (requires admin authorization)
  */
-export async function createAthletes(athletesData: CreateAthletesDto) {
+export async function createAthletes(athletesData: CreateAthletesDto): Promise<User[]> {
   const { data, error } = await api.POST('/api/v1/users/athletes', {
     body: athletesData,
   });
@@ -166,7 +157,7 @@ export async function createAthletes(athletesData: CreateAthletesDto) {
 /**
  * Batch create coach accounts (requires admin authorization)
  */
-export async function createCoaches(coachesData: CreateCoachesDto) {
+export async function createCoaches(coachesData: CreateCoachesDto): Promise<User[]> {
   const { data, error } = await api.POST('/api/v1/users/coaches', {
     body: coachesData,
   });
@@ -182,7 +173,7 @@ export async function createCoaches(coachesData: CreateCoachesDto) {
 /**
  * Sync users with external system (requires super user authorization)
  */
-export async function syncUsers() {
+export async function syncUsers(): Promise<User[]> {
   const { data, error } = await api.PATCH('/api/v1/users/sync', {});
   
   if (error) {
@@ -196,7 +187,7 @@ export async function syncUsers() {
 /**
  * Delete a user by their identifier (requires super user authorization)
  */
-export async function deleteUserById(id: string) {
+export async function deleteUserById(id: string): Promise<boolean> {
   const { error } = await api.DELETE('/api/v1/users/{id}', {
     params: { path: { id } },
   });

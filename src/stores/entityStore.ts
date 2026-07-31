@@ -14,7 +14,7 @@ import {
   type CreateEntityRequest,
   type UpdateEntityRequest,
 } from '../api/api.entities';
-import type { User, Roles } from '../api/api.users';
+import { Role, type User } from '../api/api.users';
 
 /** Rebuild a hierarchy map from a flat entity list. */
 function buildEntityMap(flat: Entity[]): Record<string, Entity[]> {
@@ -45,7 +45,7 @@ interface EntityState {
   loadChildEntities: (parentId: string) => Promise<Entity[]>;
   loadEntitiesForUser: (userId: string) => Promise<Entity[]>;
   loadEntityUsers: (entityId: string) => Promise<void>;
-  addUserToEntity: (entityId: string, userId: string, roles: { roles: Roles[] | null }) => Promise<boolean>;
+  addUserToEntity: (entityId: string, userId: string, roles: { roles: Role[] | null }) => Promise<boolean>;
   removeUserFromEntity: (entityId: string, userId: string) => Promise<boolean>;
 }
 
@@ -124,7 +124,7 @@ export const useEntityStore = create<EntityState>((set, get) => ({
     }
   },
 
-  addUserToEntity: async (entityId, userId, roles: { roles: Roles[] | null }) => {
+  addUserToEntity: async (entityId, userId, roles: { roles: Role[] | null }) => {
     try {
       await addUserToEntity(entityId, userId, roles);
       await get().loadEntityUsers(entityId);

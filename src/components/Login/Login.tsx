@@ -1,22 +1,27 @@
 import './Login.css';
 
-import { useState, useEffect, FormEvent } from 'react';
-import { 
-  signInWithGoogle, 
-  signInWithApple, 
+import { FormEvent, useEffect, useState } from 'react';
+import {
+  checkIsSignInWithEmailLink,
+  completeMagicLinkSignIn,
   handleRedirectResult,
   sendMagicLink,
-  checkIsSignInWithEmailLink,
-  completeMagicLinkSignIn
+  signInWithApple,
+  signInWithGoogle
 } from '../../firebase/auth';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faApple, faGoogle } from '@fortawesome/free-brands-svg-icons';
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useAuthStore } from '../../stores/authStore';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+
+  const authError = useAuthStore((s) => s.error);
+  const setAuthError = useAuthStore((s) => s.setAuthError);
 
   // Handle redirect result and magic link when component mounts
   useEffect(() => {
@@ -85,6 +90,18 @@ function Login() {
     
     checkAuth();
   }, []);
+
+  // React to auth failures reported by AuthProvider — e.g. the magic link
+  // succeeds but the follow-up profile fetch fails and the user is signed
+  // back out. Bail out of the loading state and show the error instead of
+  // hanging on the spinner. Fully deterministic: driven by the store value,
+  // not a timeout.
+  useEffect(() => {
+    if (!authError) return;
+    setError(authError);
+    setLoading(false);
+    setAuthError(null); // consume so it doesn't re-trigger
+  }, [authError, setAuthError]);
 
   const handleContinueWithApple = async () => {
     setLoading(true);
@@ -179,48 +196,55 @@ function Login() {
         </div>
 
         <div className="login-form">
-          {error && (
-            <div className="error-message">
-              {error}
+          {loading ? (
+            <div className="login-loading">
+              <div className="login-spinner" />
+              <p>Signing you in...</p>
             </div>
+          ) : (
+            <>
+              {error && (
+                <div className="error-message">
+                  {error}
+                </div>
+              )}
+
+              <button 
+                className="social-button apple-button" 
+                onClick={handleContinueWithApple}
+              >
+                <FontAwesomeIcon icon={faApple} className="social-icon" />
+                Continue with Apple
+              </button>
+
+              <button 
+                className="social-button google-button" 
+                onClick={handleContinueWithGoogle}
+              >
+                <FontAwesomeIcon icon={faGoogle} className="social-icon" />
+                Continue with Google
+              </button>
+
+              <div className="divider">
+                <span>OR CONTINUE WITH EMAIL</span>
+              </div>
+
+              <form onSubmit={handleEmailContinue}>
+                <input
+                  type="email"
+                  className="email-input"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+
+                <button type="submit" className="continue-button">
+                  Continue
+                </button>
+              </form>
+            </>
           )}
-
-          <button 
-            className="social-button apple-button" 
-            onClick={handleContinueWithApple}
-            disabled={loading}
-          >
-            <FontAwesomeIcon icon={faApple} className="social-icon" />
-            Continue with Apple
-          </button>
-
-          <button 
-            className="social-button google-button" 
-            onClick={handleContinueWithGoogle}
-            disabled={loading}
-          >
-            <FontAwesomeIcon icon={faGoogle} className="social-icon" />
-            Continue with Google
-          </button>
-
-          <div className="divider">
-            <span>OR CONTINUE WITH EMAIL</span>
-          </div>
-
-          <form onSubmit={handleEmailContinue}>
-            <input
-              type="email"
-              className="email-input"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-
-            <button type="submit" className="continue-button" disabled={loading}>
-              {loading ? 'Loading...' : 'Continue'}
-            </button>
-          </form>
         </div>
       </div>
     </div>

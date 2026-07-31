@@ -3,9 +3,9 @@
  * Reads the API URL from .env file (VITE_API_BASE_URL)
  */
 
+import { execSync } from 'child_process';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { execSync } from 'child_process';
 
 // Read .env file
 function loadEnv() {
@@ -34,7 +34,7 @@ function loadEnv() {
 // Get API base URL from .env or use default
 const env = loadEnv();
 const apiBaseUrl = env.VITE_API_BASE_URL || 'https://dev-api.perfect-toss.com';
-const swaggerUrl = `${apiBaseUrl}/swagger/v1-internal/swagger.json`;
+const swaggerUrl = `${apiBaseUrl}/swagger/internal/swagger.json`;
 const outputPath = 'src/api/schema.d.ts';
 
 console.log(`📡 Fetching OpenAPI spec from: ${swaggerUrl}`);

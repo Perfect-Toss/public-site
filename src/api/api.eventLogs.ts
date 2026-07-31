@@ -16,7 +16,7 @@ export type EventLogIEnumerablePagedResponse = components['schemas']['EventLogIE
 /**
  * Create a single event log
  */
-export async function createEventLog(eventData: CreateEventLogDto) {
+export async function createEventLog(eventData: CreateEventLogDto): Promise<EventLog> {
   const { data, error } = await api.POST('/api/v1/eventlogs', {
     body: eventData,
   });
@@ -32,7 +32,7 @@ export async function createEventLog(eventData: CreateEventLogDto) {
 /**
  * Bulk create event logs
  */
-export async function bulkCreateEventLogs(events: CreateEventLogDto[]) {
+export async function bulkCreateEventLogs(events: CreateEventLogDto[]): Promise<EventLog[]> {
   const { data, error } = await api.POST('/api/v1/eventlogs/bulk', {
     body: { eventLogs: events },
   });
@@ -95,7 +95,7 @@ export async function fetchEventLogTypes(): Promise<string[]> {
  * Get all event logs for a specific entity (requires admin authorization)
  * @deprecated This endpoint has been removed. Use searchEventLogs with entityId filter instead.
  */
-export async function fetchEventLogsByEntity(entityId: string) {
+export async function fetchEventLogsByEntity(entityId: string): Promise<EventLogIEnumerablePagedResponse> {
   return searchEventLogs({ entityId });
 }
 
@@ -103,14 +103,14 @@ export async function fetchEventLogsByEntity(entityId: string) {
  * Get all event logs of a specific type (requires admin authorization)
  * @deprecated This endpoint has been removed. Use searchEventLogs with eventType filter instead.
  */
-export async function fetchEventLogsByType(eventType: string) {
+export async function fetchEventLogsByType(eventType: string): Promise<EventLogIEnumerablePagedResponse> {
   return searchEventLogs({ eventType });
 }
 
 /**
  * Get last event timestamp for a user
  */
-export async function getLastUserEvent(userId: string) {
+export async function getLastUserEvent(userId: string): Promise<string | null> {
   const { data, error } = await api.GET('/api/v1/eventlogs/user/{userId}/last', {
     params: { path: { userId } },
   });

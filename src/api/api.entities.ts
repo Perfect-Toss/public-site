@@ -13,7 +13,7 @@ export type AddUserToEntityRequest = components['schemas']['AddUserToEntityReque
 /**
  * Fetch all root-level entities (organizations without a parent)
  */
-export async function fetchEntities() {
+export async function fetchEntities(): Promise<Entity[]> {
   const { data, error } = await api.GET('/api/v1/entities', {});
   
   if (error) {
@@ -21,13 +21,13 @@ export async function fetchEntities() {
     throw new Error('Failed to fetch entities');
   }
   
-  return data || [];
+  return (data || []) as Entity[];
 }
 
 /**
  * Fetch all entities in the system
  */
-export async function fetchAllEntities() {
+export async function fetchAllEntities(): Promise<Entity[]> {
   const { data, error } = await api.GET('/api/v1/entities/all', {});
   
   if (error) {
@@ -35,13 +35,13 @@ export async function fetchAllEntities() {
     throw new Error('Failed to fetch all entities');
   }
   
-  return data || [];
+  return (data || []) as Entity[];
 }
 
 /**
  * Fetch a specific entity by ID
  */
-export async function fetchEntityById(id: string) {
+export async function fetchEntityById(id: string): Promise<Entity | null> {
   const { data, error } = await api.GET('/api/v1/entities/id/{id}', {
     params: { path: { id } },
   });
@@ -51,13 +51,13 @@ export async function fetchEntityById(id: string) {
     throw new Error('Failed to fetch entity');
   }
   
-  return data ?? null;
+  return (data ?? null) as Entity | null;
 }
 
 /**
  * Fetch all entities of a specific type
  */
-export async function fetchEntitiesByType(entityType: string) {
+export async function fetchEntitiesByType(entityType: string): Promise<Entity[]> {
   const { data, error } = await api.GET('/api/v1/entities/type/{entityType}', {
     params: { path: { entityType } },
   });
@@ -67,13 +67,13 @@ export async function fetchEntitiesByType(entityType: string) {
     throw new Error('Failed to fetch entities by type');
   }
   
-  return data || [];
+  return (data || []) as Entity[];
 }
 
 /**
  * Fetch all child entities of a specific parent entity
  */
-export async function fetchChildEntities(parentEntityId: string) {
+export async function fetchChildEntities(parentEntityId: string): Promise<Entity[]> {
   const { data, error } = await api.GET('/api/v1/entities/parent/{parentEntityId}', {
     params: { path: { parentEntityId } },
   });
@@ -83,13 +83,13 @@ export async function fetchChildEntities(parentEntityId: string) {
     throw new Error('Failed to fetch child entities');
   }
   
-  return data || [];
+  return (data || []) as Entity[];
 }
 
 /**
  * Create a new entity
  */
-export async function createEntity(entityData: CreateEntityRequest) {
+export async function createEntity(entityData: CreateEntityRequest): Promise<Entity | null> {
   const { data, error } = await api.POST('/api/v1/entities', {
     body: entityData,
   });
@@ -99,13 +99,13 @@ export async function createEntity(entityData: CreateEntityRequest) {
     throw new Error('Failed to create entity');
   }
   
-  return data ?? null;
+  return (data ?? null) as Entity | null;
 }
 
 /**
  * Update an existing entity
  */
-export async function updateEntity(id: string, entityData: UpdateEntityRequest) {
+export async function updateEntity(id: string, entityData: UpdateEntityRequest): Promise<Entity | null> {
   const { data, error } = await api.PUT('/api/v1/entities/{id}', {
     params: { path: { id } },
     body: entityData,
@@ -116,13 +116,13 @@ export async function updateEntity(id: string, entityData: UpdateEntityRequest) 
     throw new Error('Failed to update entity');
   }
   
-  return data ?? null;
+  return (data ?? null) as Entity | null;
 }
 
 /**
  * Delete an entity
  */
-export async function deleteEntity(id: string) {
+export async function deleteEntity(id: string): Promise<boolean> {
   const { error } = await api.DELETE('/api/v1/entities/{id}', {
     params: { path: { id } },
   });
@@ -138,7 +138,7 @@ export async function deleteEntity(id: string) {
 /**
  * Fetch users for a specific entity
  */
-export async function fetchEntityUsers(entityId: string) {
+export async function fetchEntityUsers(entityId: string): Promise<components['schemas']['User'][]> {
   const { data, error } = await api.GET('/api/v1/entities/{entityId}/users', {
     params: { path: { entityId } },
   });
@@ -158,7 +158,7 @@ export async function addUserToEntity(
   entityId: string, 
   userId: string, 
   roles: AddUserToEntityRequest
-) {
+): Promise<boolean> {
   const { error } = await api.POST('/api/v1/entities/{entityId}/users/{userId}', {
     params: { path: { entityId, userId } },
     body: roles,
@@ -175,7 +175,7 @@ export async function addUserToEntity(
 /**
  * Remove a user from an entity
  */
-export async function removeUserFromEntity(entityId: string, userId: string) {
+export async function removeUserFromEntity(entityId: string, userId: string): Promise<boolean> {
   const { error } = await api.DELETE('/api/v1/entities/{entityId}/users/{userId}', {
     params: { path: { entityId, userId } },
   });
