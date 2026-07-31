@@ -67,34 +67,32 @@ collapsed. In non-production builds, hovering it shows the build timestamp.
 > A socket-based push solution will be worked out later so the app can notify
 > users the moment a new build ships, without periodic polling.
 
-## 5. Releasing a new version
+## 5. Releasing a new version (semantic-release)
 
-The release workflow (`.github/workflows/release.yml`) runs on any `v*` tag. It
-verifies the tag matches `package.json` and then creates a GitHub Release with
-auto-generated release notes.
+Releases are fully automated with [semantic-release](https://semantic-release.org/)
+(`.github/workflows/semantic-release.yml`). On every push to `main` it:
 
-### Cutting a release
+1. Analyzes the commits since the last release (Conventional Commits)
+2. Determines the next version (patch / minor / major)
+3. Generates release notes and updates `CHANGELOG.md`
+4. Bumps `package.json` (and `package-lock.json`)
+5. Creates a `vX.Y.Z` git tag and a GitHub Release
+6. Commits the version bump back to `main` — which re-triggers the Azure
+   deploy, so the live app carries the released version
 
-```bash
-# 1. Bump the version (patch / minor / major) — updates package.json + creates a tag
-npm version patch
-# or: npm version minor
-# or: npm version major
+### Commit conventions
 
-# 2. Push the commit and tag
-git push
-git push --tags
-```
+| Commit message                      | Version change          |
+| ----------------------------------- | ----------------------- |
+| `fix(...)`                          | Patch (`1.0.0 -> 1.0.1`) |
+| `feat(...)`                         | Minor (`1.0.0 -> 1.1.0`) |
+| `feat!` / `BREAKING CHANGE:` footer | Major (`1.0.0 -> 2.0.0`) |
 
-Order of events:
+### Branch protection
 
-1. Pushing the commit to `main` triggers the normal deploy workflow →
-   production is updated and `version.json` reflects the new version.
-2. Pushing the `vX.Y.Z` tag triggers `release.yml` → a GitHub Release is
-   created with generated release notes.
-
-> To make the tag match `package.json`, always bump with `npm version` (which
-> creates the tag) rather than `git tag` by hand.
+The git plugin pushes the version bump back to `main`. If branch protection
+requires pull requests, add an exception for the GitHub Actions bot token, or
+the push (and therefore the release) will fail.
 
 ## 6. CI wiring
 
@@ -112,5 +110,6 @@ both build steps so every CI build embeds the exact commit it was built from.
 | `scripts/generate-version.mjs`                | Writes `public/version.json`               |
 | `src/components/HomePage/HomePage.tsx`        | Sidebar version readout                    |
 | `.github/workflows/azure-deploy.yml`          | Passes `VITE_GIT_SHA` to builds            |
-| `.github/workflows/release.yml`               | Creates GitHub Releases on `v*` tags       |
+| `.github/workflows/semantic-release.yml`      | Runs semantic-release on push to `main`    |
+| `.releaserc.json`                             | semantic-release plugin/config             |
 | `package.json`                                | `generate:version` script; source of truth for version |

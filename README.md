@@ -78,6 +78,28 @@ Quick links:
 - **Preview**: Creates preview environment for each pull request
 - **Manual**: Trigger deployment from GitHub Actions tab
 
+### Releases & Versioning
+
+Releases are automated with **semantic-release**. On every push to `main`, it analyzes commit messages (Conventional Commits), bumps the version, updates `CHANGELOG.md`, creates a `vX.Y.Z` git tag + GitHub Release, and commits the version bump back to `main` (which re-deploys the app with the released version).
+
+**Commit conventions that trigger releases:**
+
+| Commit message               | Version change          |
+| ---------------------------- | ----------------------- |
+| `fix(scope): ...`            | Patch (`1.0.0 -> 1.0.1`) |
+| `feat(scope): ...`           | Minor (`1.0.0 -> 1.1.0`) |
+| `feat!` / `BREAKING CHANGE:` | Major (`1.0.0 -> 2.0.0`) |
+
+```bash
+git commit -m "fix: correct tablet sync timing"
+git commit -m "feat(devices): add bulk export"
+git commit -m "feat!: drop legacy API support"
+```
+
+Other prefixes (`chore:`, `docs:`, `refactor:`, `test:`) do **not** trigger a release. The released version is shown at the bottom of the expanded sidebar and at `/version.json`. See the [Versioning & Release Guide](./docs/14-VERSIONING.md) for full details.
+
+> **Branch protection:** semantic-release pushes the version bump back to `main`. If branch protection requires pull requests, add an exception for the GitHub Actions bot token or releases will fail.
+
 ## Documentation
 
 - [Firebase Setup](./docs/01-FIREBASE_SETUP.md)
@@ -91,6 +113,7 @@ Quick links:
 - [React Router Migration](./docs/09-REACT_ROUTER_MIGRATION.md)
 - [Azure Deployment](./docs/10-AZURE_DEPLOYMENT.md)
 - [GitHub Secrets Setup](./docs/11-GITHUB_SECRETS_SETUP.md)
+- [Versioning & Release Guide](./docs/14-VERSIONING.md)
 
 ## Project Structure
 
