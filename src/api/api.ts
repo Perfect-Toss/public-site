@@ -13,6 +13,7 @@
  *   import { fetchEventLogSummary } from '../api/api.eventLogs';
  *   import { fetchMetaInfo } from '../api/api.meta';
  *   import { fetchVideos } from '../api/api.videos';
+ *   import { fetchTags } from '../api/api.tags';
  */
 
 export * from './api.auth';
@@ -24,3 +25,4 @@ export * from './api.machines';
 export * from './api.tablets';
 export * from './api.tabletTypes';
 export * from './api.videos';
+export * from './api.tags';

@@ -1372,6 +1372,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all global tags and tags created by the current user. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Tag"][];
+                        "application/json": components["schemas"]["Tag"][];
+                        "text/json": components["schemas"]["Tag"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new tag. Only admins can create global tags. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The tag creation request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateTagRequest"];
+                    "text/json": components["schemas"]["CreateTagRequest"];
+                    "application/*+json": components["schemas"]["CreateTagRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Tag"];
+                        "application/json": components["schemas"]["Tag"];
+                        "text/json": components["schemas"]["Tag"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tags/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Updates an existing tag. Only admins can update global tags; users can update tags they created. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the tag to update. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The tag update request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateTagRequest"];
+                    "text/json": components["schemas"]["UpdateTagRequest"];
+                    "application/*+json": components["schemas"]["UpdateTagRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Tag"];
+                        "application/json": components["schemas"]["Tag"];
+                        "text/json": components["schemas"]["Tag"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes a tag. Only admins can delete global tags; users can delete tags they created. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the tag to delete. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -2684,6 +2820,15 @@ export interface components {
              */
             price?: number | null;
         };
+        /** @description Request model for creating a new tag. */
+        CreateTagRequest: {
+            /** @description Gets the name of the tag. */
+            name: string | null;
+            /** @description Gets the optional hex color of the tag. */
+            colorHex?: string | null;
+            /** @description Gets a value indicating whether the tag is global. */
+            isGlobal?: boolean;
+        };
         /** @description Data transfer object for creating a new user. */
         CreateUserDto: {
             /** @description Gets the first name of the user. */
@@ -2944,6 +3089,10 @@ export interface components {
             userId?: string | null;
             /** @description The current user's email address. */
             email?: string | null;
+            /** @description The deployment environment (e.g. Development, Production). */
+            environment?: string | null;
+            /** @description The git commit SHA stamped as build metadata, if present. */
+            gitSha?: string | null;
         };
         /** @enum {string} */
         ReviewStatus: "Unknown" | "NotReviewed" | "ReviewRequested" | "Reviewed";
@@ -3184,6 +3333,15 @@ export interface components {
              * @description Gets the price of the tablet type.
              */
             price?: number | null;
+        };
+        /** @description Request model for updating an existing tag. */
+        UpdateTagRequest: {
+            /** @description Gets the updated name of the tag. */
+            name: string | null;
+            /** @description Gets the updated hex color of the tag. */
+            colorHex?: string | null;
+            /** @description Gets a value indicating whether the tag is global. */
+            isGlobal?: boolean;
         };
         /** @description Data transfer object for updating an existing user. */
         UpdateUserDto: {

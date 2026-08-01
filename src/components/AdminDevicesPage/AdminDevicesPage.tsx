@@ -1,7 +1,7 @@
 import './AdminDevicesPage.css';
 
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { faDesktop, faLayerGroup, faPlus, faTablet } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop, faLayerGroup, faPlus, faTablet, faTags } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -9,21 +9,25 @@ const TAB_LABELS: Record<string, string> = {
   machines: 'Machine',
   tablets: 'Tablet',
   'tablet-types': 'Tablet Type',
+  tags: 'Tag',
 } as const;
 
 const TAB_NEW_ROUTES: Record<string, string> = {
   machines: '/admin/devices/machines/new',
   tablets: '/admin/devices/tablets/new',
   'tablet-types': '/admin/devices/tablet-types/new',
+  tags: '/admin/devices/tags/new',
 } as const;
 
 function AdminDevicesPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Determine active tab from the current path
-  const pathSegment = location.pathname.split('/').pop() ?? '';
-  const activeTab = pathSegment in TAB_LABELS ? pathSegment : 'machines';
+  // Determine active tab from the current path (handles list, new, and :id/edit routes)
+  const tabKey = Object.keys(TAB_LABELS).find((key) =>
+    location.pathname.includes(`/admin/devices/${key}`)
+  );
+  const activeTab = (tabKey && tabKey in TAB_LABELS ? tabKey : 'machines');
 
   const handleAdd = () => {
     navigate(TAB_NEW_ROUTES[activeTab] ?? '/admin/devices/machines/new');
@@ -66,6 +70,13 @@ function AdminDevicesPage() {
           >
             <FontAwesomeIcon icon={faLayerGroup} />
             Tablet Types
+          </NavLink>
+          <NavLink
+            to="/admin/devices/tags"
+            className={({ isActive }) => `device-tab-btn ${isActive ? 'active' : ''}`}
+          >
+            <FontAwesomeIcon icon={faTags} />
+            Tags
           </NavLink>
         </div>
 
