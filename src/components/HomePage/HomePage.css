@@ -162,6 +162,31 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Slightly recessed panel so the scrollable region is distinguishable
+     from the sidebar header/footer areas (same base color otherwise). */
+  background-color: rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.32) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .nav-item {
@@ -293,7 +318,6 @@
 }
 
 .nav-item.active {
-  background-color: rgba(207, 255, 4, 0.1);
   color: #cfff04;
   border-left-color: #cfff04;
 }
@@ -302,6 +326,14 @@
   font-size: 18px;
   width: 20px;
   text-align: center;
+}
+
+/* Divider between the scrollable nav and the account/logout section,
+   matching the header's divider under the logo. */
+.nav-account-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 0 0 4px;
+  flex-shrink: 0;
 }
 
 .logout-button {
@@ -314,6 +346,172 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   margin: 8px 20px;
   flex-shrink: 0;
+}
+
+/* Admin section label */
+.nav-section-label {
+  padding: 10px 20px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.35);
+  text-transform: uppercase;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Collapsed sidebar: hide the label text but keep its spacing */
+.sidebar.collapsed .nav-section-label {
+  visibility: hidden;
+}
+
+/* ─── Accordion Group (Devices) ─────────────────────────────────── */
+
+.nav-group {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nav-group-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.nav-group-header .nav-group-chevron {
+  margin-left: auto;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Locked group (contains the active route): not collapsible, shows the
+   selected color on the label only (no bar, no full highlight). */
+.nav-group-header.locked {
+  cursor: default;
+  color: #cfff04;
+}
+
+.nav-group-header.locked:hover {
+  background-color: transparent;
+  color: #cfff04;
+}
+
+.nav-group-header.locked .nav-group-chevron {
+  opacity: 0.35;
+}
+
+.sidebar.collapsed .nav-group-header .nav-group-chevron {
+  display: none;
+}
+
+/* Inline accordion children (expanded sidebar only) */
+.nav-group-children {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0 8px;
+}
+
+.nav-group-children.open {
+  display: flex;
+}
+
+.nav-group-child {
+  display: block;
+  padding: 12px 20px 12px 46px;
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-group-child:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.nav-group-child.active {
+  color: #cfff04;
+  border-left-color: #cfff04;
+}
+
+.sidebar.collapsed .nav-group-children {
+  display: none;
+}
+
+/* ─── Flyout Submenu (collapsed / narrow sidebar) ───────────────── */
+
+.nav-group-flyout {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  min-width: 180px;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  background: #1a1f24;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 300;
+}
+
+.nav-group-flyout .nav-group-child {
+  padding: 12px 18px;
+}
+
+.nav-group-flyout-title {
+  padding: 6px 18px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 6px;
+}
+
+.sidebar.collapsed .nav-group:hover .nav-group-flyout {
+  display: block;
+}
+
+/* ─── Collapsed-Sidebar Tooltip (JS-rendered) ────────────────────────
+   Positioned with position: fixed so it escapes the scrollable nav
+   container (which would otherwise clip it like the flyout). */
+
+.sidebar-tooltip {
+  position: fixed;
+  transform: translateY(-50%);
+  background: #1a1f24;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 500;
+  pointer-events: none;
+}
+
+/* Tooltips are rendered by JS (sidebar-tooltip); disable the CSS
+   pseudo-element tooltips — the scrollable nav clips them, and leaving
+   them on would double up for items outside the nav (account/logout/etc). */
+.nav-item[data-tooltip]::after,
+.nav-item[data-tooltip]::before,
+.sidebar-version[data-tooltip]::after,
+.sidebar-version[data-tooltip]::before,
+.sidebar-toggle[data-tooltip]::after,
+.sidebar-toggle[data-tooltip]::before {
+  display: none;
 }
 
 /* ─── Main Content ───────────────────────────────────────────────────────── */
@@ -560,8 +758,25 @@
     display: none;
   }
 
+  .nav-section-label {
+    visibility: hidden;
+  }
+
   .logout-button span:not(.nav-icon) {
     display: none;
+  }
+
+  /* Narrow sidebar: hide inline accordion, use flyout on hover */
+  .nav-group-children {
+    display: none !important;
+  }
+
+  .nav-group-header .nav-group-chevron {
+    display: none;
+  }
+
+  .nav-group:hover .nav-group-flyout {
+    display: block;
   }
 
   .main-content {

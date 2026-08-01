@@ -20,7 +20,7 @@ function AdminPage() {
     <div className="admin-page">
       <section className="section">
         <div className="section-header">
-          <h2>ADMIN DASHBOARD</h2>
+          <h2>Admin Dashboard</h2>
         </div>
 
         <div className="admin-grid" style={{ 

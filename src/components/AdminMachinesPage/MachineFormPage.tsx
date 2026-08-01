@@ -131,7 +131,7 @@ function MachineFormPage() {
             <FontAwesomeIcon icon={faArrowLeft} />
             <span>Back</span>
           </button>
-          <h2>{isEditing ? 'EDIT MACHINE' : 'ADD MACHINE'}</h2>
+          <h2>{isEditing ? 'Edit Machine' : 'Add Machine'}</h2>
           <div />
         </div>
 

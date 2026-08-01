@@ -157,7 +157,7 @@ function AdminUsersPage() {
     <div className="admin-users-page">
       <section className="section">
         <div className="section-header">
-          <h2>USER MANAGEMENT</h2>
+          <h2>User Management</h2>
           <div className="header-actions">
             <button
               className="secondary-btn icon-only-btn"

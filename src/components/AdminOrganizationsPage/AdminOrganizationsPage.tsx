@@ -154,7 +154,7 @@ function AdminOrganizationsPage() {
     <div className="admin-orgs-page">
       <section className="section">
         <div className="section-header">
-          <h2>ORGANIZATION MANAGEMENT</h2>
+          <h2>Organization Management</h2>
         </div>
 
         <button

@@ -94,7 +94,7 @@ function EditOrganizationPage() {
             <FontAwesomeIcon icon={faArrowLeft} />
             <span>Back</span>
           </button>
-          <h2>EDIT ORGANIZATION</h2>
+          <h2>Edit Organization</h2>
           <div />
         </div>
 

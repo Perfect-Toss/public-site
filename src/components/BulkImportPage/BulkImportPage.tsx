@@ -100,7 +100,7 @@ function BulkImportPage() {
         </div>
 
         <div className="section-header">
-          <h2>BULK IMPORT</h2>
+          <h2>Bulk Import</h2>
         </div>
 
         <div className="bulk-import-section" style={{ marginTop: 0 }}>

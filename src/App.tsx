@@ -1,11 +1,10 @@
 import './App.css'
 
+import AdminReferencePage, { TabletTypesTabPage, TagsTabPage } from './components/AdminReferencePage'
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import {
   MachinesTabPage,
-  TabletTypesTabPage,
   TabletsTabPage,
-  TagsTabPage,
 } from './components/AdminDevicesPage/DeviceTabWrappers'
 
 import AccountPage from './components/AccountPage'
@@ -126,6 +125,9 @@ function AppContent() {
             <Route index element={<Navigate to="machines" replace />} />
             <Route path="machines" element={<MachinesTabPage />} />
             <Route path="tablets" element={<TabletsTabPage />} />
+          </Route>
+          <Route path="reference" element={<AdminReferencePage />}>
+            <Route index element={<Navigate to="tablet-types" replace />} />
             <Route path="tablet-types" element={<TabletTypesTabPage />} />
             <Route path="tags" element={<TagsTabPage />} />
           </Route>
@@ -133,10 +135,10 @@ function AppContent() {
           <Route path="devices/machines/:id/edit" element={<MachineFormPage />} />
           <Route path="devices/tablets/new" element={<TabletFormPage />} />
           <Route path="devices/tablets/:id/edit" element={<TabletFormPage />} />
-          <Route path="devices/tablet-types/new" element={<TabletTypeFormPage />} />
-          <Route path="devices/tablet-types/:id/edit" element={<TabletTypeFormPage />} />
-          <Route path="devices/tags/new" element={<TagFormPage />} />
-          <Route path="devices/tags/:id/edit" element={<TagFormPage />} />
+          <Route path="reference/tablet-types/new" element={<TabletTypeFormPage />} />
+          <Route path="reference/tablet-types/:id/edit" element={<TabletTypeFormPage />} />
+          <Route path="reference/tags/new" element={<TagFormPage />} />
+          <Route path="reference/tags/:id/edit" element={<TagFormPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/new" element={<AddUserPage />} />
           <Route path="users/import" element={<BulkImportPage />} />

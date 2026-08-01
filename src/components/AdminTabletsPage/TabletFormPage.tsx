@@ -134,7 +134,7 @@ function TabletFormPage() {
             <FontAwesomeIcon icon={faArrowLeft} />
             <span>Back</span>
           </button>
-          <h2>{isEditing ? 'EDIT TABLET' : 'ADD TABLET'}</h2>
+          <h2>{isEditing ? 'Edit Tablet' : 'Add Tablet'}</h2>
           <div />
         </div>
 

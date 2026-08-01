@@ -50,7 +50,7 @@ function AccountPage() {
     <div className="account-page">
       <section className="section">
         <div className="section-header">
-          <h2>ACCOUNT SETTINGS</h2>
+          <h2>Account Settings</h2>
         </div>
 
         <div className="account-content" style={{ marginTop: '30px' }}>

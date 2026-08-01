@@ -34,6 +34,7 @@ function OrganizationsPage() {
     <div className="organizations-page">
       <section className="section">
         <div className="section-header">
+          <h2>Organizations</h2>
           <div className="header-actions">
             <div className="search-box">
               <FontAwesomeIcon icon={faSearch} className="search-icon" />

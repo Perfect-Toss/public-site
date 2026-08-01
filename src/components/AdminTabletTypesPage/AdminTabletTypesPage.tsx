@@ -94,7 +94,7 @@ function AdminTabletTypesPage() {
   /* ─── Edit / Delete ──────────────────────────────────────────── */
 
   const openEditForm = (type: TabletType) => {
-    navigate(`/admin/devices/tablet-types/${type.id}/edit`);
+    navigate(`/admin/reference/tablet-types/${type.id}/edit`);
   };
 
   /* ─── Delete ──────────────────────────────────────────────────── */

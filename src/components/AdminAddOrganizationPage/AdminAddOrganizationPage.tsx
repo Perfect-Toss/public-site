@@ -55,7 +55,7 @@ function AdminAddOrganizationPage() {
             <FontAwesomeIcon icon={faArrowLeft} />
             <span>Back</span>
           </button>
-          <h2>ADD ORGANIZATION</h2>
+          <h2>Add Organization</h2>
           <div />
         </div>
 
