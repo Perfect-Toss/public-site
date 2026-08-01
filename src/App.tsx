@@ -5,6 +5,7 @@ import {
   MachinesTabPage,
   TabletTypesTabPage,
   TabletsTabPage,
+  TagsTabPage,
 } from './components/AdminDevicesPage/DeviceTabWrappers'
 
 import AccountPage from './components/AccountPage'
@@ -30,6 +31,7 @@ import SettingsView from './components/OrganizationPage/views/SettingsView'
 import SubOrgsView from './components/OrganizationPage/views/SubOrgsView'
 import TabletFormPage from './components/AdminTabletsPage/TabletFormPage'
 import TabletTypeFormPage from './components/AdminTabletTypesPage/TabletTypeFormPage'
+import TagFormPage from './components/AdminTagsPage/TagFormPage'
 import UserDetailPage from './components/UserDetailPage'
 import VideosPage from './components/VideosPage'
 import { useAuth } from './contexts/useAuth'
@@ -125,6 +127,7 @@ function AppContent() {
             <Route path="machines" element={<MachinesTabPage />} />
             <Route path="tablets" element={<TabletsTabPage />} />
             <Route path="tablet-types" element={<TabletTypesTabPage />} />
+            <Route path="tags" element={<TagsTabPage />} />
           </Route>
           <Route path="devices/machines/new" element={<MachineFormPage />} />
           <Route path="devices/machines/:id/edit" element={<MachineFormPage />} />
@@ -132,6 +135,8 @@ function AppContent() {
           <Route path="devices/tablets/:id/edit" element={<TabletFormPage />} />
           <Route path="devices/tablet-types/new" element={<TabletTypeFormPage />} />
           <Route path="devices/tablet-types/:id/edit" element={<TabletTypeFormPage />} />
+          <Route path="devices/tags/new" element={<TagFormPage />} />
+          <Route path="devices/tags/:id/edit" element={<TagFormPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/new" element={<AddUserPage />} />
           <Route path="users/import" element={<BulkImportPage />} />

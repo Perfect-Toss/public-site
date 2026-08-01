@@ -9,8 +9,8 @@ import {
   faChevronRight,
   faHome,
   faRightFromBracket,
+  faScrewdriverWrench,
   faSitemap,
-  faTabletScreenButton,
   faTag,
   faUser,
   faUsers,
@@ -114,9 +114,9 @@ function HomePage() {
               <NavLink
                 to="/admin/devices"
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                data-tooltip="Devices"
+                data-tooltip="Devices & Utilities"
               >
-                <span className="nav-icon"><FontAwesomeIcon icon={faTabletScreenButton} /></span>
+                <span className="nav-icon"><FontAwesomeIcon icon={faScrewdriverWrench} /></span>
                 {!collapsed && <span>DEVICES</span>}
               </NavLink>
               <NavLink
