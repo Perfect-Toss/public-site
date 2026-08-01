@@ -14,6 +14,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { HexColorPicker } from 'react-colorful';
+import { colorFor } from '../../utils/color';
 import { useTagStore } from '../../stores/tagStore';
 
 const DEFAULT_COLOR = '#3498db';
@@ -26,13 +28,15 @@ function TagFormPage() {
   const [formData, setFormData] = useState({
     name: '',
     colorHex: DEFAULT_COLOR,
-    isGlobal: true,
   });
+  // Whether the color was explicitly picked by the user. When false, the color
+  // auto-derives from the name as the user types.
+  const [colorManual, setColorManual] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loadingEntity, setLoadingEntity] = useState(false);
 
-  const { loadTagById, createTag, updateTag } = useTagStore();
+  const { loadTags, loadTagById, createTag, updateTag } = useTagStore();
 
   // Load tag data for editing
   useEffect(() => {
@@ -44,8 +48,10 @@ function TagFormPage() {
             setFormData({
               name: tag.name ?? '',
               colorHex: tag.colorHex ?? DEFAULT_COLOR,
-              isGlobal: Boolean(tag.isGlobal),
             });
+            // Treat the tag's saved color as intentional so editing the name
+            // doesn't silently override it.
+            setColorManual(true);
           }
         })
         .catch(() => {
@@ -56,7 +62,22 @@ function TagFormPage() {
   }, [id, loadTagById]);
 
   const handleSubmit = useCallback(async () => {
-    if (!formData.name.trim()) return;
+    const name = formData.name.trim();
+    if (!name) return;
+
+    // Frontend guard: don't create/rename to a tag name that already exists.
+    // Read fresh store state after any load so the check isn't stale.
+    if (useTagStore.getState().tags.length === 0) {
+      await loadTags();
+    }
+    const currentTags = useTagStore.getState().tags;
+    const isDuplicate = currentTags.some(
+      (t) => t.name?.trim().toLowerCase() === name.toLowerCase() && t.id !== id
+    );
+    if (isDuplicate) {
+      setResult({ type: 'error', message: `A tag named "${name}" already exists.` });
+      return;
+    }
 
     setSubmitting(true);
     setResult(null);
@@ -64,31 +85,31 @@ function TagFormPage() {
     try {
       if (isEditing && id) {
         const dto: UpdateTagRequest = {
-          name: formData.name.trim(),
+          name,
           colorHex: formData.colorHex || null,
-          isGlobal: formData.isGlobal,
+          isGlobal: true,
         };
         await updateTag(id, dto);
         setResult({ type: 'success', message: 'Tag updated successfully!' });
       } else {
         const dto: CreateTagRequest = {
-          name: formData.name.trim(),
+          name,
           colorHex: formData.colorHex || null,
-          isGlobal: formData.isGlobal,
+          isGlobal: true,
         };
         await createTag(dto);
         setResult({ type: 'success', message: 'Tag created successfully!' });
       }
 
       setTimeout(() => {
-        navigate('/admin/devices/tags');
+        navigate('/admin/reference/tags');
       }, 1200);
     } catch (err) {
       setResult({ type: 'error', message: err instanceof Error ? err.message : 'An error occurred.' });
     } finally {
       setSubmitting(false);
     }
-  }, [formData, isEditing, id, navigate, createTag, updateTag]);
+  }, [formData, isEditing, id, navigate, loadTags, createTag, updateTag]);
 
   if (loadingEntity) {
     return (
@@ -106,11 +127,11 @@ function TagFormPage() {
     <div className="admin-tags-page admin-form-page">
       <section className="section">
         <div className="section-header">
-          <button className="back-btn" onClick={() => navigate('/admin/devices/tags')}>
+          <button className="back-btn" onClick={() => navigate('/admin/reference/tags')}>
             <FontAwesomeIcon icon={faArrowLeft} />
             <span>Back</span>
           </button>
-          <h2>{isEditing ? 'EDIT TAG' : 'ADD TAG'}</h2>
+          <h2>{isEditing ? 'Edit Tag' : 'Add Tag'}</h2>
           <div />
         </div>
 
@@ -129,42 +150,44 @@ function TagFormPage() {
             <label>Name *</label>
             <input
               type="text"
+              autoFocus
               placeholder="e.g. Forehand, Footwork, Topspin"
               value={formData.name}
-              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => {
+                const name = e.target.value;
+                setFormData((prev) => ({
+                  ...prev,
+                  name,
+                  // Auto-pick a color from the name until the user picks one manually
+                  colorHex: colorManual
+                    ? prev.colorHex
+                    : name.trim()
+                      ? colorFor(name, { forceDark: true })
+                      : prev.colorHex,
+                }));
+              }}
             />
           </div>
 
           <div className="form-group">
             <label>Color</label>
-            <div className="tag-color-row">
-              <input
-                type="color"
-                value={formData.colorHex}
-                onChange={(e) => setFormData((prev) => ({ ...prev, colorHex: e.target.value }))}
-              />
-              <input
-                type="text"
-                placeholder="e.g. #3498db"
-                value={formData.colorHex}
-                onChange={(e) => setFormData((prev) => ({ ...prev, colorHex: e.target.value }))}
+            <div className="tag-picker">
+              <div className="tag-picker-preview">
+                <span className="tag-swatch" style={{ background: formData.colorHex }} />
+                <span className="tag-color-value">{formData.colorHex?.toUpperCase()}</span>
+              </div>
+              <HexColorPicker
+                color={formData.colorHex}
+                onChange={(color) => {
+                  setColorManual(true);
+                  setFormData((prev) => ({ ...prev, colorHex: color }));
+                }}
               />
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={formData.isGlobal}
-                onChange={(e) => setFormData((prev) => ({ ...prev, isGlobal: e.target.checked }))}
-              />
-              Global tag (visible to all users — requires admin)
-            </label>
-          </div>
-
           <div className="form-actions">
-            <button className="cancel-btn" onClick={() => navigate('/admin/devices/tags')}>
+            <button className="cancel-btn" onClick={() => navigate('/admin/reference/tags')}>
               Cancel
             </button>
             <button

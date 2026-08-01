@@ -99,7 +99,7 @@ function DashboardPage() {
       <div className="dashboard-page">
         <section className="section">
           <div className="section-header">
-            <h2>USAGE DASHBOARD</h2>
+            <h2>Usage Dashboard</h2>
           </div>
           <div className="loading-container">
             <div className="spinner" />
@@ -115,7 +115,7 @@ function DashboardPage() {
       <div className="dashboard-page">
         <section className="section">
           <div className="section-header">
-            <h2>USAGE DASHBOARD</h2>
+            <h2>Usage Dashboard</h2>
           </div>
           <div className="error-container">
             <p>{error}</p>
@@ -132,7 +132,7 @@ function DashboardPage() {
     <div className="dashboard-page">
       <section className="section">
         <div className="section-header">
-          <h2>USAGE DASHBOARD</h2>
+          <h2>Usage Dashboard</h2>
           <p className="dashboard-description">
             Event log summary grouped by user — videos captured &amp; days used per month
           </p>

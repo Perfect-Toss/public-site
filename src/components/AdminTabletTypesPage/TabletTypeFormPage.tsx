@@ -88,7 +88,7 @@ function TabletTypeFormPage() {
       }
 
       setTimeout(() => {
-        navigate('/admin/devices/tablet-types');
+        navigate('/admin/reference/tablet-types');
       }, 1200);
     } catch (err) {
       setResult({ type: 'error', message: err instanceof Error ? err.message : 'An error occurred.' });
@@ -113,11 +113,11 @@ function TabletTypeFormPage() {
     <div className="admin-tablet-types-page admin-form-page">
       <section className="section">
         <div className="section-header">
-          <button className="back-btn" onClick={() => navigate('/admin/devices/tablet-types')}>
+          <button className="back-btn" onClick={() => navigate('/admin/reference/tablet-types')}>
             <FontAwesomeIcon icon={faArrowLeft} />
             <span>Back</span>
           </button>
-          <h2>{isEditing ? 'EDIT TABLET TYPE' : 'ADD TABLET TYPE'}</h2>
+          <h2>{isEditing ? 'Edit Tablet Type' : 'Add Tablet Type'}</h2>
           <div />
         </div>
 
@@ -185,7 +185,7 @@ function TabletTypeFormPage() {
           </div>
 
           <div className="form-actions">
-            <button className="cancel-btn" onClick={() => navigate('/admin/devices/tablet-types')}>
+            <button className="cancel-btn" onClick={() => navigate('/admin/reference/tablet-types')}>
               Cancel
             </button>
             <button

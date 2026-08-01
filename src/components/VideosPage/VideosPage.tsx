@@ -13,7 +13,7 @@ function VideosPage() {
     <div className="videos-page">
       <section className="section">
         <div className="section-header">
-          <h2>VIDEOS</h2>
+          <h2>Videos</h2>
           <div className="header-actions">
             <div className="search-box">
               <FontAwesomeIcon icon={faSearch} className="search-icon" />

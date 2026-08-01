@@ -65,7 +65,7 @@ function HomeView() {
           {/* Organizations Section */}
           <section className="section">
             <div className="section-header">
-              <h2>ORGANIZATIONS</h2>
+              <h2>Organizations</h2>
               <button className="view-all-btn">VIEW ALL</button>
             </div>
 
@@ -89,7 +89,7 @@ function HomeView() {
           {/* Pending Review Section */}
           <section className="section">
             <div className="section-header">
-              <h2>PENDING REVIEW</h2>
+              <h2>Pending Review</h2>
               <button className="view-all-btn">VIEW ALL</button>
             </div>
 
@@ -127,7 +127,7 @@ function HomeView() {
           {/* Trending Content Section */}
           <section className="section">
             <div className="section-header">
-              <h2>TRENDING CONTENT</h2>
+              <h2>Trending Content</h2>
             </div>
             <div className="trending-placeholder">
               {trendingContent.length > 0 ? (

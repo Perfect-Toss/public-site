@@ -51,7 +51,7 @@ function AddUserPage() {
         </div>
 
         <div className="section-header">
-          <h2>ADD USER</h2>
+          <h2>Add User</h2>
         </div>
 
         <div className="modal-body" style={{ maxWidth: 480, padding: 0 }}>

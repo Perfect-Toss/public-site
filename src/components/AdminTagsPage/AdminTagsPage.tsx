@@ -83,7 +83,7 @@ function AdminTagsPage() {
   /* ─── Edit / Delete ──────────────────────────────────────────── */
 
   const openEditForm = (tag: Tag) => {
-    navigate(`/admin/devices/tags/${tag.id}/edit`);
+    navigate(`/admin/reference/tags/${tag.id}/edit`);
   };
 
   const handleDelete = useCallback(async () => {
@@ -127,20 +127,19 @@ function AdminTagsPage() {
               <th className="sortable-header" onClick={() => handleSort('name')}>
                 Tag {renderSortIcon('name')}
               </th>
-              <th>Color</th>
               <th className="sortable-header" onClick={() => handleSort('isGlobal')}>
                 Scope {renderSortIcon('isGlobal')}
               </th>
               <th className="sortable-header" onClick={() => handleSort('createdAt')}>
                 Created {renderSortIcon('createdAt')}
               </th>
-              <th style={{ width: 120 }}>Actions</th>
+              <th style={{ width: 80 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr className="loading-row">
-                <td colSpan={5}>
+                <td colSpan={4}>
                   <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} />
                   Loading tags...
                 </td>
@@ -148,12 +147,12 @@ function AdminTagsPage() {
             )}
             {error && (
               <tr className="error-row">
-                <td colSpan={5}>Failed to load tags. Please try again.</td>
+                <td colSpan={4}>Failed to load tags. Please try again.</td>
               </tr>
             )}
             {!loading && !error && sortedTags.length === 0 && (
               <tr className="loading-row">
-                <td colSpan={5}>
+                <td colSpan={4}>
                   <div className="empty-state">
                     <FontAwesomeIcon icon={faTags} size="3x" />
                     <p>No tags found. Add your first tag to get started.</p>
@@ -188,13 +187,6 @@ function AdminTagsPage() {
                   </a>
                 </td>
                 <td>
-                  {tag.colorHex ? (
-                    <span className="tag-color-value">{tag.colorHex}</span>
-                  ) : (
-                    '—'
-                  )}
-                </td>
-                <td>
                   {tag.isGlobal ? (
                     <span className="tag-global-badge">Global</span>
                   ) : (
@@ -205,9 +197,6 @@ function AdminTagsPage() {
                   {tag.createdAt ? formatDate(tag.createdAt) : '—'}
                 </td>
                 <td>
-                  <button className="action-btn edit" onClick={() => openEditForm(tag)} title="Edit tag">
-                    Edit
-                  </button>
                   <button className="action-btn delete" onClick={() => setDeleteTarget(tag)} title="Delete tag">
                     <FontAwesomeIcon icon={faTrash} />
                   </button>
