@@ -13,6 +13,10 @@ export type SetVideoAccessRequest = components['schemas']['SetVideoAccessRequest
 export type ShareVideoRequest = components['schemas']['ShareVideoRequest'];
 export type VideoUserAccessResult = components['schemas']['VideoUserAccessResult'];
 export type VideoEntityAccessResult = components['schemas']['VideoEntityAccessResult'];
+export type VideoAccessLevel = components['schemas']['VideoAccessLevel'];
+export type DeviceOrientation = components['schemas']['DeviceOrientation'];
+export type UploadStatus = components['schemas']['UploadStatus'];
+export type ReviewStatus = components['schemas']['ReviewStatus'];
 export type VideoIEnumerablePagedResponse = components['schemas']['VideoIEnumerablePagedResponse'];
 
 // ============================================================================

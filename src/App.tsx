@@ -32,6 +32,7 @@ import TabletFormPage from './components/AdminTabletsPage/TabletFormPage'
 import TabletTypeFormPage from './components/AdminTabletTypesPage/TabletTypeFormPage'
 import TagFormPage from './components/AdminTagsPage/TagFormPage'
 import UserDetailPage from './components/UserDetailPage'
+import VideoDetailPage from './components/VideoDetailPage'
 import VideosPage from './components/VideosPage'
 import { useAuth } from './contexts/useAuth'
 
@@ -106,6 +107,7 @@ function AppContent() {
       }>
         <Route index element={<HomeView />} />
         <Route path="videos" element={<VideosPage />} />
+        <Route path="videos/:id" element={<VideoDetailPage />} />
         <Route path="organizations" element={<OrganizationsPage />} />
         <Route path="organizations/:id" element={<OrganizationPage />}>
           <Route index element={<OverviewView />} />
