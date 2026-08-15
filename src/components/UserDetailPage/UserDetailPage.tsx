@@ -1,7 +1,14 @@
 import '../../styles/page.css';
 import './UserDetailPage.css';
 
-import { Role, isAdminUser, type UpdateUserDto, type User } from '../../api/api.users';
+import {
+  Role,
+  deleteUserThumbnail,
+  isAdminUser,
+  type UpdateUserDto,
+  type User,
+  uploadUserThumbnail,
+} from '../../api/api.users';
 import type { Role as RoleType } from '../../utils/roles';
 import {
   faArrowLeft,
@@ -15,7 +22,8 @@ import {
   faTrash,
   faUser,
 } from '@fortawesome/free-solid-svg-icons';
-import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../../utils/user';
+import { getDisplayName, renderRoleBadges } from '../../utils/user';
+import { UserAvatar } from '../common';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -140,47 +148,31 @@ function UserDetailPage() {
     }
   }, [user, editForm, updateUser, refreshUser]);
 
-  const buildSafeThumbnailDto = useCallback((overrides: { thumbnailImage: string | null }) => ({
-    id: user!.id,
-    firstName: user!.firstName ?? null,
-    lastName: user!.lastName ?? null,
-    heightInInches: user!.heightInInches ?? null,
-    birthdate: user!.birthdate ?? null,
-    roles: (user!.roles as RoleType[] | null) ?? null,
-    ...overrides,
-  }), [user]);
-
   const handleThumbnailUpload = useCallback(async (file: File) => {
     if (!user?.id) return;
     setThumbnailSaving(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const result = reader.result as string;
-        const base64 = result.split(',')[1];
-        await updateUser(buildSafeThumbnailDto({ thumbnailImage: base64 }));
-        await refreshUser();
-      };
-      reader.readAsDataURL(file);
+      await uploadUserThumbnail(user.id, file);
+      await refreshUser();
     } catch (err) {
       console.error('Failed to upload thumbnail:', err);
     } finally {
       setThumbnailSaving(false);
     }
-  }, [user, buildSafeThumbnailDto, updateUser, refreshUser]);
+  }, [user?.id, refreshUser]);
 
   const handleThumbnailRemove = useCallback(async () => {
     if (!user?.id) return;
     setThumbnailSaving(true);
     try {
-      await updateUser(buildSafeThumbnailDto({ thumbnailImage: '' }));
+      await deleteUserThumbnail(user.id);
       await refreshUser();
     } catch (err) {
       console.error('Failed to remove thumbnail:', err);
     } finally {
       setThumbnailSaving(false);
     }
-  }, [user, buildSafeThumbnailDto, updateUser, refreshUser]);
+  }, [user?.id, refreshUser]);
 
   return (
     <div className="user-detail-page">
@@ -213,21 +205,7 @@ function UserDetailPage() {
           <div className="user-detail-card">
             <div className="user-detail-header">
               <div className="thumbnail-edit-wrapper">
-                {user.thumbnailImage ? (
-                  <img
-                    className="user-detail-avatar-large user-detail-avatar-img"
-                    src={`data:image/jpeg;base64,${user.thumbnailImage}`}
-                    alt={getDisplayName(user)}
-                  />
-                ) : (
-                  <div
-                    className="user-detail-avatar-large"
-                    style={user.colorHex ? {
-                      background: user.colorHex,
-                      color: isLightColor(user.colorHex) ? '#1a1f24' : '#fff',
-                    } : undefined}
-                  >{getInitials(user)}</div>
-                )}
+                <UserAvatar user={user} size={72} />
                 {isAdmin && (
                   <div className="thumbnail-edit-actions">
                     <label className={`thumbnail-upload-btn ${thumbnailSaving ? 'disabled' : ''}`} title="Upload photo">
@@ -245,7 +223,7 @@ function UserDetailPage() {
                         style={{ display: 'none' }}
                       />
                     </label>
-                    {user.thumbnailImage && (
+                    {user.thumbnailPath && (
                       <button
                         className="thumbnail-remove-btn"
                         title="Remove photo"

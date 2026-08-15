@@ -37,24 +37,6 @@
   padding: 32px 32px 0;
 }
 
-.user-detail-avatar-large {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: #cfff04;
-  color: #1a1f24;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.user-detail-avatar-img {
-  object-fit: cover;
-}
-
 /* ─── Thumbnail Upload ──────────────────────────────────────────── */
 
 .thumbnail-edit-wrapper {

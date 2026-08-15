@@ -9,7 +9,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  /* Span the full content width with no gutters (counteract .main-content padding)
+     and pull up so there's no initial gap above the header. */
+  margin: -40px -40px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 12px 40px;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Match .main-content's reduced padding on small screens. */
+@media (max-width: 768px) {
+  .video-detail-header {
+    margin: -20px -20px 20px;
+    padding: 12px 20px;
+  }
 }
 
 .back-button {
@@ -39,7 +55,6 @@
   gap: 10px;
 }
 
-.share-btn,
 .delete-btn {
   display: inline-flex;
   align-items: center;
@@ -50,21 +65,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-}
-
-.share-btn {
-  background-color: #cfff04;
-  color: #1a1f24;
-  border: none;
-}
-
-.share-btn:hover {
-  background-color: #b8e600;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(207, 255, 4, 0.3);
-}
-
-.delete-btn {
   background: none;
   color: #dc3545;
   border: 1px solid #f5c6cb;
@@ -146,6 +146,15 @@
 .video-detail-meta strong {
   color: #1a1f24;
   font-weight: 600;
+}
+
+.video-detail-meta .video-meta-owner {
+  align-items: center;
+}
+
+/* Keep the inline UserInfo from adding button padding that shifts the meta row. */
+.video-detail-meta .user-info {
+  padding: 0;
 }
 
 .video-detail-tags {
@@ -239,6 +248,11 @@
 
 .access-item:hover {
   background: #fcfdff;
+}
+
+.access-item > .user-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .access-avatar {
@@ -513,32 +527,4 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
-}
-
-.metadata-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #fff;
-}
-
-.metadata-item:last-child {
-  border-bottom: none;
-}
-
-.metadata-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #999;
-}
-
-.metadata-value {
-  margin-left: 12px;
-  font-size: 13px;
-  color: #1a1f24;
-  word-break: break-word;
 }
