@@ -15,7 +15,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   deleteVideo,
@@ -35,10 +35,22 @@ import {
   type VideoUserAccessResult,
 } from '../../api/api.videos';
 import { fetchAllEntities, type Entity } from '../../api/api.entities';
-import type { Tag } from '../../api/api.tags';
 import { fetchAllUsers, type User } from '../../api/api.users';
-import { formatDate } from '../../utils/format';
 import { getDisplayName } from '../../utils/user';
+import { MetadataItem, UserInfo } from '../common';
+import {
+  formatAspectRatio,
+  formatBoolean,
+  formatBytes,
+  formatDateTime,
+  formatDuration,
+  formatEnum,
+} from '../../utils/format';
+import {
+  formatEntityNames,
+  formatTagNames,
+  formatUserNames,
+} from '../../utils/videos';
 
 const ACCESS_LEVEL_LABELS: Record<VideoAccessLevel, string> = {
   ReadOnly: 'Read only',
@@ -69,100 +81,13 @@ const REVIEW_STATUS_LABELS: Record<ReviewStatus, string> = {
   Reviewed: 'Reviewed',
 };
 
-function MetadataItem({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="metadata-item">
-      <span className="metadata-label">{label}</span>
-      <span className="metadata-value">{value}</span>
-    </div>
-  );
-}
-
-function formatDateTime(value?: string | null): string {
-  if (!value) return '—';
-  try {
-    return new Date(value).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  } catch {
-    return value;
-  }
-}
-
-function formatBoolean(value?: boolean | null): string {
-  if (value === undefined || value === null) return '—';
-  return value ? 'Yes' : 'No';
-}
-
-function formatAspectRatio(value?: number | null): string {
-  if (value === undefined || value === null) return '—';
-  const ratio = Math.round(value * 100) / 100;
-  if (Math.abs(ratio - 16 / 9) < 0.01) return `${value.toFixed(2)} (16:9)`;
-  if (Math.abs(ratio - 4 / 3) < 0.01) return `${value.toFixed(2)} (4:3)`;
-  if (Math.abs(ratio - 9 / 16) < 0.01) return `${value.toFixed(2)} (9:16)`;
-  return value.toFixed(2);
-}
-
-function formatEnum<T extends string>(labels: Record<T, string>, value?: T | null): string {
-  if (!value || !labels[value]) return '—';
-  return labels[value];
-}
-
-function formatEntityNames(entities?: Entity[] | null): string {
-  if (!entities || entities.length === 0) return '—';
-  return entities.map((e) => e.name || 'Untitled entity').join(', ');
-}
-
-function formatUserNames(users?: User[] | null): string {
-  if (!users || users.length === 0) return '—';
-  return users.map(getDisplayName).join(', ');
-}
-
-function formatTagNames(tags?: Tag[] | null): string {
-  if (!tags || tags.length === 0) return '—';
-  const names = tags.map((t) => t.name).filter(Boolean);
-  return names.length > 0 ? names.join(', ') : '—';
-}
-
-/** Format a length in seconds as mm:ss or h:mm:ss. */
-function formatDuration(lengthInSeconds?: number): string {
-  if (lengthInSeconds === undefined || lengthInSeconds == null || lengthInSeconds < 0) return '—';
-  const total = Math.round(lengthInSeconds);
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const seconds = total % 60;
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return hours > 0
-    ? `${hours}:${pad(minutes)}:${pad(seconds)}`
-    : `${pad(minutes)}:${pad(seconds)}`;
-}
-
-function formatBytes(sizeInBytes?: number): string {
-  if (sizeInBytes === undefined || sizeInBytes == null || sizeInBytes < 0) return '—';
-  const units = ['B', 'KB', 'MB', 'GB'];
-  let value = sizeInBytes;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value.toFixed(value >= 10 || unit === 0 ? 0 : 1)} ${units[unit]}`;
-}
-
-function ownerDisplayName(video: Video): string {
-  const owner = video.owner;
-  if (!owner) return '';
-  const name = [owner.firstName, owner.lastName].filter(Boolean).join(' ').trim();
-  return name || owner.email || '';
-}
-
 function VideoDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  // The video response already embeds the user info for audit fields.
+  const renderUserRef = (user?: Video['createdByUser']) =>
+    user ? <UserInfo user={user} size={24} /> : '—';
 
   const [video, setVideo] = useState<Video | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -191,7 +116,7 @@ function VideoDetailPage() {
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const [metadataExpanded, setMetadataExpanded] = useState(true);
+  const [metadataExpanded, setMetadataExpanded] = useState(false);
 
   const loadVideo = useCallback(async () => {
     if (!id) return;
@@ -380,7 +305,6 @@ function VideoDetailPage() {
     if (!video) return null;
 
     const poster = video.thumbnail ? `data:image/jpeg;base64,${video.thumbnail}` : undefined;
-    const ownerName = ownerDisplayName(video);
     const notUploaded = video.uploadStatus === 'NotUploaded' || video.uploadStatus === 'Pending';
 
     return (
@@ -392,7 +316,7 @@ function VideoDetailPage() {
           </button>
 
           <div className="video-detail-actions">
-            <button className="share-btn" onClick={openShareModal}>
+            <button className="secondary-btn" onClick={openShareModal}>
               <FontAwesomeIcon icon={faShareNodes} />
               <span>Share</span>
             </button>
@@ -409,7 +333,6 @@ function VideoDetailPage() {
               key={videoUrl}
               src={videoUrl}
               controls
-              autoPlay
               playsInline
               poster={poster}
               className="video-detail-video"
@@ -444,7 +367,7 @@ function VideoDetailPage() {
           <div className="video-detail-meta">
             {video.timestamp && (
               <span>
-                <strong>Captured</strong> {formatDate(video.timestamp)}
+                <strong>Captured</strong> {formatDateTime(video.timestamp)}
               </span>
             )}
             <span>
@@ -453,9 +376,9 @@ function VideoDetailPage() {
             <span>
               <strong>Size</strong> {formatBytes(video.sizeInBytes)}
             </span>
-            {ownerName && (
-              <span>
-                <strong>Owner</strong> {ownerName}
+            {video.owner && (
+              <span className="video-meta-owner">
+                <strong>Owner</strong> <UserInfo user={video.owner} showAvatar={false} />
               </span>
             )}
           </div>
@@ -475,10 +398,6 @@ function VideoDetailPage() {
         <section className="video-access-section">
           <div className="video-access-header">
             <h2>Access & Sharing</h2>
-            <button className="secondary-btn" onClick={openShareModal}>
-              <FontAwesomeIcon icon={faShareNodes} />
-              <span>Share video</span>
-            </button>
           </div>
 
           {accessLoading ? (
@@ -505,8 +424,7 @@ function VideoDetailPage() {
                   <ul className="access-list">
                     {accessUsers.map((entry) => (
                       <li key={entry.user.id} className="access-item">
-                        <span className="access-avatar">{getDisplayName(entry.user).charAt(0).toUpperCase()}</span>
-                        <span className="access-name">{getDisplayName(entry.user)}</span>
+                        <UserInfo user={entry.user} size={32} />
                         <span className={`access-level ${entry.accessLevel.toLowerCase()}`}>
                           {ACCESS_LEVEL_LABELS[entry.accessLevel]}
                         </span>
@@ -588,8 +506,10 @@ function VideoDetailPage() {
               label="Review status"
               value={formatEnum(REVIEW_STATUS_LABELS, video.reviewStatus)}
             />
-            <MetadataItem label="Owner" value={ownerName || video.ownerId || '—'} />
-            <MetadataItem label="Owner ID" value={video.ownerId || '—'} />
+            <MetadataItem
+              label="Owner"
+              value={video.owner ? <UserInfo user={video.owner} size={24} /> : '—'}
+            />
             <MetadataItem
               label="Associated entities"
               value={formatEntityNames(video.associatedEntities)}
@@ -606,13 +526,13 @@ function VideoDetailPage() {
               value={formatDateTime(video.uploadTokenExpiresAt)}
             />
             {/* ── Admin / audit data (kept at the bottom) ── */}
-            <MetadataItem label="Created by" value={video.createdBy || '—'} />
+            <MetadataItem label="Created by" value={renderUserRef(video.createdByUser)} />
             <MetadataItem label="Created at" value={formatDateTime(video.createdAt)} />
-            <MetadataItem label="Last modified by" value={video.lastModifiedBy || '—'} />
+            <MetadataItem label="Last modified by" value={renderUserRef(video.lastModifiedByUser)} />
             <MetadataItem label="Last modified at" value={formatDateTime(video.lastModifiedAt)} />
             <MetadataItem label="Deleted" value={formatBoolean(video.isDeleted)} />
             <MetadataItem label="Deleted at" value={formatDateTime(video.deletedAt)} />
-            <MetadataItem label="Deleted by" value={video.deletedBy || '—'} />
+            <MetadataItem label="Deleted by" value={renderUserRef(video.deletedByUser)} />
           </div>
           )}
         </section>

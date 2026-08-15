@@ -1,40 +1,16 @@
 import '../../styles/page.css';
 import './VideosPage.css';
 
-import { faPlay, faSearch, faVideo } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faVideo } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchVideos, type Video } from '../../api/api.videos';
-import { formatDate } from '../../utils/format';
+import { formatDate, formatDuration } from '../../utils/format';
+import { ownerDisplayName, thumbnailSrc } from '../../utils/videos';
 
 const PAGE_SIZE = 12;
-
-/** Format a length in seconds as mm:ss or h:mm:ss. */
-function formatDuration(lengthInSeconds?: number): string {
-  if (lengthInSeconds === undefined || lengthInSeconds == null || lengthInSeconds < 0) return '';
-  const total = Math.round(lengthInSeconds);
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const seconds = total % 60;
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return hours > 0
-    ? `${hours}:${pad(minutes)}:${pad(seconds)}`
-    : `${pad(minutes)}:${pad(seconds)}`;
-}
-
-/** The API returns the thumbnail as a base64 byte string; render it as a data URL. */
-function thumbnailSrc(video: Video): string | null {
-  return video.thumbnail ? `data:image/jpeg;base64,${video.thumbnail}` : null;
-}
-
-function ownerDisplayName(video: Video): string {
-  const owner = video.owner;
-  if (!owner) return '';
-  const name = [owner.firstName, owner.lastName].filter(Boolean).join(' ').trim();
-  return name || owner.email || '';
-}
 
 function VideoCard({ video }: { video: Video }) {
   const navigate = useNavigate();
@@ -72,10 +48,7 @@ function VideoCard({ video }: { video: Video }) {
             <FontAwesomeIcon icon={faVideo} size="3x" style={{ opacity: 0.3 }} />
           </div>
         )}
-        {duration && <span className="video-card-duration">{duration}</span>}
-        <span className="video-card-play">
-          <FontAwesomeIcon icon={faPlay} />
-        </span>
+        {duration !== '—' && <span className="video-card-duration">{duration}</span>}
       </div>
 
       <div className="video-card-body">

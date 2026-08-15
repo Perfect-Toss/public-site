@@ -15,7 +15,8 @@ import {
   faTrash,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
-import { getDisplayName, getInitials, isLightColor, renderRoleBadges } from '../../utils/user';
+import { getDisplayName, renderRoleBadges } from '../../utils/user';
+import { UserInfo } from '../common';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -284,26 +285,7 @@ function AdminUsersPage() {
                   sortedUsers.map((user) => (
                   <tr key={user.id} onClick={() => navigate(`/admin/users/${user.id}`)}>
                     <td>
-                      <div className="user-name-cell">
-                        {user.thumbnailImage ? (
-                          <img
-                            className="user-avatar user-avatar-img"
-                            src={`data:image/jpeg;base64,${user.thumbnailImage}`}
-                            alt={getDisplayName(user)}
-                          />
-                        ) : (
-                          <div
-                            className="user-avatar"
-                            style={user.colorHex ? {
-                              background: user.colorHex,
-                              color: isLightColor(user.colorHex) ? '#1a1f24' : '#fff',
-                            } : undefined}
-                          >{getInitials(user)}</div>
-                        )}
-                        <div className="user-info">
-                          <span className="name">{getDisplayName(user)}</span>
-                        </div>
-                      </div>
+                      <UserInfo user={user} size={32} />
                     </td>
                     <td style={{ color: '#666' }}>{user.email || '-'}</td>
                     <td>{renderRoleBadges(user.roles)}</td>

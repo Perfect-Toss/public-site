@@ -1,0 +1,17 @@
+.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #cfff04;
+  color: #1a1f24;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+  overflow: hidden;
+  user-select: none;
+}
+
+.user-avatar-img {
+  object-fit: cover;
+}

@@ -4,12 +4,13 @@ import type { paths } from './schema';
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://dev-api.perfect-toss.com';
 
-// Create a type-safe API client
-export const apiClient = createClient<paths>({ 
+// Create a type-safe API client.
+// NOTE: openapi-fetch sets "Content-Type: application/json" automatically for
+// serialized JSON bodies, and leaves multipart/form-data bodies (FormData) for
+// the browser to set with the correct boundary. So we don't set a global
+// Content-Type here.
+export const apiClient = createClient<paths>({
   baseUrl: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Holds the current auth token in memory

@@ -199,3 +199,37 @@ export async function deleteUserById(id: string): Promise<boolean> {
 
   return true;
 }
+
+/**
+ * Upload (or replace) a user's thumbnail image (requires admin authorization).
+ * The server writes the image to public storage and bumps the cache-busting version.
+ */
+export async function uploadUserThumbnail(userId: string, file: File | Blob): Promise<void> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const { error } = await api.POST('/api/v1/users/{userId}/thumbnail', {
+    params: { path: { userId } },
+    body: formData,
+  });
+
+  if (error) {
+    console.error('Failed to upload user thumbnail:', error);
+    throw new Error('Failed to upload user thumbnail');
+  }
+}
+
+/**
+ * Remove a user's thumbnail image (requires admin authorization).
+ * Deletes the blob and clears the stored path/version.
+ */
+export async function deleteUserThumbnail(userId: string): Promise<void> {
+  const { error } = await api.DELETE('/api/v1/users/{userId}/thumbnail', {
+    params: { path: { userId } },
+  });
+
+  if (error) {
+    console.error('Failed to delete user thumbnail:', error);
+    throw new Error('Failed to delete user thumbnail');
+  }
+}

@@ -4,6 +4,101 @@
  */
 
 export interface paths {
+    "/api/v1/admin/cache/user-info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns basic cache statistics (entry count and estimated total size in bytes). */
+        get: {
+            parameters: {
+                query?: {
+                    "api-version"?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Flushes the entire user-info cache. */
+        delete: {
+            parameters: {
+                query?: {
+                    "api-version"?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cache/user-info/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Removes a single user's entry from the cache. */
+        delete: {
+            parameters: {
+                query?: {
+                    "api-version"?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description The user whose cached info should be dropped. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/token": {
         parameters: {
             query?: never;
@@ -322,6 +417,77 @@ export interface paths {
                 header?: never;
                 path: {
                     /** @description The unique identifier of the entity to delete. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/entities/{id}/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Uploads (or replaces) the entity's logo. The server writes the image to public
+         *     storage and bumps the cache-busting version.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The entity whose logo is being set. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description The image file (multipart/form-data).
+                         */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** Removes the entity's logo (deletes the blob and clears the stored path). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The entity whose logo is being removed. */
                     id: string;
                 };
                 cookie?: never;
@@ -1745,6 +1911,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{userId}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Uploads (or replaces) the current user's thumbnail. The server writes the image to
+         *     the dedicated public storage account and bumps the cache-busting version.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The user whose thumbnail is being set. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description The image file (multipart/form-data).
+                         */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** Removes the user's thumbnail (deletes the blob and clears the stored path). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The user whose thumbnail is being removed. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/accept": {
         parameters: {
             query?: never;
@@ -2380,6 +2617,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/videos/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets all video metadata records owned by the current user,
+         *     ordered by creation date descending.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description The page number (default 1). */
+                    pageNumber?: number;
+                    /** @description The page size (default 10, max 200). */
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoIEnumerablePagedResponse"];
+                        "application/json": components["schemas"]["VideoIEnumerablePagedResponse"];
+                        "text/json": components["schemas"]["VideoIEnumerablePagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos/shared": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets all video metadata records the current user can access through direct sharing
+         *     or entity access (excluding videos they own), ordered by creation date descending.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description The page number (default 1). */
+                    pageNumber?: number;
+                    /** @description The page size (default 10, max 200). */
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoIEnumerablePagedResponse"];
+                        "application/json": components["schemas"]["VideoIEnumerablePagedResponse"];
+                        "text/json": components["schemas"]["VideoIEnumerablePagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/videos/{id}": {
         parameters: {
             query?: never;
@@ -2900,11 +3229,17 @@ export interface components {
             deletedAt?: string | null;
             /** Format: uuid */
             deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
             name: string | null;
             description?: string | null;
             entityType?: string | null;
             /** Format: uuid */
             parentEntityId?: string | null;
+            logoPath?: string | null;
+            /** Format: int32 */
+            logoVersion?: number;
         };
         /** @description Represents an entity access entry. Entity access defaults to Review level. */
         EntityAccessEntry: {
@@ -2917,14 +3252,6 @@ export interface components {
         EventLog: {
             /** Format: uuid */
             id: string;
-            /** Format: uuid */
-            createdBy?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: uuid */
-            lastModifiedBy?: string | null;
-            /** Format: date-time */
-            lastModifiedAt?: string | null;
             eventType: string | null;
             /** Format: date-time */
             timestamp: string;
@@ -3031,6 +3358,9 @@ export interface components {
             deletedAt?: string | null;
             /** Format: uuid */
             deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
             name: string | null;
             machineId: string | null;
             isPhysicalDevice: boolean;
@@ -3055,6 +3385,14 @@ export interface components {
             lastModifiedBy?: string | null;
             /** Format: date-time */
             lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
             machine?: components["schemas"]["Machine"];
             tabletName?: string | null;
             softwareVersion?: string | null;
@@ -3151,6 +3489,9 @@ export interface components {
             deletedAt?: string | null;
             /** Format: uuid */
             deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
             name?: string | null;
             tabletUserId?: string | null;
             pin?: string | null;
@@ -3180,6 +3521,9 @@ export interface components {
             deletedAt?: string | null;
             /** Format: uuid */
             deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
             model?: string | null;
             size?: string | null;
             memory?: string | null;
@@ -3203,6 +3547,9 @@ export interface components {
             deletedAt?: string | null;
             /** Format: uuid */
             deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
             name: string | null;
             colorHex?: string | null;
             isGlobal?: boolean;
@@ -3366,11 +3713,6 @@ export interface components {
              * @description Gets or sets the birthdate of the user.
              */
             birthdate?: string | null;
-            /**
-             * Format: byte
-             * @description Gets or sets the thumbnail image data for the user.
-             */
-            thumbnailImage?: string | null;
             /** @description Gets or sets the roles assigned to the user. */
             roles?: components["schemas"]["Roles"][] | null;
         };
@@ -3424,6 +3766,9 @@ export interface components {
             deletedAt?: string | null;
             /** Format: uuid */
             deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
             externalId?: string | null;
             firstName?: string | null;
             lastName?: string | null;
@@ -3433,8 +3778,9 @@ export interface components {
             email: string | null;
             /** Format: date */
             birthdate?: string | null;
-            /** Format: byte */
-            thumbnailImage?: string | null;
+            thumbnailPath?: string | null;
+            /** Format: int32 */
+            thumbnailVersion?: number;
             acceptedTerms?: boolean;
             confirmedAge?: boolean;
             isEmailVerified?: boolean;
@@ -3455,6 +3801,14 @@ export interface components {
             errors?: string[] | null;
             data?: components["schemas"]["User"];
         };
+        UserInfo: {
+            /** Format: uuid */
+            id?: string;
+            firstName?: string | null;
+            lastName?: string | null;
+            email?: string | null;
+            thumbnailUrl?: string | null;
+        };
         Video: {
             /** Format: uuid */
             id: string;
@@ -3471,6 +3825,9 @@ export interface components {
             deletedAt?: string | null;
             /** Format: uuid */
             deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
             /** Format: uuid */
             ownerId?: string;
             owner?: components["schemas"]["User"];
