@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { CreateEntityRequest } from '../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { StyledSelect } from '../common';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -94,16 +95,16 @@ function AdminAddOrganizationPage() {
 
           <div className="form-group">
             <label htmlFor="org-parent">Parent Organization</label>
-            <select
+            <StyledSelect
               id="org-parent"
               value={form.parentEntityId}
-              onChange={(e) => setForm((f) => ({ ...f, parentEntityId: e.target.value }))}
+              onChange={(v) => setForm((f) => ({ ...f, parentEntityId: v }))}
             >
               <option value="">— None (root level) —</option>
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>{org.name}</option>
               ))}
-            </select>
+            </StyledSelect>
           </div>
 
           <div className="form-group">

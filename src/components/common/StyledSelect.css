@@ -1,0 +1,25 @@
+/* ─── StyledSelect ────────────────────────────────────────────────────────
+   StyledSelect delegates rendering to VirtualizedSelect (searchable=false),
+   so the trigger and panel styling lives in VirtualizedSelect.css. This file
+   only adds the wrapper + optional leading-icon support. */
+
+.styled-select {
+  position: relative;
+  width: 100%;
+}
+
+.styled-select-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #666;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Shift the trigger text when a leading icon is present. */
+.styled-select-has-icon .vs-trigger {
+  padding-left: 34px;
+}
+

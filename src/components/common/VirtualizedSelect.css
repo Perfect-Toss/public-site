@@ -1,0 +1,190 @@
+/* ─── VirtualizedSelect ─────────────────────────────────────────────────── */
+
+.virtualized-select {
+  position: relative;
+  width: 100%;
+}
+
+.vs-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1a1f24;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.vs-trigger:hover:not(:disabled) {
+  border-color: #ccc;
+}
+
+.vs-trigger:focus-visible,
+.vs-trigger.vs-open {
+  outline: none;
+  border-color: #cfff04;
+  box-shadow: 0 0 0 2px rgba(207, 255, 4, 0.1);
+}
+
+.vs-trigger:disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.vs-trigger-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vs-trigger-label.vs-placeholder {
+  color: #999;
+}
+
+.vs-chevron {
+  flex-shrink: 0;
+  color: #666;
+  transition: transform 0.2s ease;
+}
+
+.vs-trigger.vs-open .vs-chevron {
+  transform: rotate(180deg);
+}
+
+.vs-clear {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #999;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.vs-clear:hover {
+  color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+}
+
+/* Panel renders in a portal (fixed position) so it's never clipped by
+   ancestors with overflow (modals, tables, cards). */
+.vs-panel {
+  position: fixed;
+  z-index: 1100;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.vs-search {
+  padding: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.vs-search input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1a1f24;
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.vs-search input:focus {
+  border-color: #cfff04;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(207, 255, 4, 0.1);
+}
+
+.vs-list {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.vs-option {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #1a1f24;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vs-option.vs-active {
+  background: rgba(207, 255, 4, 0.25);
+}
+
+.vs-option.vs-selected {
+  font-weight: 600;
+}
+
+.vs-option:hover {
+  background: #f5f5f5;
+}
+
+.vs-option.vs-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vs-option-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #f0f0f0;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.vs-option-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vs-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+}
+
+.vs-loading-more {
+  padding: 6px;
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  border-top: 1px solid #f0f0f0;
+}

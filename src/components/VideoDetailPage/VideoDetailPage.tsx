@@ -37,7 +37,7 @@ import {
 import { fetchAllEntities, type Entity } from '../../api/api.entities';
 import { fetchAllUsers, type User } from '../../api/api.users';
 import { getDisplayName } from '../../utils/user';
-import { MetadataItem, UserInfo } from '../common';
+import { MetadataItem, StyledSelect, UserAvatar, UserInfo, VirtualizedSelect } from '../common';
 import {
   formatAspectRatio,
   formatBoolean,
@@ -567,45 +567,59 @@ function VideoDetailPage() {
                     {shareTarget === 'user' ? 'User' : 'Entity'}
                   </label>
                   {shareTarget === 'user' ? (
-                    <select
+                    <VirtualizedSelect
                       id="share-target"
+                      items={shareableUsers}
                       value={shareUserId}
-                      onChange={(e) => setShareUserId(e.target.value)}
-                    >
-                      <option value="">Select a user...</option>
-                      {shareableUsers.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {getDisplayName(u)}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => setShareUserId(v ?? '')}
+                      getOptionValue={(u) => u.id}
+                      getOptionLabel={(u) => getDisplayName(u)}
+                      renderOption={(u) => (
+                        <>
+                          <UserAvatar user={u} size={28} />
+                          <span className="vs-option-text">{getDisplayName(u)}</span>
+                        </>
+                      )}
+                      placeholder="Select a user..."
+                      searchPlaceholder="Search users..."
+                      emptyMessage="No users available"
+                      clearable
+                    />
                   ) : (
-                    <select
+                    <VirtualizedSelect
                       id="share-target"
+                      items={shareableEntities}
                       value={shareEntityId}
-                      onChange={(e) => setShareEntityId(e.target.value)}
-                    >
-                      <option value="">Select an entity...</option>
-                      {shareableEntities.map((e) => (
-                        <option key={e.id} value={e.id}>
-                          {e.name || 'Untitled entity'}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => setShareEntityId(v ?? '')}
+                      getOptionValue={(e) => e.id}
+                      getOptionLabel={(e) => e.name || 'Untitled entity'}
+                      renderOption={(e) => (
+                        <>
+                          <span className="vs-option-icon">
+                            <FontAwesomeIcon icon={faBuilding} />
+                          </span>
+                          <span className="vs-option-text">{e.name || 'Untitled entity'}</span>
+                        </>
+                      )}
+                      placeholder="Select an entity..."
+                      searchPlaceholder="Search entities..."
+                      emptyMessage="No entities available"
+                      clearable
+                    />
                   )}
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="share-level">Access level</label>
-                  <select
+                  <StyledSelect
                     id="share-level"
                     value={shareLevel}
-                    onChange={(e) => setShareLevel(e.target.value as VideoAccessLevel)}
+                    onChange={(v) => setShareLevel(v as VideoAccessLevel)}
                   >
                     <option value="ReadOnly">Read only</option>
                     <option value="Review">Review</option>
                     <option value="Edit">Edit</option>
-                  </select>
+                  </StyledSelect>
                 </div>
 
                 {shareError && <p className="share-error">{shareError}</p>}

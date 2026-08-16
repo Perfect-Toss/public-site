@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { StyledSelect } from '../common';
 import { useMachineStore } from '../../stores/machineStore';
 import { useTabletStore } from '../../stores/tabletStore';
 
@@ -168,15 +169,15 @@ function MachineFormPage() {
 
           <div className="form-group">
             <label>Status</label>
-            <select
+            <StyledSelect
               value={formData.status}
-              onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value }))}
+              onChange={(v) => setFormData((prev) => ({ ...prev, status: v }))}
             >
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
               <option value="Maintenance">Maintenance</option>
               <option value="Pending">Pending</option>
-            </select>
+            </StyledSelect>
           </div>
 
           <div className="form-group">
@@ -211,9 +212,9 @@ function MachineFormPage() {
 
           <div className="form-group">
             <label>Assigned Tablet</label>
-            <select
+            <StyledSelect
               value={formData.tabletId}
-              onChange={(e) => setFormData((prev) => ({ ...prev, tabletId: e.target.value }))}
+              onChange={(v) => setFormData((prev) => ({ ...prev, tabletId: v }))}
             >
               <option value="">— None —</option>
               {tablets.map((t) => (
@@ -221,7 +222,7 @@ function MachineFormPage() {
                   {t.name || 'Unnamed'} {t.tabletUserId ? `(${t.tabletUserId})` : ''}
                 </option>
               ))}
-            </select>
+            </StyledSelect>
           </div>
 
           <div className="form-group">
