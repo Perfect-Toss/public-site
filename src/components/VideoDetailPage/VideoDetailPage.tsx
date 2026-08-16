@@ -376,12 +376,13 @@ function VideoDetailPage() {
             <span>
               <strong>Size</strong> {formatBytes(video.sizeInBytes)}
             </span>
-            {video.owner && (
-              <span className="video-meta-owner">
-                <strong>Owner</strong> <UserInfo user={video.owner} showAvatar={false} />
-              </span>
-            )}
           </div>
+
+          {video.owner && (
+            <div className="video-detail-owner">
+              <UserInfo user={video.owner} size={28} />
+            </div>
+          )}
 
           {video.tags && video.tags.length > 0 && (
             <div className="video-detail-tags">
