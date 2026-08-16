@@ -302,3 +302,36 @@ export async function fetchVideoEntityUsers(videoId: string): Promise<VideoEntit
 
   return data || [];
 }
+
+/**
+ * Upload (or replace) a video's thumbnail image.
+ * The server writes the image to public storage and bumps the cache-busting version.
+ */
+export async function uploadVideoThumbnail(id: string, file: File | Blob): Promise<void> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const { error } = await api.POST('/api/v1/videos/{id}/thumbnail', {
+    params: { path: { id } },
+    body: formData,
+  });
+
+  if (error) {
+    console.error('Failed to upload video thumbnail:', error);
+    throw new Error('Failed to upload video thumbnail');
+  }
+}
+
+/**
+ * Remove a video's thumbnail image (deletes the blob and clears the stored path).
+ */
+export async function deleteVideoThumbnail(id: string): Promise<void> {
+  const { error } = await api.DELETE('/api/v1/videos/{id}/thumbnail', {
+    params: { path: { id } },
+  });
+
+  if (error) {
+    console.error('Failed to delete video thumbnail:', error);
+    throw new Error('Failed to delete video thumbnail');
+  }
+}

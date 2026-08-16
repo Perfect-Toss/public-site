@@ -34,7 +34,10 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        /** Flushes the entire user-info cache. */
+        /**
+         * Flushes the entire user-info cache and re-warms it from the database so
+         *     mapping-based audit-user hydration keeps returning entries.
+         */
         delete: {
             parameters: {
                 query?: {
@@ -70,7 +73,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Removes a single user's entry from the cache. */
+        /** Removes a single user's entry from the cache and reloads it from the database. */
         delete: {
             parameters: {
                 query?: {
@@ -78,7 +81,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    /** @description The user whose cached info should be dropped. */
+                    /** @description The user whose cached info should be refreshed. */
                     userId: string;
                 };
                 cookie?: never;
@@ -597,7 +600,34 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Gets the roles a user holds on a specific entity. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the entity. */
+                    entityId: string;
+                    /** @description The unique identifier of the user. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Roles"][];
+                        "application/json": components["schemas"]["Roles"][];
+                        "text/json": components["schemas"]["Roles"][];
+                    };
+                };
+            };
+        };
         put?: never;
         /** Adds a user to an entity with specified roles. */
         post: {
@@ -2977,6 +3007,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/videos/{id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Uploads (or replaces) a video's thumbnail. The server writes the image to
+         *     the dedicated public storage account and bumps the cache-busting version.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video whose thumbnail is being set. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description The image file (multipart/form-data).
+                         */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** Removes the video's thumbnail (deletes the blob and clears the stored path). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video whose thumbnail is being removed. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/videos/{id}/owner": {
         parameters: {
             query?: never;
@@ -3179,11 +3280,6 @@ export interface components {
             /** @description Gets the label or title of the video. */
             label?: string | null;
             /**
-             * Format: byte
-             * @description Gets the optional thumbnail image data.
-             */
-            thumbnail?: string | null;
-            /**
              * Format: date-time
              * @description Gets the timestamp of the video.
              */
@@ -3240,6 +3336,7 @@ export interface components {
             logoPath?: string | null;
             /** Format: int32 */
             logoVersion?: number;
+            logoUrl?: string | null;
         };
         /** @description Represents an entity access entry. Entity access defaults to Review level. */
         EntityAccessEntry: {
@@ -3393,6 +3490,8 @@ export interface components {
             createdByUser?: components["schemas"]["UserInfo"];
             lastModifiedByUser?: components["schemas"]["UserInfo"];
             deletedByUser?: components["schemas"]["UserInfo"];
+            /** Format: uuid */
+            machineId?: string;
             machine?: components["schemas"]["Machine"];
             tabletName?: string | null;
             softwareVersion?: string | null;
@@ -3721,11 +3820,6 @@ export interface components {
             /** @description Gets the label or title of the video. */
             label?: string | null;
             /**
-             * Format: byte
-             * @description Gets the optional thumbnail image data.
-             */
-            thumbnail?: string | null;
-            /**
              * Format: date-time
              * @description Gets the timestamp of the video.
              */
@@ -3778,9 +3872,7 @@ export interface components {
             email: string | null;
             /** Format: date */
             birthdate?: string | null;
-            thumbnailPath?: string | null;
-            /** Format: int32 */
-            thumbnailVersion?: number;
+            thumbnailUrl?: string | null;
             acceptedTerms?: boolean;
             confirmedAge?: boolean;
             isEmailVerified?: boolean;
@@ -3835,8 +3927,7 @@ export interface components {
             tags?: components["schemas"]["Tag"][] | null;
             coaches?: components["schemas"]["User"][] | null;
             label?: string | null;
-            /** Format: byte */
-            thumbnail?: string | null;
+            thumbnailUrl?: string | null;
             /** Format: date-time */
             timestamp?: string;
             /** Format: int32 */
@@ -3849,10 +3940,6 @@ export interface components {
             uploadStatus?: components["schemas"]["UploadStatus"];
             reviewStatus?: components["schemas"]["ReviewStatus"];
             blobPath?: string | null;
-            /** Format: date-time */
-            uploadTokenIssuedAt?: string | null;
-            /** Format: date-time */
-            uploadTokenExpiresAt?: string | null;
         };
         /** @enum {string} */
         VideoAccessLevel: "ReadOnly" | "Review" | "Edit";

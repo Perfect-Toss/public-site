@@ -304,7 +304,7 @@ function VideoDetailPage() {
 
     if (!video) return null;
 
-    const poster = video.thumbnail ? `data:image/jpeg;base64,${video.thumbnail}` : undefined;
+    const poster = video.thumbnailUrl ?? undefined;
     const notUploaded = video.uploadStatus === 'NotUploaded' || video.uploadStatus === 'Pending';
 
     return (
@@ -517,14 +517,6 @@ function VideoDetailPage() {
             <MetadataItem label="Coaches" value={formatUserNames(video.coaches)} />
             <MetadataItem label="Tags" value={formatTagNames(video.tags)} />
             <MetadataItem label="Blob path" value={video.blobPath || '—'} />
-            <MetadataItem
-              label="Upload token issued at"
-              value={formatDateTime(video.uploadTokenIssuedAt)}
-            />
-            <MetadataItem
-              label="Upload token expires at"
-              value={formatDateTime(video.uploadTokenExpiresAt)}
-            />
             {/* ── Admin / audit data (kept at the bottom) ── */}
             <MetadataItem label="Created by" value={renderUserRef(video.createdByUser)} />
             <MetadataItem label="Created at" value={formatDateTime(video.createdAt)} />

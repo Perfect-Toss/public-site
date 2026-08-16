@@ -9,6 +9,7 @@ export type Entity = components['schemas']['Entity'];
 export type CreateEntityRequest = components['schemas']['CreateEntityRequest'];
 export type UpdateEntityRequest = components['schemas']['UpdateEntityRequest'];
 export type AddUserToEntityRequest = components['schemas']['AddUserToEntityRequest'];
+export type EntityUserRole = components['schemas']['Roles'];
 
 /**
  * Fetch all root-level entities (organizations without a parent)
