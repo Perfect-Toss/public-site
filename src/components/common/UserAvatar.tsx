@@ -1,6 +1,7 @@
 import './UserAvatar.css';
 
-import { getDisplayName, getInitials, isLightColor } from '../../utils/user';
+import { colorFor, isLightColor } from '../../utils/color';
+import { getDisplayName, getInitials } from '../../utils/user';
 
 export interface UserAvatarProps {
   user: {
@@ -41,14 +42,17 @@ export function UserAvatar({ user, size = 32, className, alt }: UserAvatarProps)
     );
   }
 
+  // Prefer the user's stored color; fall back to a deterministic color derived
+  // from their display name so everyone gets a stable, unique-looking avatar.
+  const avatarColor = user.colorHex ?? colorFor(getDisplayName(user));
+
   return (
     <div
       className={['user-avatar', className].filter(Boolean).join(' ')}
       style={{
         ...dimensionStyle,
-        ...(user.colorHex
-          ? { background: user.colorHex, color: isLightColor(user.colorHex) ? '#1a1f24' : '#fff' }
-          : undefined),
+        background: avatarColor,
+        color: isLightColor(avatarColor) ? '#1a1f24' : '#fff',
       }}
     >
       {getInitials(user)}

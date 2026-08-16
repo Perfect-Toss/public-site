@@ -1,112 +1,13 @@
 /**
- * Deterministic color utilities — ported from a Dart Flutter extension.
+ * Generic color utilities — ported from a Dart Flutter extension.
  *
- * Derives a stable hex color from an arbitrary string (e.g. a person's name)
- * using a djb2-style hash, plus HSL-based darken/lighten helpers.
+ * `colorFor` derives a stable hex color from an arbitrary string (e.g. a
+ * person's name) using the same hash, RGB extraction, and optional
+ * force-dark / force-light luminance adjustments as the Flutter app.
+ * `isLightColor` helps pick readable text (black vs white) over a color.
  */
 
-interface RGB {
-  r: number;
-  g: number;
-  b: number;
-}
-
-interface HSL {
-  h: number;
-  s: number;
-  l: number;
-}
-
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, value));
-
-function hexToRgb(hex: string): RGB {
-  let h = hex.replace('#', '');
-  if (h.length === 3) {
-    h = h
-      .split('')
-      .map((c) => c + c)
-      .join('');
-  }
-  const int = parseInt(h, 16);
-  if (Number.isNaN(int)) return { r: 0, g: 0, b: 0 };
-  return { r: (int >> 16) & 0xff, g: (int >> 8) & 0xff, b: int & 0xff };
-}
-
-function rgbToHex({ r, g, b }: RGB): string {
-  const toHex = (v: number) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0');
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
-}
-
-function rgbToHsl({ r, g, b }: RGB): HSL {
-  const rn = r / 255;
-  const gn = g / 255;
-  const bn = b / 255;
-  const max = Math.max(rn, gn, bn);
-  const min = Math.min(rn, gn, bn);
-  const l = (max + min) / 2;
-  let h = 0;
-  let s = 0;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case rn:
-        h = (gn - bn) / d + (gn < bn ? 6 : 0);
-        break;
-      case gn:
-        h = (bn - rn) / d + 2;
-        break;
-      default:
-        h = (rn - gn) / d + 4;
-        break;
-    }
-    h /= 6;
-  }
-  return { h, s, l };
-}
-
-function hslToRgb({ h, s, l }: HSL): RGB {
-  if (s === 0) {
-    const v = Math.round(l * 255);
-    return { r: v, g: v, b: v };
-  }
-  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-  const p = 2 * l - q;
-  const hue2rgb = (p0: number, q0: number, t: number) => {
-    let tt = t;
-    if (tt < 0) tt += 1;
-    if (tt > 1) tt -= 1;
-    if (tt < 1 / 6) return p0 + (q0 - p0) * 6 * tt;
-    if (tt < 1 / 2) return q0;
-    if (tt < 2 / 3) return p0 + (q0 - p0) * (2 / 3 - tt) * 6;
-    return p0;
-  };
-  return {
-    r: Math.round(hue2rgb(p, q, h + 1 / 3) * 255),
-    g: Math.round(hue2rgb(p, q, h) * 255),
-    b: Math.round(hue2rgb(p, q, h - 1 / 3) * 255),
-  };
-}
-
-/** Perceived lightness in the 0.0–1.0 range (0 = black, 1 = white). */
-export function getLuminance(hex: string): number {
-  return rgbToHsl(hexToRgb(hex)).l;
-}
-
-/** Decreases lightness by `amount` (clamped to a valid range). */
-export function darken(hex: string, amount = 0.1): string {
-  const hsl = rgbToHsl(hexToRgb(hex));
-  return rgbToHex(hslToRgb({ ...hsl, l: clamp(hsl.l - amount, 0, 1) }));
-}
-
-/** Increases lightness by `amount` (clamped to a valid range). */
-export function lighten(hex: string, amount = 0.1): string {
-  const hsl = rgbToHsl(hexToRgb(hex));
-  return rgbToHex(hslToRgb({ ...hsl, l: clamp(hsl.l + amount, 0, 1) }));
-}
-
-interface ColorForOptions {
+export interface ColorForOptions {
   /** Darkens light colors so white text stays readable. */
   forceDark?: boolean;
   /** Lightens dark colors so black text stays readable. */
@@ -114,13 +15,15 @@ interface ColorForOptions {
 }
 
 /**
- * Picks a deterministic hex color based on a string (e.g. a person's name).
- *
- * - `forceDark: true`  -> darkens light colors so white text stays readable
- * - `forceLight: true` -> lightens dark colors so black text stays readable
+ * Deterministically generate a hex color from a string (e.g. a user's name),
+ * mirroring the Dart `colorFor` implementation: the same string hash, the same
+ * RGB extraction from the hashed value, and the same optional force-dark /
+ * force-light luminance adjustments. The same input always yields the same
+ * color, so it can be used as an avatar fallback when a user has no `colorHex`.
  */
-export function colorFor(text: string, { forceDark = false, forceLight = false }: ColorForOptions = {}): string {
-  // djb2-style string hash
+export function colorFor(text: string, options?: ColorForOptions): string {
+  const { forceDark = false, forceLight = false } = options ?? {};
+
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
     hash = text.charCodeAt(i) + ((hash << 5) - hash);
@@ -129,17 +32,61 @@ export function colorFor(text: string, { forceDark = false, forceLight = false }
   const red = (finalHash & 0xff0000) >> 16;
   const green = (finalHash & 0xff00) >> 8;
   const blue = finalHash & 0xff;
-  const color = rgbToHex({ r: red, g: green, b: blue });
 
   if (forceDark) {
-    const luminance = getLuminance(color);
-    if (luminance > 0.5) return darken(color, luminance - 0.4);
+    const luminance = relativeLuminance(red, green, blue);
+    if (luminance > 0.5) {
+      const amount = luminance - 0.4;
+      return rgbToHex(
+        Math.round(red * (1 - amount)),
+        Math.round(green * (1 - amount)),
+        Math.round(blue * (1 - amount)),
+      );
+    }
   }
 
   if (forceLight) {
-    const luminance = getLuminance(color);
-    if (luminance < 0.5) return lighten(color, luminance + 0.4);
+    const luminance = relativeLuminance(red, green, blue);
+    if (luminance < 0.5) {
+      const amount = luminance + 0.4;
+      return rgbToHex(
+        Math.round(red + (255 - red) * amount),
+        Math.round(green + (255 - green) * amount),
+        Math.round(blue + (255 - blue) * amount),
+      );
+    }
   }
 
-  return color;
+  return rgbToHex(red, green, blue);
 }
+
+/**
+ * Perceived brightness (W3C formula). Returns true for "light" colors so
+ * callers can pick dark text over them (e.g. on avatars).
+ */
+export function isLightColor(hex?: string | null): boolean {
+  if (!hex) return false;
+  const c = hex.replace('#', '');
+  if (c.length < 6) return false;
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  // Perceived brightness (W3C formula)
+  return r * 0.299 + g * 0.587 + b * 0.114 > 160;
+}
+
+/** sRGB relative luminance, matching Dart's `Color.getLuminance()`. */
+function relativeLuminance(r: number, g: number, b: number): number {
+  const linearize = (v: number) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
+}
+
+/** Convert RGB channels (0-255) to a hex string (#rrggbb). */
+function rgbToHex(r: number, g: number, b: number): string {
+  const toHex = (v: number) => v.toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
