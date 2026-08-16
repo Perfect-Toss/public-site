@@ -11,6 +11,7 @@ import {
 import { useRef, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { StyledSelect } from '../common';
 import { useAuth } from '../../contexts/useAuth';
 
 function AccountPage() {
@@ -225,11 +226,11 @@ function AccountPage() {
             <div style={{ marginLeft: '30px' }}>
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', fontWeight: '600', marginBottom: '5px' }}>Theme</label>
-                <select style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
+                <StyledSelect defaultValue="Light">
                   <option>Light</option>
                   <option>Dark</option>
                   <option>Auto</option>
-                </select>
+                </StyledSelect>
               </div>
             </div>
           </div>

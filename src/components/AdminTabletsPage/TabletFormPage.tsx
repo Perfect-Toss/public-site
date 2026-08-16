@@ -13,6 +13,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { StyledSelect } from '../common';
 import { useTabletStore } from '../../stores/tabletStore';
 import { useUserStore } from '../../stores/userStore';
 
@@ -182,9 +183,9 @@ function TabletFormPage() {
 
           <div className="form-group">
             <label>Service Account</label>
-            <select
+            <StyledSelect
               value={formData.serviceAccountId}
-              onChange={(e) => setFormData((prev) => ({ ...prev, serviceAccountId: e.target.value }))}
+              onChange={(v) => setFormData((prev) => ({ ...prev, serviceAccountId: v }))}
             >
               <option value="">— None —</option>
               {serviceAccountsLoading && (
@@ -197,14 +198,14 @@ function TabletFormPage() {
                     : sa.email || sa.id}
                 </option>
               ))}
-            </select>
+            </StyledSelect>
           </div>
 
           <div className="form-group">
             <label>Tablet Type</label>
-            <select
+            <StyledSelect
               value={formData.tabletTypeId}
-              onChange={(e) => setFormData((prev) => ({ ...prev, tabletTypeId: e.target.value }))}
+              onChange={(v) => setFormData((prev) => ({ ...prev, tabletTypeId: v }))}
             >
               <option value="">— None —</option>
               {tabletTypesLoading && (
@@ -215,7 +216,7 @@ function TabletFormPage() {
                   {tt.model || tt.id}
                 </option>
               ))}
-            </select>
+            </StyledSelect>
           </div>
 
           <div className="form-group">

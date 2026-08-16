@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { StyledSelect } from '../common';
 import type { UpdateEntityRequest } from '../../api/api.entities';
 import { useEntityStore } from '../../stores/entityStore';
 
@@ -129,10 +130,10 @@ function EditOrganizationPage() {
           </div>
           <div className="form-group">
             <label htmlFor="edit-parent">Parent Organization</label>
-            <select
+            <StyledSelect
               id="edit-parent"
               value={editForm.parentEntityId}
-              onChange={(e) => setEditForm((f) => ({ ...f, parentEntityId: e.target.value }))}
+              onChange={(v) => setEditForm((f) => ({ ...f, parentEntityId: v }))}
             >
               <option value="">— None (root level) —</option>
               {organizations
@@ -140,7 +141,7 @@ function EditOrganizationPage() {
                 .map((org) => (
                   <option key={org.id} value={org.id}>{org.name}</option>
                 ))}
-            </select>
+            </StyledSelect>
           </div>
           <div className="form-group">
             <label htmlFor="edit-description">Description</label>
