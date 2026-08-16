@@ -4,9 +4,9 @@ import type { User } from '../api/api.users';
 import type { Video } from '../api/api.videos';
 import { getDisplayName } from './user';
 
-/** The API returns the thumbnail as a base64 byte string; render it as a data URL. */
+/** The API returns a direct URL to the video's thumbnail image. */
 export function thumbnailSrc(video: Video): string | null {
-  return video.thumbnail ? `data:image/jpeg;base64,${video.thumbnail}` : null;
+  return video.thumbnailUrl ?? null;
 }
 
 export function ownerDisplayName(video: Video): string {

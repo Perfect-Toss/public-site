@@ -1,5 +1,6 @@
-import { getDisplayName, getInitials, isLightColor } from '../../utils/user';
 import './UserAvatar.css';
+
+import { getDisplayName, getInitials, isLightColor } from '../../utils/user';
 
 export interface UserAvatarProps {
   user: {
@@ -7,13 +8,8 @@ export interface UserAvatarProps {
     lastName?: string | null;
     email?: string | null;
     colorHex?: string | null;
-    /** Legacy base64-encoded thumbnail (old API model). */
-    thumbnailImage?: string | null;
-    /** Resolved full thumbnail URL (e.g. from the UserInfo DTO). */
+    /** Resolved full thumbnail URL. */
     thumbnailUrl?: string | null;
-    /** User thumbnail path + cache-busting version. */
-    thumbnailPath?: string | null;
-    thumbnailVersion?: number;
   };
   /** Avatar diameter in pixels. Defaults to 32. */
   size?: number;
@@ -21,16 +17,9 @@ export interface UserAvatarProps {
   alt?: string;
 }
 
-/** Resolve the best available thumbnail source for a user avatar. */
+/** Resolve the thumbnail source for a user avatar. */
 function resolveThumbnailSrc(user: UserAvatarProps['user']): string | null {
-  if (user.thumbnailUrl) return user.thumbnailUrl;
-  if (user.thumbnailImage) return `data:image/jpeg;base64,${user.thumbnailImage}`;
-  if (user.thumbnailPath) {
-    return user.thumbnailVersion
-      ? `${user.thumbnailPath}?v=${user.thumbnailVersion}`
-      : user.thumbnailPath;
-  }
-  return null;
+  return user.thumbnailUrl ?? null;
 }
 
 export function UserAvatar({ user, size = 32, className, alt }: UserAvatarProps) {

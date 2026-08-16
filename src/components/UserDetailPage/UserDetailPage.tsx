@@ -223,7 +223,7 @@ function UserDetailPage() {
                         style={{ display: 'none' }}
                       />
                     </label>
-                    {user.thumbnailPath && (
+                    {user.thumbnailUrl && (
                       <button
                         className="thumbnail-remove-btn"
                         title="Remove photo"
