@@ -148,12 +148,21 @@
   font-weight: 600;
 }
 
-.video-detail-meta .video-meta-owner {
+.video-detail-owner {
+  display: flex;
   align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #666;
 }
 
-/* Keep the inline UserInfo from adding button padding that shifts the meta row. */
-.video-detail-meta .user-info {
+.video-detail-owner strong {
+  color: #1a1f24;
+  font-weight: 600;
+}
+
+.video-detail-owner .user-info {
   padding: 0;
 }
 

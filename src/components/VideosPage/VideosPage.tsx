@@ -1,26 +1,41 @@
 import '../../styles/page.css';
 import './VideosPage.css';
 
-import { faSearch, faVideo } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faSearch, faVideo } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchVideos, type Video } from '../../api/api.videos';
-import { formatDate, formatDuration } from '../../utils/format';
+import { fetchVideos, type ReviewStatus, type Video } from '../../api/api.videos';
+import { UserInfo } from '../common';
+import { formatBytes, formatDateTime, formatDuration, formatEnum } from '../../utils/format';
 import { ownerDisplayName, thumbnailSrc } from '../../utils/videos';
 
 const PAGE_SIZE = 12;
+
+const REVIEW_STATUS_LABELS: Record<ReviewStatus, string> = {
+  Unknown: 'Unknown',
+  NotReviewed: 'Not reviewed',
+  ReviewRequested: 'Review requested',
+  Reviewed: 'Reviewed',
+};
+
+const REVIEW_STATUS_CLASS: Record<ReviewStatus, string> = {
+  Unknown: '',
+  NotReviewed: 'not-reviewed',
+  ReviewRequested: 'review-requested',
+  Reviewed: 'reviewed',
+};
 
 function VideoCard({ video }: { video: Video }) {
   const navigate = useNavigate();
   const thumb = thumbnailSrc(video);
   const duration = formatDuration(video.lengthInSeconds);
-  const ownerName = ownerDisplayName(video);
+  const size = formatBytes(video.sizeInBytes);
 
   const pendingUpload = video.uploadStatus === 'Pending' || video.uploadStatus === 'NotUploaded';
-  const reviewRequested = video.reviewStatus === 'ReviewRequested';
-  const reviewed = video.reviewStatus === 'Reviewed';
+  const reviewStatus =
+    video.reviewStatus && video.reviewStatus !== 'Unknown' ? video.reviewStatus : undefined;
 
   const openVideo = useCallback(() => {
     navigate(`/videos/${video.id}`);
@@ -56,9 +71,20 @@ function VideoCard({ video }: { video: Video }) {
           {video.label || 'Untitled video'}
         </h3>
         <div className="video-card-meta">
-          {video.timestamp && <span>{formatDate(video.timestamp)}</span>}
-          {ownerName && <span>{ownerName}</span>}
+          {video.timestamp && (
+            <span title="Captured">
+              <FontAwesomeIcon icon={faClock} />
+              {formatDateTime(video.timestamp)}
+            </span>
+          )}
+          {size !== '—' && <span title="File size">{size}</span>}
         </div>
+
+        {video.owner && (
+          <div className="video-card-owner">
+            <UserInfo user={video.owner} size={20} />
+          </div>
+        )}
 
         {video.tags && video.tags.length > 0 && (
           <div className="video-card-tags">
@@ -73,15 +99,16 @@ function VideoCard({ video }: { video: Video }) {
           </div>
         )}
 
-        {(pendingUpload || reviewRequested || reviewed) && (
-          <span className={`video-card-status${reviewed ? ' reviewed' : ''}`}>
-            {pendingUpload
-              ? 'Pending upload'
-              : reviewRequested
-                ? 'Review requested'
-                : 'Reviewed'}
-          </span>
-        )}
+        <div className="video-card-statuses">
+          {pendingUpload && (
+            <span className="video-card-status upload-pending">Pending upload</span>
+          )}
+          {reviewStatus && (
+            <span className={`video-card-status ${REVIEW_STATUS_CLASS[reviewStatus]}`}>
+              {formatEnum(REVIEW_STATUS_LABELS, reviewStatus)}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
