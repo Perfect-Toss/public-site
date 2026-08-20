@@ -75,6 +75,16 @@ export function isLightColor(hex?: string | null): boolean {
   return r * 0.299 + g * 0.587 + b * 0.114 > 160;
 }
 
+/** Convert a `#rrggbb` hex color to an `rgba()` string with the given alpha. */
+export function hexToRgba(hex: string | null | undefined, alpha: number): string {
+  const c = (hex ?? '').replace('#', '');
+  if (c.length < 6) return `rgba(255, 255, 255, ${alpha})`;
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 /** sRGB relative luminance, matching Dart's `Color.getLuminance()`. */
 function relativeLuminance(r: number, g: number, b: number): number {
   const linearize = (v: number) => {

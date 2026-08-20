@@ -1,0 +1,149 @@
+/* ─── Review marker timeline (inside the custom player chrome) ───────────── */
+
+.video-timeline {
+  width: 100%;
+  padding: 2px 0;
+  pointer-events: none; /* let clicks on empty track pass through */
+}
+
+.video-timeline-track {
+  position: relative;
+  /* Match the anchor control track (.vr-anchor-track). */
+  height: 24px;
+  border-radius: 6px;
+  background: #2a2f36;
+  /* Inset the content so markers stay inside the corners, like .vr-anchor-inner. */
+  padding: 0 12px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.video-timeline-marker,
+.video-timeline-segment {
+  pointer-events: auto;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  position: absolute;
+}
+
+/* Marker dot — same centering as the anchor control's .vr-anchor-dot. */
+.video-timeline-marker {
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  /* Fallback; the per-reviewer color is applied inline. */
+  background: #cfff04;
+  border: 2px solid #1a1f24;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s ease;
+  /* Keep snapshot/general dots on top of segment bars and the progress fill. */
+  z-index: 3;
+}
+
+.video-timeline-marker:hover {
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+.video-timeline-marker.active {
+  transform: translate(-50%, -50%) scale(1.45);
+  box-shadow: 0 0 0 3px #fff;
+}
+
+/* Segment bar — inset vertically like the anchor control's range/ref segments. */
+.video-timeline-segment {
+  top: 6px;
+  bottom: 6px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+  transition: filter 0.15s ease;
+  z-index: 2;
+}
+
+.video-timeline-segment:hover {
+  filter: brightness(1.3);
+}
+
+.video-timeline-segment.active {
+  filter: brightness(1.6);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* ─── Hover preview popup on markers ─────────────────────────────────────── */
+
+/* Rendered in a portal to <body> so the video/player can't clip it. */
+.video-timeline-popup {
+  position: fixed;
+  transform: translate(-50%, -100%);
+  width: 360px;
+  max-width: min(90vw, calc(100vw - 24px));
+  max-height: 80vh;
+  overflow: auto;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #1a1f24;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  color: #e8e8e8;
+  font-size: 13px;
+  z-index: 2000;
+  pointer-events: auto;
+  text-align: left;
+}
+
+/* Reviewer row — full avatar + name on the left, timestamp on the right. */
+.vtp-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.vtp-user .user-info {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+
+.vtp-user .user-info-name {
+  color: #fff;
+}
+
+.vtp-user .user-info-email {
+  color: #ccc;
+}
+
+.vtp-pos {
+  flex-shrink: 0;
+  color: #999;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.vtp-text {
+  margin: 0;
+  color: #e8e8e8;
+  line-height: 1.5;
+  font-size: 13px;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.vtp-audio {
+  margin-top: 8px;
+}
+
+.vtp-drawing {
+  display: block;
+  max-width: 100%;
+  max-height: 200px;
+  margin-top: 8px;
+  border-radius: 8px;
+  object-fit: contain;
+}

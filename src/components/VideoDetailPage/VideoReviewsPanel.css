@@ -1,0 +1,1045 @@
+/* ─── Shared close button (inline composer) ──────────────────────────────── */
+
+.vr-close {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: #999;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.vr-close:hover {
+  color: #1a1f24;
+  background: #f0f0f0;
+}
+
+/* ─── Text/audio composer overlay (matches the drawing overlay) ─────────── */
+
+.vro-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.vro-audio-status {
+  position: absolute;
+  top: 74px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: calc(100% - 32px);
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(20, 24, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.vro-listening {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ff8f8f;
+  white-space: nowrap;
+}
+
+.vro-listening-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff8f8f;
+  animation: vr-pulse 1.2s ease-in-out infinite;
+}
+
+.vro-attached {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vro-attached audio {
+  height: 34px;
+  max-width: 260px;
+}
+
+.vro-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  color: #ff8f8f;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vro-remove:hover {
+  text-decoration: underline;
+}
+
+.vro-compose {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(600px, calc(100% - 32px));
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(20, 24, 28, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.vro-mic {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.vro-mic:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.vro-mic.recording {
+  background: #dc3545;
+  color: #fff;
+}
+
+.vro-caption {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  resize: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 120px;
+}
+
+.vro-caption:focus {
+  outline: none;
+  border-color: #cfff04;
+}
+
+.vro-caption::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.vro-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #1a1f24;
+  color: #cfff04;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.vro-submit:hover {
+  background: #2d333b;
+}
+
+.vro-close-inline {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.vro-close-inline:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.vro-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.vro-error {
+  position: absolute;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
+  z-index: 2;
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(220, 53, 69, 0.9);
+  color: #fff;
+  font-size: 12px;
+  max-width: calc(100% - 40px);
+}
+
+/* ─── Reviews list (below the video) ─────────────────────────────────────── */
+
+.video-reviews-list-section {
+  margin-top: 32px;
+}
+
+.video-reviews-list-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 18px;
+  padding: 0 0 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.video-reviews-list-header:hover {
+  border-color: #ccc;
+}
+
+.video-reviews-list-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #1a1f24;
+}
+
+.vr-list-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f0f0f0;
+  color: #666;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vr-chevron {
+  margin-left: auto;
+  color: #999;
+  font-size: 12px;
+}
+
+/* ─── Shared bits ────────────────────────────────────────────────────────── */
+
+.vr-error {
+  margin: 8px 0;
+  color: #dc3545;
+  font-size: 13px;
+}
+
+.vr-empty {
+  margin: 0;
+  padding: 16px;
+  color: #999;
+  font-size: 13px;
+  text-align: center;
+  border: 1px dashed #e0e0e0;
+  border-radius: 8px;
+}
+
+.vr-list-title {
+  margin: 24px 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+}
+
+.vr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vr-btn:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+  color: #1a1f24;
+}
+
+.vr-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ─── Composer ───────────────────────────────────────────────────────────── */
+
+.vr-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  background: #fafafa;
+}
+
+/* ─── Anchor toggles ─────────────────────────────────────────────────────── */
+
+.vr-anchors {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vr-anchors-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+}
+
+.vr-anchors-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vr-anchors-head .vr-anchor-hint {
+  font-size: 11px;
+  color: #999;
+}
+
+.vr-anchors-head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vr-anchor-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1f24;
+}
+
+.vr-anchor {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vr-anchor-track {
+  position: relative;
+  height: 24px;
+  border-radius: 6px;
+  background: #2a2f36;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+
+/* Inset wrapper so bubbles + range stay inside the track with a little gutter. */
+.vr-anchor-inner {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 0;
+  bottom: 0;
+}
+
+/* Faint reference markers for existing review snapshots/segments. */
+.vr-anchor-ref {
+  position: absolute;
+  pointer-events: none;
+}
+
+.vr-anchor-ref-dot {
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #888;
+  opacity: 0.5;
+}
+
+.vr-anchor-ref-segment {
+  top: 6px;
+  bottom: 6px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 2px;
+}
+
+.vr-anchor-range {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  background: rgba(207, 255, 4, 0.35);
+  border-left: 2px solid #cfff04;
+  border-right: 2px solid #cfff04;
+  border-radius: 4px;
+}
+
+.vr-anchor-dot,
+.vr-anchor-handle {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #cfff04;
+  border: 2px solid #1a1f24;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+  touch-action: none;
+}
+
+.vr-anchor-dot {
+  cursor: grab;
+}
+
+.vr-anchor-handle {
+  cursor: ew-resize;
+}
+
+.vr-anchor-hint {
+  color: #999;
+}
+
+.vr-text {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1a1f24;
+  resize: vertical;
+}
+
+.vr-text:focus {
+  outline: none;
+  border-color: #cfff04;
+  box-shadow: 0 0 0 3px rgba(207, 255, 4, 0.25);
+}
+
+/* Note textarea in the review request popup — fixed size so it can't resize the modal. */
+.form-group textarea.review-note-text {
+  resize: none;
+}
+
+/* ─── Grouped user/entity picker (review request popup) ─────────────────── */
+
+.review-target {
+  position: relative;
+}
+
+.review-target-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  color: #1a1f24;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.review-target-trigger:hover {
+  border-color: #ccc;
+}
+
+.review-target-trigger:focus-visible {
+  outline: none;
+  border-color: #cfff04;
+  box-shadow: 0 0 0 3px rgba(207, 255, 4, 0.25);
+}
+
+.review-target-selected {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.review-target-selected > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-target-placeholder {
+  flex: 1;
+  color: #999;
+}
+
+.review-target-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #999;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.review-target-clear:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.review-target-chevron {
+  margin-left: auto;
+  color: #999;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.review-target-chevron.open {
+  transform: rotate(180deg);
+}
+
+.review-target-panel {
+  position: fixed;
+  z-index: 1100;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+}
+
+.review-target-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #999;
+}
+
+.review-target-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1a1f24;
+  background: none;
+}
+
+.review-target-groups {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.review-target-group-label {
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #999;
+}
+
+.review-target-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1a1f24;
+  text-align: left;
+  cursor: pointer;
+}
+
+.review-target-option:hover {
+  background: #f5f5f5;
+}
+
+.review-target-option.selected {
+  background: rgba(207, 255, 4, 0.18);
+}
+
+.review-target-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+
+.review-target-option-primary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.review-target-option-secondary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #999;
+}
+
+.review-target-check {
+  margin-left: auto;
+  color: #1a1f24;
+  flex-shrink: 0;
+}
+
+.review-target-kind-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.review-target-empty {
+  margin: 0;
+  padding: 10px 12px;
+  color: #999;
+  font-size: 13px;
+}
+
+/* ─── Voice / audio ──────────────────────────────────────────────────────── */
+
+.vr-mic-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vr-mic-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #555;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vr-mic-btn:hover {
+  border-color: #cfff04;
+  color: #1a1f24;
+}
+
+.vr-mic-btn.recording {
+  color: #fff;
+  background: #dc3545;
+  border-color: #dc3545;
+}
+
+.vr-listening {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #dc3545;
+  white-space: nowrap;
+}
+
+.vr-listening-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #dc3545;
+  animation: vr-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes vr-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.7);
+  }
+}
+
+/* Single-line comment box that grows with its content. */
+.vr-text.vr-text-grow {
+  resize: none;
+  overflow-y: hidden;
+  min-height: 44px;
+}
+
+.vr-hint {
+  font-size: 11px;
+  color: #999;
+}
+
+
+
+.vr-attached-audio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vr-attached-audio audio {
+  height: 36px;
+  max-width: 280px;
+}
+
+.vr-remove {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  color: #dc3545;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vr-remove:hover {
+  text-decoration: underline;
+}
+
+/* ─── Submit ─────────────────────────────────────────────────────────────── */
+
+.vr-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #1a1f24;
+  color: #cfff04;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vr-submit:hover {
+  background: #2d333b;
+}
+
+.vr-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ─── Inline composer (embedded in the video player) ────────────────────── */
+
+.vr-composer-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vr-composer-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #1a1f24;
+}
+
+.vr-composer-head .vr-close {
+  margin-left: auto;
+}
+
+.vr-composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.vr-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #666;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vr-cancel:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+  color: #1a1f24;
+}
+
+/* Playback-position quick anchor actions (player only). */
+.vr-position-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.vr-position-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a1f24;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.vr-position-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #555;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.vr-position-actions button:hover {
+  background: #f5f5f5;
+  border-color: #cfff04;
+  color: #1a1f24;
+}
+
+/* ─── Lists ──────────────────────────────────────────────────────────────── */
+
+.vr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.vr-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fff;
+  transition: box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.vr-item:last-child {
+  border-bottom: none;
+}
+
+.vr-item-highlight {
+  box-shadow: inset 0 0 0 2px #cfff04;
+  background: #fdfeda;
+}
+
+.vr-item-clickable {
+  cursor: pointer;
+}
+
+.vr-item-clickable:hover {
+  background: #f7f7f8;
+}
+
+.vr-item-clickable:focus-visible {
+  outline: 2px solid #0a84ff;
+  outline-offset: -2px;
+}
+
+.vr-item-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vr-item-head .user-info {
+  padding: 0;
+}
+
+.vr-req-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vr-req-open {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.vr-req-done {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.vr-item-pos {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1f24;
+}
+
+.vr-item-time {
+  margin-left: auto;
+  font-size: 12px;
+  color: #999;
+}
+
+.vr-delete {
+  border: none;
+  background: none;
+  color: #ccc;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 13px;
+}
+
+.vr-delete:hover {
+  color: #dc3545;
+}
+
+.vr-item-text {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.vr-item-audio {
+  display: block;
+  margin-top: 10px;
+  height: 36px;
+  max-width: 100%;
+}
+
+.vr-item-drawing {
+  display: block;
+  margin-top: 10px;
+  max-width: 100%;
+  max-height: 260px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+/* ─── Request form ───────────────────────────────────────────────────────── */
+
+.vr-request-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px dashed #e0e0e0;
+  border-radius: 8px;
+}

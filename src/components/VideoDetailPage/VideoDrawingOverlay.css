@@ -1,0 +1,174 @@
+/* Full-video drawing overlay for snapshot reviews. */
+
+.vdo-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.85);
+  cursor: crosshair;
+}
+
+.vdo-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.vdo-toolbar {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: calc(100% - 24px);
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(20, 24, 28, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  flex-wrap: wrap;
+}
+
+.vdo-tool-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vdo-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.vdo-tool:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.vdo-tool.active {
+  background: rgba(207, 255, 4, 0.2);
+  color: #cfff04;
+}
+
+.vdo-close {
+  color: #ff8f8f;
+}
+
+.vdo-colors {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+}
+
+.vdo-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.vdo-swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px #cfff04;
+  transform: scale(1.1);
+}
+
+.vdo-compose {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(560px, calc(100% - 32px));
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(20, 24, 28, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.vdo-caption {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  resize: none;
+}
+
+.vdo-caption:focus {
+  outline: none;
+  border-color: #cfff04;
+}
+
+.vdo-caption::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.vdo-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #1a1f24;
+  color: #cfff04;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.vdo-submit:hover {
+  background: #2d333b;
+}
+
+.vdo-submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.vdo-error {
+  position: absolute;
+  left: 50%;
+  bottom: 84px;
+  transform: translateX(-50%);
+  z-index: 2;
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(220, 53, 69, 0.9);
+  color: #fff;
+  font-size: 12px;
+  max-width: calc(100% - 40px);
+}

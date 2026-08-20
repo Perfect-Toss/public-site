@@ -6,6 +6,8 @@ import {
   faBuilding,
   faChevronDown,
   faChevronUp,
+  faFlag,
+  faHardDrive,
   faShareNodes,
   faSpinner,
   faTimes,
@@ -15,8 +17,13 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useModalKeyboard } from '../../hooks/useModalKeyboard';
+import { CustomVideoPlayer } from './CustomVideoPlayer';
+import { ReviewRequestModal } from './ReviewRequestModal';
+import { VideoReviewList } from './VideoReviewList';
+import { useVideoReviews } from './useVideoReviews';
 import {
   deleteVideo,
   fetchVideoById,
@@ -84,10 +91,14 @@ const REVIEW_STATUS_LABELS: Record<ReviewStatus, string> = {
 function VideoDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { reviews, requests, loading: reviewsLoading, error: reviewsError, reload } =
+    useVideoReviews(id ?? '');
 
   // The video response already embeds the user info for audit fields.
   const renderUserRef = (user?: Video['createdByUser']) =>
     user ? <UserInfo user={user} size={24} /> : '—';
+
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const [video, setVideo] = useState<Video | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -116,7 +127,19 @@ function VideoDetailPage() {
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const [metadataExpanded, setMetadataExpanded] = useState(false);
+  const [metadataExpanded, setMetadataExpanded] = useState(true);
+  const [accessExpanded, setAccessExpanded] = useState(true);
+  const [requestReviewOpen, setRequestReviewOpen] = useState(false);
+
+  // Review currently selected in the player (drives the timeline highlight and
+  // segment looping). A nonce lets re-clicking the same review re-seek/re-loop.
+  const [activeReviewId, setActiveReviewId] = useState<string | null>(null);
+  const [selectNonce, setSelectNonce] = useState(0);
+
+  const handleSelectReview = useCallback((reviewId: string) => {
+    setActiveReviewId(reviewId);
+    setSelectNonce((n) => n + 1);
+  }, []);
 
   const loadVideo = useCallback(async () => {
     if (!id) return;
@@ -277,6 +300,20 @@ function VideoDetailPage() {
     }
   }, [id, navigate]);
 
+  // Escape cancels / Enter accepts on the share and delete modals.
+  useModalKeyboard({
+    active: shareOpen,
+    onCancel: () => setShareOpen(false),
+    onAccept: handleShare,
+    busy: shareSubmitting,
+  });
+  useModalKeyboard({
+    active: deleteConfirmOpen,
+    onCancel: () => setDeleteConfirmOpen(false),
+    onAccept: handleDelete,
+    busy: deleteSubmitting,
+  });
+
   // Users/entities not already granted access, for the share picker.
   const shareableUsers = allUsers.filter((u) => !accessUsers.some((a) => a.user.id === u.id));
   const shareableEntities = allEntities.filter((e) => !accessEntities.some((a) => a.entity.id === e.id));
@@ -315,27 +352,74 @@ function VideoDetailPage() {
             <span>Back to videos</span>
           </button>
 
+          <h1 className="video-detail-header-title">{video.label || 'Untitled video'}</h1>
+
           <div className="video-detail-actions">
-            <button className="secondary-btn" onClick={openShareModal}>
+            <button
+              className="secondary-btn icon-only-btn"
+              onClick={() => setRequestReviewOpen(true)}
+              title="Request review"
+              aria-label="Request review"
+            >
+              <FontAwesomeIcon icon={faFlag} />
+              <span>Request review</span>
+            </button>
+            <button
+              className="secondary-btn icon-only-btn"
+              onClick={openShareModal}
+              title="Share"
+              aria-label="Share"
+            >
               <FontAwesomeIcon icon={faShareNodes} />
               <span>Share</span>
             </button>
-            <button className="delete-btn" onClick={() => setDeleteConfirmOpen(true)}>
+            <button
+              className="delete-btn icon-only-btn"
+              onClick={() => setDeleteConfirmOpen(true)}
+              title="Delete"
+              aria-label="Delete"
+            >
               <FontAwesomeIcon icon={faTrash} />
               <span>Delete</span>
             </button>
           </div>
         </div>
 
-        <div className="video-detail-player">
+        <div className="video-detail-stage">
+          <div className="video-detail-player">
           {videoUrl ? (
-            <video
+            <CustomVideoPlayer
               key={videoUrl}
-              src={videoUrl}
-              controls
-              playsInline
+              ref={videoRef}
+              videoUrl={videoUrl}
               poster={poster}
-              className="video-detail-video"
+              reviews={reviews}
+              durationFallback={video.lengthInSeconds ?? 0}
+              activeReviewId={activeReviewId}
+              selectNonce={selectNonce}
+              onSelectReview={handleSelectReview}
+              videoId={id ?? ''}
+              onAdded={() => void reload()}
+              topBar={
+                <div className="video-cvp-info">
+                  {video.owner && (
+                    <span className="video-cvp-info-owner">
+                      <UserInfo user={video.owner} size={22} />
+                    </span>
+                  )}
+                  <div className="video-cvp-info-meta">
+                    {video.timestamp && (
+                      <span className="video-cvp-info-item" title="Captured">
+                        {formatDateTime(video.timestamp)}
+                      </span>
+                    )}
+                    <span className="video-cvp-info-item" title="Size">
+                      <FontAwesomeIcon icon={faHardDrive} />
+                      {formatBytes(video.sizeInBytes)}
+                    </span>
+                  </div>
+                </div>
+              }
             />
           ) : notUploaded ? (
             <div className="video-detail-unavailable">
@@ -359,31 +443,11 @@ function VideoDetailPage() {
               </button>
             </div>
           )}
+          </div>
+
         </div>
 
         <div className="video-detail-info">
-          <h1 className="video-detail-title">{video.label || 'Untitled video'}</h1>
-
-          <div className="video-detail-meta">
-            {video.timestamp && (
-              <span>
-                <strong>Captured</strong> {formatDateTime(video.timestamp)}
-              </span>
-            )}
-            <span>
-              <strong>Duration</strong> {formatDuration(video.lengthInSeconds)}
-            </span>
-            <span>
-              <strong>Size</strong> {formatBytes(video.sizeInBytes)}
-            </span>
-          </div>
-
-          {video.owner && (
-            <div className="video-detail-owner">
-              <UserInfo user={video.owner} size={28} />
-            </div>
-          )}
-
           {video.tags && video.tags.length > 0 && (
             <div className="video-detail-tags">
               {video.tags.map((tag) => (
@@ -397,11 +461,21 @@ function VideoDetailPage() {
 
         {/* ── Access & Sharing ─────────────────────────────────── */}
         <section className="video-access-section">
-          <div className="video-access-header">
+          <button
+            type="button"
+            className="video-access-header"
+            onClick={() => setAccessExpanded((open) => !open)}
+            aria-expanded={accessExpanded}
+          >
             <h2>Access & Sharing</h2>
-          </div>
+            <FontAwesomeIcon
+              icon={accessExpanded ? faChevronUp : faChevronDown}
+              className="metadata-chevron"
+            />
+          </button>
 
-          {accessLoading ? (
+          {accessExpanded && (
+          accessLoading ? (
             <div className="loading-container" style={{ padding: '30px 20px' }}>
               <div className="spinner" />
               <p>Loading access...</p>
@@ -470,8 +544,20 @@ function VideoDetailPage() {
                 )}
               </div>
             </div>
+          )
           )}
         </section>
+
+        {/* ── Reviews (below the video) ──────────────────────────── */}
+        <VideoReviewList
+          videoId={id ?? ''}
+          reviews={reviews}
+          requests={requests}
+          loading={reviewsLoading}
+          error={reviewsError}
+          reload={reload}
+          onSelectReview={handleSelectReview}
+        />
 
         {/* ── Full Metadata ─────────────────────────────────────── */}
         <section className="video-metadata-section">
@@ -529,6 +615,15 @@ function VideoDetailPage() {
           </div>
           )}
         </section>
+
+        {/* ── Review Request Modal ──────────────────────────────── */}
+        {requestReviewOpen && (
+          <ReviewRequestModal
+            videoId={id ?? ''}
+            onClose={() => setRequestReviewOpen(false)}
+            onCreated={() => void reload()}
+          />
+        )}
 
         {/* ── Share Modal ───────────────────────────────────────── */}
         {shareOpen && (

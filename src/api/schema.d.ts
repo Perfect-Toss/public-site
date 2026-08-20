@@ -1246,6 +1246,151 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/videos/{videoId}/review-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all review requests for a video, newest first, each including its reviews. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video whose review requests are returned. */
+                    videoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoReviewRequest"][];
+                        "application/json": components["schemas"]["VideoReviewRequest"][];
+                        "text/json": components["schemas"]["VideoReviewRequest"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Requests a review against a video. The request is general (not anchored to a
+         *     timestamp); reviews fulfilling it are created separately.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video to review. */
+                    videoId: string;
+                };
+                cookie?: never;
+            };
+            /** @description The review request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RequestVideoReviewRequest"];
+                    "text/json": components["schemas"]["RequestVideoReviewRequest"];
+                    "application/*+json": components["schemas"]["RequestVideoReviewRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoReviewRequest"];
+                        "application/json": components["schemas"]["VideoReviewRequest"];
+                        "text/json": components["schemas"]["VideoReviewRequest"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos/{videoId}/review-requests/{requestId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a single review request including its reviews. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video the review request belongs to. */
+                    videoId: string;
+                    /** @description The review request identifier. */
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoReviewRequest"];
+                        "application/json": components["schemas"]["VideoReviewRequest"];
+                        "text/json": components["schemas"]["VideoReviewRequest"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /**
+         * Deletes a review request. Its reviews are detached and remain accessible as
+         *     standalone reviews.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video the review request belongs to. */
+                    videoId: string;
+                    /** @description The review request to delete. */
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tablets": {
         parameters: {
             query?: never;
@@ -2575,6 +2720,152 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/videos/{videoId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets all review items for a video, newest first, including their creators. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video whose review items are returned. */
+                    videoId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoReview"][];
+                        "application/json": components["schemas"]["VideoReview"][];
+                        "text/json": components["schemas"]["VideoReview"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Adds a review item to a video. The kind of item is derived from its anchors: a
+         *     general note (text/audio, not anchored), a snapshot review (freeze-frame
+         *     timestamp; text/audio/drawing), or a segment review (timestamp + duration;
+         *     text/audio only). The current user is recorded as the item's creator (and
+         *     therefore its reviewer), and all open review requests for the video are marked
+         *     done.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video being reviewed. */
+                    videoId: string;
+                };
+                cookie?: never;
+            };
+            /** @description The review item to add. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AddVideoReviewRequest"];
+                    "text/json": components["schemas"]["AddVideoReviewRequest"];
+                    "application/*+json": components["schemas"]["AddVideoReviewRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoReview"];
+                        "application/json": components["schemas"]["VideoReview"];
+                        "text/json": components["schemas"]["VideoReview"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos/{videoId}/reviews/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a single review item including its creator. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video the review item belongs to. */
+                    videoId: string;
+                    /** @description The review item identifier. */
+                    itemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoReview"];
+                        "application/json": components["schemas"]["VideoReview"];
+                        "text/json": components["schemas"]["VideoReview"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Removes a review item from a video. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video the review item belongs to. */
+                    videoId: string;
+                    /** @description The review item to remove. */
+                    itemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/videos": {
         parameters: {
             query?: never;
@@ -3122,6 +3413,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/videos/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Deletes the uploaded video file from Azure Blob Storage while keeping the
+         *     video metadata record, so the video can be re-uploaded later.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the video. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3130,6 +3461,35 @@ export interface components {
         AddUserToEntityRequest: {
             /** @description Gets the roles to assign to the user for the entity. */
             roles: components["schemas"]["Roles"][] | null;
+        };
+        /**
+         * @description Request model for adding a review item to a video review. The kind of item is
+         *     derived from its anchors: general (no timestamp/duration; text/audio), snapshot
+         *     (timestamp only; text/audio/drawing), or segment (timestamp + duration; text/audio only).
+         */
+        AddVideoReviewRequest: {
+            /**
+             * Format: date-span
+             * @description Gets the position within the video: the freeze-frame position for snapshot items,
+             *     or the start of the segment for segment items.
+             */
+            timestamp?: string | null;
+            /**
+             * Format: date-span
+             * @description Gets the length of the segment within the video (segment items only). The segment
+             *     spans [Timestamp, Timestamp + Duration).
+             */
+            duration?: string | null;
+            /** @description Gets the optional text commentary. */
+            text?: string | null;
+            /** @description Gets the optional inline audio data (base64). */
+            audioData?: string | null;
+            /** @description Gets the MIME type of the inline audio data. */
+            audioMimeType?: string | null;
+            /** @description Gets the optional inline drawing overlay data (base64), snapshot items only. */
+            drawingData?: string | null;
+            /** @description Gets the MIME type of the inline drawing data. */
+            drawingMimeType?: string | null;
         };
         /** @description Request model for creating multiple athletes in a batch. */
         CreateAthletesDto: {
@@ -3530,6 +3890,21 @@ export interface components {
             environment?: string | null;
             /** @description The git commit SHA stamped as build metadata, if present. */
             gitSha?: string | null;
+        };
+        /** @description Request model for requesting a review against a video. */
+        RequestVideoReviewRequest: {
+            /** @description Gets the optional note describing what should be reviewed. */
+            requestNote?: string | null;
+            /**
+             * Format: uuid
+             * @description Gets the optional user requested to perform the review.
+             */
+            reviewerId?: string | null;
+            /**
+             * Format: uuid
+             * @description Gets the optional entity the review is requested from.
+             */
+            entityId?: string | null;
         };
         /** @enum {string} */
         ReviewStatus: "Unknown" | "NotReviewed" | "ReviewRequested" | "Reviewed";
@@ -3957,6 +4332,77 @@ export interface components {
             totalCount?: number;
             items?: components["schemas"]["Video"][] | null;
         };
+        VideoReview: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
+            /** Format: uuid */
+            videoId?: string;
+            video?: components["schemas"]["Video"];
+            type?: components["schemas"]["VideoReviewType"];
+            /** Format: date-span */
+            timestamp?: string | null;
+            /** Format: date-span */
+            duration?: string | null;
+            text?: string | null;
+            audioData?: string | null;
+            audioMimeType?: string | null;
+            drawingData?: string | null;
+            drawingMimeType?: string | null;
+        };
+        VideoReviewRequest: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
+            /** Format: uuid */
+            videoId?: string;
+            video?: components["schemas"]["Video"];
+            /** Format: uuid */
+            requestedById?: string;
+            requestedBy?: components["schemas"]["User"];
+            /** Format: uuid */
+            requestedReviewerId?: string | null;
+            requestedReviewer?: components["schemas"]["User"];
+            /** Format: uuid */
+            requestedEntityId?: string | null;
+            requestedEntity?: components["schemas"]["Entity"];
+            requestNote?: string | null;
+            status?: components["schemas"]["VideoReviewRequestStatus"];
+        };
+        /** @enum {string} */
+        VideoReviewRequestStatus: "Unknown" | "Open" | "Done";
+        /** @enum {string} */
+        VideoReviewType: "Unknown" | "General" | "Snapshot" | "Segment";
         VideoUserAccessResult: {
             user: components["schemas"]["User"];
             accessLevel: components["schemas"]["VideoAccessLevel"];
