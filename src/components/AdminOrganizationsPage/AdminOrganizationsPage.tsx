@@ -14,6 +14,7 @@ import {
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 
 import type { Entity } from '../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -147,6 +148,14 @@ function AdminOrganizationsPage() {
       setDeleteSubmitting(false);
     }
   }, [deleteConfirm, deleteEntity]);
+
+  // Escape cancels / Enter accepts on the delete-organization confirmation modal.
+  useModalKeyboard({
+    active: Boolean(deleteConfirm),
+    onCancel: () => setDeleteConfirm(null),
+    onAccept: handleDeleteOrganization,
+    busy: deleteSubmitting,
+  });
 
   /* ─── Render ───────────────────────────────────────────────── */
 

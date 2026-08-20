@@ -18,6 +18,12 @@ export type DeviceOrientation = components['schemas']['DeviceOrientation'];
 export type UploadStatus = components['schemas']['UploadStatus'];
 export type ReviewStatus = components['schemas']['ReviewStatus'];
 export type VideoIEnumerablePagedResponse = components['schemas']['VideoIEnumerablePagedResponse'];
+export type VideoReview = components['schemas']['VideoReview'];
+export type VideoReviewRequest = components['schemas']['VideoReviewRequest'];
+export type VideoReviewType = components['schemas']['VideoReviewType'];
+export type VideoReviewRequestStatus = components['schemas']['VideoReviewRequestStatus'];
+export type RequestVideoReviewRequest = components['schemas']['RequestVideoReviewRequest'];
+export type AddVideoReviewRequest = components['schemas']['AddVideoReviewRequest'];
 
 // ============================================================================
 // Videos API
@@ -334,4 +340,159 @@ export async function deleteVideoThumbnail(id: string): Promise<void> {
     console.error('Failed to delete video thumbnail:', error);
     throw new Error('Failed to delete video thumbnail');
   }
+}
+
+// ============================================================================
+// Video Reviews API
+// ============================================================================
+
+/**
+ * Get all review requests for a video, newest first, each including its reviews
+ */
+export async function fetchVideoReviewRequests(videoId: string): Promise<VideoReviewRequest[]> {
+  const { data, error } = await api.GET('/api/v1/videos/{videoId}/review-requests', {
+    params: { path: { videoId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch video review requests:', error);
+    throw new Error('Failed to fetch video review requests');
+  }
+
+  return data || [];
+}
+
+/**
+ * Request a review against a video. The request is general (not anchored to a
+ * timestamp); reviews fulfilling it are created separately.
+ */
+export async function createVideoReviewRequest(
+  videoId: string,
+  request: RequestVideoReviewRequest,
+): Promise<VideoReviewRequest | null> {
+  const { data, error } = await api.POST('/api/v1/videos/{videoId}/review-requests', {
+    params: { path: { videoId } },
+    body: request,
+  });
+
+  if (error) {
+    console.error('Failed to create video review request:', error);
+    throw new Error('Failed to create video review request');
+  }
+
+  return data ?? null;
+}
+
+/**
+ * Get a single review request for a video, including its reviews
+ */
+export async function fetchVideoReviewRequest(
+  videoId: string,
+  requestId: string,
+): Promise<VideoReviewRequest | null> {
+  const { data, error } = await api.GET('/api/v1/videos/{videoId}/review-requests/{requestId}', {
+    params: { path: { videoId, requestId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch video review request:', error);
+    throw new Error('Failed to fetch video review request');
+  }
+
+  return data ?? null;
+}
+
+/**
+ * Delete a review request. Its reviews are detached and remain accessible as
+ * standalone reviews.
+ */
+export async function deleteVideoReviewRequest(
+  videoId: string,
+  requestId: string,
+): Promise<boolean> {
+  const { error } = await api.DELETE('/api/v1/videos/{videoId}/review-requests/{requestId}', {
+    params: { path: { videoId, requestId } },
+  });
+
+  if (error) {
+    console.error('Failed to delete video review request:', error);
+    throw new Error('Failed to delete video review request');
+  }
+
+  return true;
+}
+
+/**
+ * Get all review items for a video, newest first, including their creators
+ */
+export async function fetchVideoReviews(videoId: string): Promise<VideoReview[]> {
+  const { data, error } = await api.GET('/api/v1/videos/{videoId}/reviews', {
+    params: { path: { videoId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch video reviews:', error);
+    throw new Error('Failed to fetch video reviews');
+  }
+
+  return data || [];
+}
+
+/**
+ * Add a review item to a video. The kind of item is derived from its anchors:
+ * a general note (text/audio, not anchored), a snapshot review (freeze-frame
+ * timestamp; text/audio/drawing), or a segment review (timestamp + duration;
+ * text/audio only). The current user is recorded as the item's creator, and all
+ * open review requests for the video are marked done.
+ */
+export async function addVideoReview(
+  videoId: string,
+  review: AddVideoReviewRequest,
+): Promise<VideoReview | null> {
+  const { data, error } = await api.POST('/api/v1/videos/{videoId}/reviews', {
+    params: { path: { videoId } },
+    body: review,
+  });
+
+  if (error) {
+    console.error('Failed to add video review:', error);
+    throw new Error('Failed to add video review');
+  }
+
+  return data ?? null;
+}
+
+/**
+ * Get a single review item for a video, including its creator
+ */
+export async function fetchVideoReview(
+  videoId: string,
+  itemId: string,
+): Promise<VideoReview | null> {
+  const { data, error } = await api.GET('/api/v1/videos/{videoId}/reviews/{itemId}', {
+    params: { path: { videoId, itemId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch video review:', error);
+    throw new Error('Failed to fetch video review');
+  }
+
+  return data ?? null;
+}
+
+/**
+ * Remove a review item from a video
+ */
+export async function deleteVideoReview(videoId: string, itemId: string): Promise<boolean> {
+  const { error } = await api.DELETE('/api/v1/videos/{videoId}/reviews/{itemId}', {
+    params: { path: { videoId, itemId } },
+  });
+
+  if (error) {
+    console.error('Failed to delete video review:', error);
+    throw new Error('Failed to delete video review');
+  }
+
+  return true;
 }

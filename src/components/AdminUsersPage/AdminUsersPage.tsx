@@ -18,6 +18,7 @@ import {
 import { getDisplayName, renderRoleBadges } from '../../utils/user';
 import { UserInfo } from '../common';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Role, type User } from '../../api/api.users';
@@ -123,6 +124,14 @@ function AdminUsersPage() {
       setDeleteSubmitting(false);
     }
   }, [deleteConfirm, deleteUser]);
+
+  // Escape cancels / Enter accepts on the delete-user confirmation modal.
+  useModalKeyboard({
+    active: Boolean(deleteConfirm),
+    onCancel: () => setDeleteConfirm(null),
+    onAccept: handleDeleteUser,
+    busy: deleteSubmitting,
+  });
 
   /* ─── Render Helpers ───────────────────────────────────────── */
 

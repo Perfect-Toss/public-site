@@ -14,7 +14,7 @@
   margin: -40px -40px 20px;
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 50;
   padding: 12px 40px;
   background: #fff;
   border-bottom: 1px solid #e0e0e0;
@@ -49,10 +49,38 @@
   color: #1a1f24;
 }
 
+/* Centered, ellipsized title in the header bar. */
+.video-detail-header-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1f24;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .video-detail-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+/* Icon-only header actions — force circle sizing/padding over .delete-btn etc. */
+.video-detail-actions .icon-only-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  justify-content: center;
+}
+
+.video-detail-actions .icon-only-btn span {
+  display: none;
 }
 
 .delete-btn {
@@ -77,11 +105,21 @@
 
 /* ─── Player ─────────────────────────────────────────────────────────────── */
 
+.video-detail-stage {
+  position: relative;
+  margin-bottom: 20px;
+  /* Fill the viewport below the sticky header, with a bottom gap that matches
+     the space between the header and the video (65px header + 20px top gap +
+     video + 20px bottom gap = 100vh). */
+  height: calc(100vh - 65px - 40px);
+  min-height: 320px;
+}
+
 .video-detail-player {
+  height: 100%;
   background: #000;
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -97,7 +135,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  height: 100%;
   min-height: 320px;
+  box-sizing: border-box;
   padding: 40px 20px;
   text-align: center;
   color: #fff;
@@ -120,50 +160,50 @@
 
 /* ─── Info ───────────────────────────────────────────────────────────────── */
 
-.video-detail-title {
-  margin: 0 0 12px;
-  font-size: 20px;
-  font-weight: 700;
-  color: #1a1f24;
-}
-
-.video-detail-meta {
+/* Metadata shown in the dark auto-hiding overlay on the player. */
+.video-cvp-info {
   display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  margin-bottom: 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  color: #fff;
   font-size: 13px;
-  color: #666;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-.video-detail-meta span {
+.video-cvp-info-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.video-cvp-info-item {
   display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  gap: 7px;
   white-space: nowrap;
 }
 
-.video-detail-meta strong {
-  color: #1a1f24;
-  font-weight: 600;
+.video-cvp-info-item svg {
+  color: #cfff04;
 }
 
-.video-detail-owner {
+.video-cvp-info-owner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  font-size: 13px;
-  color: #666;
 }
 
-.video-detail-owner strong {
-  color: #1a1f24;
-  font-weight: 600;
-}
-
-.video-detail-owner .user-info {
+.video-cvp-info-owner .user-info {
   padding: 0;
+}
+
+/* UserInfo renders dark text by default — lighten it for the dark overlay. */
+.video-cvp-info-owner .user-info-name {
+  color: #fff;
+}
+
+.video-cvp-info-owner .user-info-email {
+  color: #ccc;
 }
 
 .video-detail-tags {
@@ -192,9 +232,19 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  width: 100%;
   margin-bottom: 18px;
-  padding-bottom: 12px;
+  padding: 0 0 12px;
+  background: none;
+  border: none;
   border-bottom: 2px solid #e0e0e0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.video-access-header:hover {
+  border-color: #ccc;
 }
 
 .video-access-header h2 {

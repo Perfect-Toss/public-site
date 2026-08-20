@@ -1,3 +1,4 @@
+export { AudioPlayer, type AudioPlayerProps } from './AudioPlayer';
 export { MetadataItem, type MetadataItemProps } from './MetadataItem';
 export { SnackbarProvider } from './Snackbar';
 export { StyledSelect, type StyledSelectProps } from './StyledSelect';

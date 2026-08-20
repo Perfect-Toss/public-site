@@ -8,6 +8,7 @@
     "build": "npm run generate:version && npm run lint && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test": "vitest run",
     "generate:api": "node scripts/generate-api-types.mjs",
     "generate:version": "node scripts/generate-version.mjs"
   },
@@ -31,6 +32,8 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^10.3.5",
     "@semantic-release/npm": "^12.0.2",
+    "@testing-library/dom": "^9.3.4",
+    "@testing-library/react": "^14.3.1",
     "@types/node": "^25.5.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
@@ -43,9 +46,11 @@
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.11.0",
     "jiti": "^2.6.1",
+    "jsdom": "^24.1.0",
     "openapi-typescript": "^7.13.0",
     "semantic-release": "^24.2.9",
     "typescript": "^5.6.3",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vitest": "^2.1.8"
   }
 }
