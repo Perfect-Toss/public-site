@@ -67,6 +67,36 @@
   border-radius: 4px;
 }
 
+/* Delete button — revealed on hover/focus, top-right of the thumbnail. */
+.video-card-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.video-card:hover .video-card-delete,
+.video-card:focus-within .video-card-delete,
+.video-card-delete:focus-visible {
+  opacity: 1;
+}
+
+.video-card-delete:hover {
+  background: #dc3545;
+}
+
 .video-card-body {
   padding: 14px 16px 16px;
 }

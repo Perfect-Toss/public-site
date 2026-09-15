@@ -1,12 +1,21 @@
+import videoPlaceholder from '../assets/video-placeholder.svg';
 import type { Entity } from '../api/api.entities';
 import type { Tag } from '../api/api.tags';
 import type { User } from '../api/api.users';
 import type { Video } from '../api/api.videos';
 import { getDisplayName } from './user';
 
-/** The API returns a direct URL to the video's thumbnail image. */
-export function thumbnailSrc(video: Video): string | null {
-  return video.thumbnailUrl ?? null;
+/** A direct URL to the video's thumbnail image, or a bundled default placeholder when the video has none. */
+export function thumbnailSrc(video: Video): string {
+  return video.thumbnailUrl ?? videoPlaceholder;
+}
+
+/**
+ * The API returns a direct URL to the video's filmstrip sprite (or null when
+ * the video was uploaded by an older build without one).
+ */
+export function filmstripSrc(video: Video): string | null {
+  return video.filmstripUrl ?? null;
 }
 
 export function ownerDisplayName(video: Video): string {

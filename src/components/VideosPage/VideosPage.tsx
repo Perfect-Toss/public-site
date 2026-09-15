@@ -1,13 +1,14 @@
 import '../../styles/page.css';
 import './VideosPage.css';
 
-import { faClock, faSearch, faVideo } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faSearch, faSpinner, faTimes, faTrash, faVideo } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchVideos, type ReviewStatus, type Video } from '../../api/api.videos';
+import { deleteVideo, fetchVideos, type ReviewStatus, type Video } from '../../api/api.videos';
 import { UserInfo } from '../common';
+import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 import { formatBytes, formatDateTime, formatDuration, formatEnum } from '../../utils/format';
 import { ownerDisplayName, thumbnailSrc } from '../../utils/videos';
 
@@ -27,10 +28,10 @@ const REVIEW_STATUS_CLASS: Record<ReviewStatus, string> = {
   Reviewed: 'reviewed',
 };
 
-function VideoCard({ video }: { video: Video }) {
+function VideoCard({ video, onDelete }: { video: Video; onDelete: (video: Video) => void }) {
   const navigate = useNavigate();
   const thumb = thumbnailSrc(video);
-  const duration = formatDuration(video.lengthInSeconds);
+  const duration = formatDuration((video.lengthInMilliseconds ?? 0) / 1000);
   const size = formatBytes(video.sizeInBytes);
 
   const pendingUpload = video.uploadStatus === 'Pending' || video.uploadStatus === 'NotUploaded';
@@ -56,14 +57,21 @@ function VideoCard({ video }: { video: Video }) {
       }}
     >
       <div className="video-card-thumbnail">
-        {thumb ? (
-          <img src={thumb} alt={video.label ?? 'Video'} loading="lazy" />
-        ) : (
-          <div className="video-card-thumbnail-placeholder">
-            <FontAwesomeIcon icon={faVideo} size="3x" style={{ opacity: 0.3 }} />
-          </div>
-        )}
+        <img src={thumb} alt={video.label ?? 'Video'} loading="lazy" />
         {duration !== '—' && <span className="video-card-duration">{duration}</span>}
+        <button
+          type="button"
+          className="video-card-delete"
+          aria-label={`Delete video ${video.label || 'Untitled video'}`}
+          title="Delete video"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(video);
+          }}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <FontAwesomeIcon icon={faTrash} />
+        </button>
       </div>
 
       <div className="video-card-body">
@@ -128,6 +136,11 @@ function VideosPage() {
 
   const hasMore = videos.length < totalCount;
 
+  // Delete-from-list confirm state.
+  const [pendingDelete, setPendingDelete] = useState<Video | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const loadPage = useCallback(async (page: number) => {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
@@ -157,6 +170,31 @@ function VideosPage() {
       setLoadingMore(false);
     }
   }, []);
+
+  const handleDelete = useCallback(async () => {
+    if (!pendingDelete) return;
+    setDeleteSubmitting(true);
+    setDeleteError(null);
+    try {
+      await deleteVideo(pendingDelete.id);
+      setVideos((prev) => prev.filter((v) => v.id !== pendingDelete.id));
+      setTotalCount((c) => Math.max(0, c - 1));
+      setPendingDelete(null);
+    } catch (err) {
+      console.error('Failed to delete video:', err);
+      setDeleteError('Failed to delete video. Please try again.');
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  }, [pendingDelete]);
+
+  // Escape cancels / Enter accepts on the delete confirm modal.
+  useModalKeyboard({
+    active: Boolean(pendingDelete),
+    onCancel: () => setPendingDelete(null),
+    onAccept: handleDelete,
+    busy: deleteSubmitting,
+  });
 
   // Initial page load
   useEffect(() => {
@@ -243,7 +281,7 @@ function VideosPage() {
       <>
         <div className="videos-grid">
           {filteredVideos.map((video) => (
-            <VideoCard key={video.id} video={video} />
+            <VideoCard key={video.id} video={video} onDelete={setPendingDelete} />
           ))}
         </div>
 
@@ -283,6 +321,56 @@ function VideosPage() {
 
         {renderContent()}
       </section>
+
+      {pendingDelete && (
+        <div className="modal-overlay" onClick={() => !deleteSubmitting && setPendingDelete(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ width: 400 }}>
+            <div className="modal-header">
+              <h3>Delete Video</h3>
+              <button
+                className="close-btn"
+                onClick={() => setPendingDelete(null)}
+                disabled={deleteSubmitting}
+                aria-label="Close"
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="delete-message">
+                Are you sure you want to delete{' '}
+                <strong>{pendingDelete.label || 'Untitled video'}</strong>? This action cannot be
+                undone.
+              </p>
+              {deleteError && <p className="share-error">{deleteError}</p>}
+              <div className="modal-actions">
+                <button
+                  className="cancel-btn"
+                  onClick={() => setPendingDelete(null)}
+                  disabled={deleteSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="submit-btn"
+                  style={{ background: '#dc3545', color: '#fff' }}
+                  onClick={handleDelete}
+                  disabled={deleteSubmitting}
+                >
+                  {deleteSubmitting ? (
+                    <FontAwesomeIcon icon={faSpinner} spin />
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faTrash} style={{ marginRight: 6 }} />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

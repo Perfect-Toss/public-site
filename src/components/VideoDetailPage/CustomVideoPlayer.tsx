@@ -29,12 +29,15 @@ import type { VideoReview } from '../../api/api.videos';
 import { AnchorPicker, type ReviewAnchor } from './ReviewAnchorPicker';
 import { VideoDrawingOverlay } from './VideoDrawingOverlay';
 import { VideoReviewComposer } from './VideoReviewComposer';
+import { VideoFilmstrip } from './VideoFilmstrip';
 import { VideoTimeline } from './VideoTimeline';
 import { buildVideoAnchors, formatPosition } from './videoTime';
 
 export interface CustomVideoPlayerProps {
   videoUrl: string;
   poster?: string;
+  /** The tablet-generated filmstrip sprite (single row of frames); null/absent for older uploads. */
+  filmstripUrl?: string | null;
   reviews: VideoReview[];
   /** Fallback duration (seconds) from metadata before the video loads. */
   durationFallback: number;
@@ -81,14 +84,15 @@ function formatClock(seconds: number): string {
 
 /**
  * Fully custom video player chrome (no native controls). From top to bottom:
- * review-marker timeline, draggable seek bar, and the controls row
- * (play, time, volume, fullscreen, menu).
+ * review-marker timeline, dynamic frame filmstrip (scrub bar), and the
+ * controls row (play, time, volume, fullscreen, menu).
  */
 export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerProps>(
   function CustomVideoPlayer(
     {
       videoUrl,
       poster,
+      filmstripUrl,
       reviews,
       durationFallback,
       topBar,
@@ -102,8 +106,6 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
   ) {
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
-    const scrubRef = useRef<HTMLDivElement>(null);
-    const scrubbingRef = useRef(false);
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -248,42 +250,17 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
     );
 
     // ── Scrubbing ───────────────────────────────────────────────────────
-    const handleSeek = useCallback(
-      (clientX: number) => {
+    /** Seek the video to an absolute time (clamped), keeping state in sync. */
+    const seekTo = useCallback(
+      (seconds: number) => {
         const video = videoRef.current;
-        const track = scrubRef.current;
-        if (!video || !track) return;
-        const rect = track.getBoundingClientRect();
-        if (rect.width <= 0) return;
-        const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-        const target = ratio * safeDuration;
+        if (!video || !Number.isFinite(seconds)) return;
+        const target = Math.min(safeDuration, Math.max(0, seconds));
         video.currentTime = target;
         setCurrentTime(video.currentTime || target);
       },
       [safeDuration],
     );
-
-    const onScrubDown = useCallback(
-      (e: React.PointerEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.currentTarget.setPointerCapture(e.pointerId);
-        scrubbingRef.current = true;
-        handleSeek(e.clientX);
-      },
-      [handleSeek],
-    );
-
-    const onScrubMove = useCallback(
-      (e: React.PointerEvent<HTMLDivElement>) => {
-        if (!scrubbingRef.current) return;
-        handleSeek(e.clientX);
-      },
-      [handleSeek],
-    );
-
-    const onScrubUp = useCallback(() => {
-      scrubbingRef.current = false;
-    }, []);
 
     // ── Keyboard editing shortcuts ────────────────────────────────────
     /** Seek by `delta` seconds (clamped to the video bounds). */
@@ -596,18 +573,12 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
               onSelectReview={selectAnchor}
             />
 
-            <div
-              ref={scrubRef}
-              className="cvp-scrub"
-              onPointerDown={onScrubDown}
-              onPointerMove={onScrubMove}
-              onPointerUp={onScrubUp}
-              onPointerLeave={onScrubUp}
-            >
-              <div className="cvp-scrub-track">
-                <div className="cvp-scrub-fill" style={{ width: `${progressPct}%` }} />
-              </div>
-            </div>
+            <VideoFilmstrip
+              filmstripUrl={filmstripUrl}
+              durationFallback={safeDuration}
+              currentTime={currentTime}
+              onSeek={seekTo}
+            />
 
             {/* One continuous position line spanning the review timeline + scrub. */}
             <div className="cvp-position-line" style={{ left: `${progressPct}%` }} />

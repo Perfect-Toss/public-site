@@ -8,14 +8,22 @@
 
 .video-timeline-track {
   position: relative;
-  /* Match the anchor control track (.vr-anchor-track). */
-  height: 24px;
+  height: 18px; /* actual height is set inline from the stacked lane count */
   border-radius: 6px;
-  background: #2a2f36;
-  /* Inset the content so markers stay inside the corners, like .vr-anchor-inner. */
-  padding: 0 12px;
+  background: #2a2f36; /* visible bar so bubbles always sit inside, like .vr-anchor-track */
   overflow: visible;
   pointer-events: none;
+}
+
+/* Inset wrapper (like .vr-anchor-inner) so markers at 0%/100% stay inside the
+   corners. Track padding would NOT work: absolutely-positioned children ignore
+   it and left:0% still means the track's very edge. */
+.video-timeline-inner {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 0;
+  bottom: 0;
 }
 
 .video-timeline-marker,
@@ -29,7 +37,6 @@
 
 /* Marker dot — same centering as the anchor control's .vr-anchor-dot. */
 .video-timeline-marker {
-  top: 50%;
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -52,23 +59,26 @@
   box-shadow: 0 0 0 3px #fff;
 }
 
-/* Segment bar — inset vertically like the anchor control's range/ref segments. */
+/* Segment (ranged) bar — identical visual language to the point dots above:
+   same height, solid reviewer-color fill, same dark border + subtle ring, as a
+   rounded capsule. Hover/active are shown with a stronger ring (no brightness
+   filter) so the fill color always matches the dot markers exactly. */
 .video-timeline-segment {
-  top: 6px;
-  bottom: 6px;
-  border-radius: 2px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
-  transition: filter 0.15s ease;
+  height: 12px;
+  border: 2px solid #1a1f24;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+  transform: translateY(-50%);
+  transition: box-shadow 0.15s ease;
   z-index: 2;
 }
 
 .video-timeline-segment:hover {
-  filter: brightness(1.3);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
 }
 
 .video-timeline-segment.active {
-  filter: brightness(1.6);
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 3px #fff;
 }
 
 /* ─── Hover preview popup on markers ─────────────────────────────────────── */

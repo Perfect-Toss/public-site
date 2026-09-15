@@ -3369,6 +3369,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/videos/{id}/filmstrip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Uploads (or replaces) a video's filmstrip sprite. The server writes the image to
+         *     the dedicated public storage account and bumps the cache-busting version. Displayed
+         *     as a plain <img>, so no storage CORS setup is required.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video whose filmstrip is being set. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description The sprite image file (multipart/form-data).
+                         */
+                        file?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** Removes the video's filmstrip (deletes the blob and clears the stored path). */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video whose filmstrip is being removed. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/videos/{id}/owner": {
         parameters: {
             query?: never;
@@ -3645,10 +3717,10 @@ export interface components {
              */
             timestamp: string;
             /**
-             * Format: int32
-             * @description Gets the length of the video in seconds.
+             * Format: int64
+             * @description Gets the length of the video in milliseconds.
              */
-            lengthInSeconds: number;
+            lengthInMilliseconds: number;
             /**
              * Format: double
              * @description Gets the aspect ratio of the video.
@@ -4200,10 +4272,10 @@ export interface components {
              */
             timestamp: string;
             /**
-             * Format: int32
-             * @description Gets the length of the video in seconds.
+             * Format: int64
+             * @description Gets the length of the video in milliseconds.
              */
-            lengthInSeconds: number;
+            lengthInMilliseconds: number;
             /**
              * Format: double
              * @description Gets the aspect ratio of the video.
@@ -4274,6 +4346,7 @@ export interface components {
             firstName?: string | null;
             lastName?: string | null;
             email?: string | null;
+            colorHex?: string | null;
             thumbnailUrl?: string | null;
         };
         Video: {
@@ -4303,10 +4376,11 @@ export interface components {
             coaches?: components["schemas"]["User"][] | null;
             label?: string | null;
             thumbnailUrl?: string | null;
+            filmstripUrl?: string | null;
             /** Format: date-time */
             timestamp?: string;
-            /** Format: int32 */
-            lengthInSeconds?: number;
+            /** Format: int64 */
+            lengthInMilliseconds?: number;
             /** Format: int64 */
             sizeInBytes?: number;
             /** Format: double */
