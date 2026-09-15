@@ -1,0 +1,26 @@
+/* ─── Filmstrip scrubber (tablet-generated sprite) ──────────────────────── */
+
+.video-filmstrip {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  touch-action: none;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #2a2f36; /* visible bar behind the sprite */
+}
+
+/* Thin scrub bar shown when no filmstrip is available (older uploads). */
+.video-filmstrip--thin {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+}
+
+/* The tablet-generated sprite — scaled to fill the bar (whole strip visible). */
+.vf-sprite {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}

@@ -57,6 +57,7 @@ import {
   formatEntityNames,
   formatTagNames,
   formatUserNames,
+  thumbnailSrc,
 } from '../../utils/videos';
 
 const ACCESS_LEVEL_LABELS: Record<VideoAccessLevel, string> = {
@@ -341,7 +342,7 @@ function VideoDetailPage() {
 
     if (!video) return null;
 
-    const poster = video.thumbnailUrl ?? undefined;
+    const poster = thumbnailSrc(video);
     const notUploaded = video.uploadStatus === 'NotUploaded' || video.uploadStatus === 'Pending';
 
     return (
@@ -393,8 +394,9 @@ function VideoDetailPage() {
               ref={videoRef}
               videoUrl={videoUrl}
               poster={poster}
+              filmstripUrl={video.filmstripUrl}
               reviews={reviews}
-              durationFallback={video.lengthInSeconds ?? 0}
+              durationFallback={(video.lengthInMilliseconds ?? 0) / 1000}
               activeReviewId={activeReviewId}
               selectNonce={selectNonce}
               onSelectReview={handleSelectReview}
@@ -578,7 +580,7 @@ function VideoDetailPage() {
             <MetadataItem label="Video ID" value={video.id} />
             <MetadataItem label="Label" value={video.label || '—'} />
             <MetadataItem label="Captured" value={formatDateTime(video.timestamp)} />
-            <MetadataItem label="Duration" value={formatDuration(video.lengthInSeconds)} />
+            <MetadataItem label="Duration" value={formatDuration((video.lengthInMilliseconds ?? 0) / 1000)} />
             <MetadataItem label="Size" value={formatBytes(video.sizeInBytes)} />
             <MetadataItem label="Aspect ratio" value={formatAspectRatio(video.aspectRatio)} />
             <MetadataItem
