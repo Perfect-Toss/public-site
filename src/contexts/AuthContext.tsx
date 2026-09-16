@@ -5,6 +5,7 @@ import { setAuthToken } from '../api/client';
 import { useAuthStore } from '../stores/authStore';
 import { fetchCurrentUser, isAdminUser } from '../api/api.users';
 import { AuthContext, type AuthContextType } from './useAuth';
+import { canCreateEvent } from '../utils/roles';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -17,6 +18,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const setAuth = useAuthStore((s) => s.setAuth);
   const setAuthError = useAuthStore((s) => s.setAuthError);
   const isAdmin = isAdminUser(currentUser);
+  const canCreateEvents = canCreateEvent(currentUser?.roles);
 
   // Stale-safe ref so the useEffect (empty deps) always calls the latest action.
   const setAuthRef = useRef(setAuth);
@@ -79,6 +81,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     firebaseUser,
     initializing,
     isAdmin,
+    canCreateEvents,
   };
 
   return (

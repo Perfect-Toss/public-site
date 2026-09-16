@@ -689,6 +689,302 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{eventId}/instances/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a single stored event instance (a session that actually happened) by its id. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the event. */
+                    eventId: string;
+                    /** @description The instance id: the id the client's device gave the instance. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventInstance"];
+                        "application/json": components["schemas"]["EventInstance"];
+                        "text/json": components["schemas"]["EventInstance"];
+                    };
+                };
+            };
+        };
+        /**
+         * Records one more state of an event instance, addressed by its id.
+         * @description An instance can be recorded offline, so the state is stored whatever it says; one that breaks
+         *     the expected flow is logged as out of order rather than refused. Limited to a global admin or a
+         *     user holding the OrganizationAdmin, Coach or ServiceAccount role on the event's organization.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the event. */
+                    eventId: string;
+                    /** @description The instance id: the id the client's device gave the instance. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The state to record, when it happened and the client's run id. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetEventInstanceStateRequest"];
+                    "text/json": components["schemas"]["SetEventInstanceStateRequest"];
+                    "application/*+json": components["schemas"]["SetEventInstanceStateRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventInstance"];
+                        "application/json": components["schemas"]["EventInstance"];
+                        "text/json": components["schemas"]["EventInstance"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Clears a stored event instance (undo a mistaken session). Idempotent. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the event. */
+                    eventId: string;
+                    /** @description The instance id: the id the client's device gave the instance. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{eventId}/instances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets a page of the stored instances of a single event, newest first.
+         * @description A page holds whole instances — each one with its ordered states — and the total is the number
+         *     of instances, not of states.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description The page number (default 1). */
+                    pageNumber?: number;
+                    /** @description The page size (default 10). */
+                    pageSize?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the event. */
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventInstanceIEnumerablePagedResponse"];
+                        "application/json": components["schemas"]["EventInstanceIEnumerablePagedResponse"];
+                        "text/json": components["schemas"]["EventInstanceIEnumerablePagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Opens an event instance by recording its first state (`Initiated`).
+         * @description The id the client's device gave the instance <em>is</em> the instance's id, so nothing is
+         *     minted and the client can address the instance with the id it already holds. A client that
+         *     works offline generates that id, records the instance's states on the device and sends them
+         *     once it reconnects (see `POST /events/instances/sync`). Opening an instance the server
+         *     already holds returns it untouched, so reconnecting never restarts one. Limited to a global
+         *     admin or a user holding the OrganizationAdmin, Coach or ServiceAccount role on the event's
+         *     organization.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the event. */
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            /** @description The id the client's device gave the instance and when it was opened. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateEventInstanceRequest"];
+                    "text/json": components["schemas"]["CreateEventInstanceRequest"];
+                    "application/*+json": components["schemas"]["CreateEventInstanceRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventInstance"];
+                        "application/json": components["schemas"]["EventInstance"];
+                        "text/json": components["schemas"]["EventInstance"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/instances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets a page of the stored instances across every event the caller can access (calendar feed),
+         *     newest first.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description The page number (default 1). */
+                    pageNumber?: number;
+                    /** @description The page size (default 10). */
+                    pageSize?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventInstanceIEnumerablePagedResponse"];
+                        "application/json": components["schemas"]["EventInstanceIEnumerablePagedResponse"];
+                        "text/json": components["schemas"]["EventInstanceIEnumerablePagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/instances/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Records the instances a client captured while offline, all in one call.
+         * @description Each instance carries the id the client's device gave it, and its states carry the states
+         *     themselves, the times they happened and the ids of the runs they belong to. They are applied
+         *     in the order they happened, so an instance recorded offline arrives whole even when its late
+         *     states reach the server after later ones; a batch that only partly made it can be sent again,
+         *     as a state the instance already holds is skipped. Every instance in the batch is checked for
+         *     write permission before any of it is written. Limited to a global admin or a user holding the
+         *     OrganizationAdmin, Coach or ServiceAccount role on the event's organization.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The instances to record, with the states captured for each. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SyncEventInstancesRequest"];
+                    "text/json": components["schemas"]["SyncEventInstancesRequest"];
+                    "application/*+json": components["schemas"]["SyncEventInstancesRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventInstance"][];
+                        "application/json": components["schemas"]["EventInstance"][];
+                        "text/json": components["schemas"]["EventInstance"][];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/eventlogs": {
         parameters: {
             query?: never;
@@ -869,7 +1165,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Gets the timestamp of the last event log for a specific user. */
+        /**
+         * Gets the timestamp of the last event log for a specific user. Admins may read any user;
+         *     everyone else only their own.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -940,6 +1239,185 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets event definitions for the organizations the current user can access, with paging.
+         *     Events whose schedule has already ended are omitted by default; pass
+         *     includeEnded to get an organization's full history. The schedule is
+         *     returned as-is; the client expands it into the scheduled instances and records sessions
+         *     through the event instance endpoints.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description The page number (default 1). */
+                    pageNumber?: number;
+                    /** @description The page size (default 10, max 200). */
+                    pageSize?: number;
+                    /** @description Optional filter to a single organization. */
+                    organizationId?: string;
+                    /**
+                     * @description When false (default) events whose schedule end date is in the past are excluded; when true
+                     *     they are returned too, so an organization's full event history can be listed.
+                     */
+                    includeEnded?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["EventIEnumerablePagedResponse"];
+                        "application/json": components["schemas"]["EventIEnumerablePagedResponse"];
+                        "text/json": components["schemas"]["EventIEnumerablePagedResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Creates a new event. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The event creation request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateEventRequest"];
+                    "text/json": components["schemas"]["CreateEventRequest"];
+                    "application/*+json": components["schemas"]["CreateEventRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Event"];
+                        "application/json": components["schemas"]["Event"];
+                        "text/json": components["schemas"]["Event"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/events/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a single event, verifying the current user can access its organization. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the event. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Event"];
+                        "application/json": components["schemas"]["Event"];
+                        "text/json": components["schemas"]["Event"];
+                    };
+                };
+            };
+        };
+        /** Updates an existing event. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the event to update. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The event update request. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateEventRequest"];
+                    "text/json": components["schemas"]["UpdateEventRequest"];
+                    "application/*+json": components["schemas"]["UpdateEventRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Event"];
+                        "application/json": components["schemas"]["Event"];
+                        "text/json": components["schemas"]["Event"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes an event. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the event to delete. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -3587,6 +4065,24 @@ export interface components {
              */
             parentEntityId?: string | null;
         };
+        /**
+         * @description Request model for opening an event instance (a session at an event) by recording its first state,
+         *     `Initiated`.
+         */
+        CreateEventInstanceRequest: {
+            /**
+             * Format: uuid
+             * @description The id the client's device gave the instance — a client recording one while offline generates
+             *     it. The server mints the instance's own id and returns it; the client id is what the instance
+             *     is recognised by when it is pushed up, and is kept for audit.
+             */
+            clientSessionId: string;
+            /**
+             * Format: date-time
+             * @description When the instance was opened. Defaults to the server's clock.
+             */
+            occurredAt?: string | null;
+        };
         /** @description Data transfer object for creating a new event log entry. */
         CreateEventLogDto: {
             /** @description Gets the type of the event (maximum 100 characters). */
@@ -3617,6 +4113,40 @@ export interface components {
         CreateEventLogsDto: {
             /** @description Gets the list of event logs to create. */
             eventLogs?: components["schemas"]["CreateEventLogDto"][] | null;
+        };
+        /** @description Request model for creating a new event. */
+        CreateEventRequest: {
+            /**
+             * Format: uuid
+             * @description The organization (entity of type "Organization") the event belongs to. The caller must
+             *     be a global admin or hold the OrganizationAdmin role on this organization.
+             */
+            organizationId: string;
+            /** @description The event name (max 100 characters). */
+            name: string | null;
+            /** @description Optional longer description of the event. */
+            description?: string | null;
+            /** @description Optional venue/location text (max 100 characters). */
+            location?: string | null;
+            /** @description Optional free-form notes. */
+            notes?: string | null;
+            /**
+             * Format: int32
+             * @description Seconds of spacing between athlete recordings.
+             */
+            secondsBetweenAthletes?: number;
+            /**
+             * Format: int32
+             * @description Length of each recording, in seconds.
+             */
+            lengthOfRecordingInSeconds?: number;
+            schedule?: components["schemas"]["EventSchedule"];
+            /** @description Optional list of athlete user ids attending the event. */
+            athleteIds?: string[] | null;
+            /** @description Optional list of organizer user ids for the event. */
+            organizerIds?: string[] | null;
+            /** @description Optional list of tag ids applied to the event. */
+            tagIds?: string[] | null;
         };
         /** @description Request model for creating a new machine. */
         CreateMachineRequest: {
@@ -3740,6 +4270,8 @@ export interface components {
             coachIds?: string[] | null;
         };
         /** @enum {string} */
+        DayOfWeek: "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday";
+        /** @enum {string} */
         DeviceOrientation: "Unknown" | "Portrait" | "Landscape" | "PortraitUpsideDown" | "LandscapeLeft" | "LandscapeRight";
         Entity: {
             /** Format: uuid */
@@ -3777,6 +4309,109 @@ export interface components {
              * @description Gets the entity identifier.
              */
             entityId: string;
+        };
+        Event: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
+            /** Format: uuid */
+            organizationId?: string;
+            organization?: components["schemas"]["Entity"];
+            name?: string | null;
+            description?: string | null;
+            location?: string | null;
+            notes?: string | null;
+            /** Format: int32 */
+            secondsBetweenAthletes?: number;
+            /** Format: int32 */
+            lengthOfRecordingInSeconds?: number;
+            schedule?: components["schemas"]["EventSchedule"];
+            athletes?: components["schemas"]["UserInfo"][] | null;
+            organizers?: components["schemas"]["UserInfo"][] | null;
+            tags?: components["schemas"]["Tag"][] | null;
+        };
+        EventIEnumerablePagedResponse: {
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            items?: components["schemas"]["Event"][] | null;
+        };
+        EventInstance: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
+            /** Format: uuid */
+            eventId?: string;
+            stateChanges?: components["schemas"]["EventInstanceStateChange"][] | null;
+        };
+        EventInstanceIEnumerablePagedResponse: {
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            /** Format: int32 */
+            totalCount?: number;
+            items?: components["schemas"]["EventInstance"][] | null;
+        };
+        /** @enum {string} */
+        EventInstanceState: "Unknown" | "Initiated" | "RunStarted" | "RunPaused" | "RunUnPaused" | "AthleteSkipped" | "RunCancelled" | "RunEnded" | "SessionEnded";
+        EventInstanceStateChange: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
+            state?: components["schemas"]["EventInstanceState"];
+            /** Format: uuid */
+            clientRunId?: string | null;
+            /** Format: date-time */
+            occurredAt?: string;
         };
         EventLog: {
             /** Format: uuid */
@@ -3864,6 +4499,40 @@ export interface components {
             lastName?: string | null;
             monthlyData?: components["schemas"]["EventLogMonthlySummary"][] | null;
         };
+        EventSchedule: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
+            eventScheduleType?: components["schemas"]["EventScheduleType"];
+            /** Format: date-time */
+            startDate?: string;
+            /** Format: date-time */
+            endDate?: string | null;
+            /** Format: int32 */
+            interval?: number;
+            /** Format: int32 */
+            occurrances?: number | null;
+            daysOfWeek?: components["schemas"]["DayOfWeek"][] | null;
+            /** Format: int32 */
+            lengthInMinutes?: number;
+        };
+        /** @enum {string} */
+        EventScheduleType: "None" | "Single" | "Daily" | "Weekly" | "Monthly" | "Yearly";
         /** @description Represents user login credentials. */
         LoginInfo: {
             /** @description Gets or sets the username (email) for authentication. */
@@ -3995,6 +4664,24 @@ export interface components {
             sasUrl: string | null;
         };
         /**
+         * @description Request model for recording one more state of an event instance. The instance is addressed by its
+         *     own id in the route: `/events/{eventId}/instances/{id}`.
+         */
+        SetEventInstanceStateRequest: {
+            state: components["schemas"]["EventInstanceState"];
+            /**
+             * Format: uuid
+             * @description The id the client's device gave the run this state belongs to, kept for audit. Leave it out for
+             *     a state that is about the instance itself (opening or ending it).
+             */
+            clientRunId?: string | null;
+            /**
+             * Format: date-time
+             * @description When the state happened. Defaults to the server's clock.
+             */
+            occurredAt?: string | null;
+        };
+        /**
          * @description Request model for bulk-setting video access for users and entities.
          *     Reconciles the provided lists against existing access, adding new entries
          *     and removing entries not in the lists.
@@ -4018,6 +4705,47 @@ export interface components {
              */
             entityId?: string | null;
             accessLevel?: components["schemas"]["VideoAccessLevel"];
+        };
+        /** @description One session in an offline sync batch. */
+        SyncEventInstanceItem: {
+            /**
+             * Format: uuid
+             * @description The id the client's device gave the session while it was offline.
+             */
+            clientSessionId: string;
+            /**
+             * Format: uuid
+             * @description The event the session belongs to.
+             */
+            eventId: string;
+            /**
+             * @description The changes the client captured, oldest first. A session the server already holds can be
+             *     sent with the changes it already has, and can be sent with none.
+             */
+            changes?: components["schemas"]["SyncEventInstanceState"][] | null;
+        };
+        /** @description One state change inside an offline sync batch. */
+        SyncEventInstanceState: {
+            state: components["schemas"]["EventInstanceState"];
+            /**
+             * Format: uuid
+             * @description The id the client's device gave the run this change belongs to, kept for audit. Leave it out
+             *     for a change that is about the session itself (opening or ending it).
+             */
+            clientRunId?: string | null;
+            /**
+             * Format: date-time
+             * @description When the change happened, on the client's clock.
+             */
+            occurredAt: string;
+        };
+        /**
+         * @description Request model for syncing the event instances a client captured while offline. The whole batch is
+         *     sent in one call, so a client that reconnects after several sessions can catch up at once.
+         */
+        SyncEventInstancesRequest: {
+            /** @description The instances to record, each with the states the client captured for it. */
+            instances: components["schemas"]["SyncEventInstanceItem"][] | null;
         };
         Tablet: {
             /** Format: uuid */
@@ -4121,6 +4849,37 @@ export interface components {
              * @description Gets the updated parent entity identifier.
              */
             parentEntityId?: string | null;
+        };
+        /**
+         * @description Request model for updating an existing event. The organization is immutable; the update
+         *     replaces the schedule/roster/tags with the provided values (empty/omitted = cleared).
+         */
+        UpdateEventRequest: {
+            /** @description The event name (max 100 characters). */
+            name: string | null;
+            /** @description Optional longer description of the event. */
+            description?: string | null;
+            /** @description Optional venue/location text (max 100 characters). */
+            location?: string | null;
+            /** @description Optional free-form notes. */
+            notes?: string | null;
+            /**
+             * Format: int32
+             * @description Seconds of spacing between athlete recordings.
+             */
+            secondsBetweenAthletes?: number;
+            /**
+             * Format: int32
+             * @description Length of each recording, in seconds.
+             */
+            lengthOfRecordingInSeconds?: number;
+            schedule?: components["schemas"]["EventSchedule"];
+            /** @description Optional list of athlete user ids attending the event (replaces the existing roster). */
+            athleteIds?: string[] | null;
+            /** @description Optional list of organizer user ids for the event (replaces the existing roster). */
+            organizerIds?: string[] | null;
+            /** @description Optional list of tag ids applied to the event (replaces the existing tags). */
+            tagIds?: string[] | null;
         };
         /** @description Request model for updating machine info (device details). */
         UpdateMachineInfoRequest: {

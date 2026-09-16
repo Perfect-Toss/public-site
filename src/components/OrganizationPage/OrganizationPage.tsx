@@ -4,8 +4,10 @@ import './OrganizationPage.css';
 import { NavLink, Outlet, useParams } from 'react-router-dom';
 import {
   faBuildingUser,
+  faCalendarDays,
   faChevronLeft,
   faCog,
+  faListCheck,
   faSitemap,
   faSpinner,
   faUsers,
@@ -135,6 +137,20 @@ function OrganizationPage() {
         >
           <FontAwesomeIcon icon={faSitemap} />
           Sub-Organizations
+        </NavLink>
+        <NavLink
+          to="events"
+          className={({ isActive }) => `org-tab${isActive ? ' active' : ''}`}
+        >
+          <FontAwesomeIcon icon={faCalendarDays} />
+          Events
+        </NavLink>
+        <NavLink
+          to="event-instances"
+          className={({ isActive }) => `org-tab${isActive ? ' active' : ''}`}
+        >
+          <FontAwesomeIcon icon={faListCheck} />
+          Event Instances
         </NavLink>
         {isAdmin && (
           <NavLink

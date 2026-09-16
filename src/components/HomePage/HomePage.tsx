@@ -5,6 +5,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   faBookBookmark,
   faBuilding,
+  faCalendarDays,
   faChartBar,
   faChevronDown,
   faChevronLeft,
@@ -262,6 +263,15 @@ function HomePage() {
           >
             <span className="nav-icon"><FontAwesomeIcon icon={faBuilding} /></span>
             {!collapsed && <span>ORGANIZATIONS</span>}
+          </NavLink>
+
+          <NavLink 
+            to="/events"
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            data-tooltip="Events"
+          >
+            <span className="nav-icon"><FontAwesomeIcon icon={faCalendarDays} /></span>
+            {!collapsed && <span>EVENTS</span>}
           </NavLink>
 
           <NavLink 
