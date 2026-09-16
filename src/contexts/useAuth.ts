@@ -12,6 +12,11 @@ export interface AuthContextType {
   initializing: boolean;
   /** Whether the current user has admin-level privileges (derived from `currentUser.roles`). */
   isAdmin: boolean;
+  /**
+   * Whether the current user's global roles let them create events (Admin or SuperUser).
+   * An organization's own admin also may, which is checked per organization.
+   */
+  canCreateEvents: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

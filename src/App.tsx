@@ -18,6 +18,10 @@ import { AuthProvider } from './contexts/AuthContext'
 import BulkImportPage from './components/BulkImportPage'
 import DashboardPage from './components/DashboardPage'
 import EditOrganizationPage from './components/AdminOrganizationsPage/EditOrganizationPage'
+import EventFormPage from './components/EventFormPage'
+import EventInstancesView from './components/OrganizationPage/views/EventInstancesView'
+import EventsPage from './components/EventsPage'
+import EventsView from './components/OrganizationPage/views/EventsView'
 import HomePage from './components/HomePage'
 import HomeView from './components/HomePage/views/HomeView'
 import Login from './components/Login'
@@ -34,6 +38,9 @@ import TagFormPage from './components/AdminTagsPage/TagFormPage'
 import UserDetailPage from './components/UserDetailPage'
 import VideoDetailPage from './components/VideoDetailPage'
 import VideosPage from './components/VideosPage'
+import { canCreateEvent } from './utils/roles'
+import { fetchEntityUserRoles } from './api/api.entities'
+import { useEffect, useState } from 'react'
 import { useAuth } from './contexts/useAuth'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -91,6 +98,65 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Guards the create-event page. The API accepts an event from a global admin or
+ * from a user holding the OrganizationAdmin role on the event's organization,
+ * so an organization's own admin is resolved against the organization named in
+ * the URL (the new-event links always carry it).
+ */
+function EventCreatorRoute({ children }: { children: React.ReactNode }) {
+  const { currentUser, canCreateEvents, initializing } = useAuth();
+  const location = useLocation();
+  const organizationId = new URLSearchParams(location.search).get('organizationId');
+
+  const [allowed, setAllowed] = useState(canCreateEvents);
+  const [checking, setChecking] = useState(false);
+
+  useEffect(() => {
+    if (canCreateEvents) {
+      setAllowed(true);
+      return;
+    }
+
+    const userId = currentUser?.id;
+    if (!organizationId || !userId) {
+      setAllowed(false);
+      return;
+    }
+
+    let cancelled = false;
+    setChecking(true);
+    fetchEntityUserRoles(organizationId, userId)
+      .then((roles) => {
+        if (!cancelled) setAllowed(canCreateEvent(roles));
+      })
+      .catch(() => {
+        if (!cancelled) setAllowed(false);
+      })
+      .finally(() => {
+        if (!cancelled) setChecking(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canCreateEvents, organizationId, currentUser?.id]);
+
+  if (initializing || checking) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
+  if (!allowed) {
+    return <Navigate to="/events" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function AppContent() {
   return (
     <Routes>
@@ -113,8 +179,16 @@ function AppContent() {
           <Route index element={<OverviewView />} />
           <Route path="members" element={<MembersView />} />
           <Route path="sub-orgs" element={<SubOrgsView />} />
+          <Route path="events" element={<EventsView />} />
+          <Route path="event-instances" element={<EventInstancesView />} />
           <Route path="settings" element={<SettingsView />} />
         </Route>
+        <Route path="events" element={<EventsPage />} />
+        <Route path="events/new" element={
+          <EventCreatorRoute>
+            <EventFormPage />
+          </EventCreatorRoute>
+        } />
         <Route path="admin" element={<AdminRoute><Outlet /></AdminRoute>}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />

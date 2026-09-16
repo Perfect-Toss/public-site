@@ -11,6 +11,7 @@
  *   import { fetchAllTablets } from '../api/api.tablets';
  *   import { fetchAllTabletTypes } from '../api/api.tabletTypes';
  *   import { fetchEventLogSummary } from '../api/api.eventLogs';
+ *   import { fetchEvents } from '../api/api.events';
  *   import { fetchMetaInfo } from '../api/api.meta';
  *   import { fetchVideos } from '../api/api.videos';
  *   import { fetchTags } from '../api/api.tags';
@@ -18,6 +19,7 @@
 
 export * from './api.auth';
 export * from './api.eventLogs';
+export * from './api.events';
 export * from './api.meta';
 export * from './api.users';
 export * from './api.entities';

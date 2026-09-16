@@ -153,6 +153,26 @@ export async function fetchEntityUsers(entityId: string): Promise<components['sc
 }
 
 /**
+ * Fetch the roles a user holds on a specific entity.
+ * A user with no roles on the entity (or an entity they cannot see) yields [].
+ */
+export async function fetchEntityUserRoles(
+  entityId: string,
+  userId: string,
+): Promise<EntityUserRole[]> {
+  const { data, error } = await api.GET('/api/v1/entities/{entityId}/users/{userId}', {
+    params: { path: { entityId, userId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch entity user roles:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
  * Add a user to an entity with specific roles
  */
 export async function addUserToEntity(
