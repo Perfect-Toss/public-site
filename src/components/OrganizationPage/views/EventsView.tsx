@@ -3,14 +3,13 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { Event } from '../../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Link } from 'react-router-dom';
 import type { OrganizationPageContext } from '../OrganizationPage';
-import { canCreateEvent } from '../../../utils/roles';
 import { describeSchedule } from '../../../utils/events';
-import { fetchEntityUserRoles } from '../../../api/api.entities';
 import { fetchEvents } from '../../../api/api.events';
 import { formatDateTime } from '../../../utils/format';
 import { nextOccurrence } from '../../../utils/events';
-import { useAuth } from '../../../contexts/useAuth';
+import { useCanManageEvents } from '../../../hooks/useCanManageEvents';
 import { useNavigate } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 
@@ -25,38 +24,12 @@ function nextOccurrenceLabel(event: Event): string {
 function EventsView() {
   const { organization } = useOutletContext<OrganizationPageContext>();
   const navigate = useNavigate();
-  const { currentUser, canCreateEvents } = useAuth();
+  // A global admin may create anywhere; anyone else needs OrganizationAdmin here.
+  const { allowed: canCreateHere } = useCanManageEvents(organization.id);
 
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // A global admin may create anywhere; anyone else needs OrganizationAdmin here.
-  const [canCreateHere, setCanCreateHere] = useState(canCreateEvents);
-
-  useEffect(() => {
-    if (canCreateEvents) {
-      setCanCreateHere(true);
-      return;
-    }
-    const userId = currentUser?.id;
-    if (!organization.id || !userId) {
-      setCanCreateHere(false);
-      return;
-    }
-
-    let cancelled = false;
-    fetchEntityUserRoles(organization.id, userId)
-      .then((roles) => {
-        if (!cancelled) setCanCreateHere(canCreateEvent(roles));
-      })
-      .catch(() => {
-        if (!cancelled) setCanCreateHere(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [canCreateEvents, currentUser?.id, organization.id]);
 
   const loadEvents = useCallback(async () => {
     if (!organization.id) return;
@@ -110,7 +83,6 @@ function EventsView() {
           <FontAwesomeIcon icon={faPlus} />
         </button>
       )}
-
       <div className="org-view-header">
         <div>
           <h3 className="org-view-title">Active Events</h3>
@@ -131,7 +103,7 @@ function EventsView() {
       ) : (
         <div className="org-event-list">
           {events.map((event) => (
-            <div key={event.id} className="org-event-row">
+            <Link key={event.id} className="org-event-row" to={`/events/${event.id}`}>
               <div className="org-event-main">
                 <span className="org-event-name">{event.name || 'Untitled event'}</span>
                 <span className="org-event-schedule">{describeSchedule(event)}</span>
@@ -156,7 +128,7 @@ function EventsView() {
                   </span>
                 )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

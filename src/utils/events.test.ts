@@ -1,3 +1,4 @@
+import type { Event, EventInstance, EventSchedule } from '../api/api.events';
 import { describe, expect, it } from 'vitest';
 import {
   describeSchedule,
@@ -12,7 +13,6 @@ import {
   occurrencesOnDay,
   startOfWeek,
 } from './events';
-import type { Event, EventInstance, EventSchedule } from '../api/api.events';
 
 /** An event whose schedule is the only thing under test. */
 function event(schedule: Partial<EventSchedule>, overrides: Partial<Event> = {}): Event {

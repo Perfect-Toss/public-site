@@ -30,6 +30,63 @@
   margin-left: auto;
 }
 
+/* ─── Info Cards (shared detail panels) ──────────────────────────────────── */
+
+.info-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.info-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #666;
+}
+
+/* ─── Recorded Session Status ────────────────────────────────────────────── */
+
+.instance-status {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+.instance-status.running {
+  background-color: #e6ffcc;
+  color: #3d6b00;
+}
+
+.instance-status.completed {
+  background-color: #e8f0fe;
+  color: #1a4f9c;
+}
+
+.instance-status.cancelled {
+  background-color: #ffeaea;
+  color: #b3261e;
+}
+
 .header-actions .primary-btn {
   order: -1;
   margin-right: 12px;
