@@ -25,6 +25,7 @@ import {
 } from '../../utils/events';
 import { fetchEvents } from '../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
 
@@ -55,11 +56,16 @@ async function fetchAllEvents(): Promise<Event[]> {
 function OccurrenceCard({ occurrence }: { occurrence: IEventOccurrence }) {
   const { event, start, end } = occurrence;
   const organizationName = event.organization?.name ?? '';
+  const label = event.name || 'Untitled event';
 
   return (
-    <article className="event-chip" title={`${event.name ?? 'Untitled event'} — ${formatTimeRange(start, end)}`}>
+    <Link
+      to={`/events/${event.id}`}
+      className="event-chip"
+      title={`${label} — ${formatTimeRange(start, end)}`}
+    >
       <span className="event-chip-time">{formatTimeRange(start, end)}</span>
-      <span className="event-chip-name">{event.name || 'Untitled event'}</span>
+      <span className="event-chip-name">{label}</span>
       {organizationName && <span className="event-chip-org">{organizationName}</span>}
       {event.location && (
         <span className="event-chip-location">
@@ -67,7 +73,7 @@ function OccurrenceCard({ occurrence }: { occurrence: IEventOccurrence }) {
           {event.location}
         </span>
       )}
-    </article>
+    </Link>
   );
 }
 

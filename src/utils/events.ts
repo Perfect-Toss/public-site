@@ -5,7 +5,8 @@
  * date, interval, occurrence count, days of week) and leaves expansion to the
  * client — the calendar expands a schedule into the occurrences that fall in
  * the visible range, and a session that actually happened is recorded as an
- * `EventInstance` addressed by the id the recording device minted.
+ * `EventInstance` (server-minted id, plus the `clientSessionId` the recording
+ * device generated so an offline client can push it up later).
  *
  * Everything here is pure and timezone-local: dates are built in the browser's
  * timezone so a 6:00 PM event reads as 6:00 PM to the person looking at it.

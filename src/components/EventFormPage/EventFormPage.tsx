@@ -9,13 +9,19 @@ import {
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import type { CreateEventRequest, DayOfWeek, EventScheduleType } from '../../api/api.events';
+import type { DayOfWeek, Event, EventScheduleType } from '../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { StyledSelect } from '../common';
-import { createEvent } from '../../api/api.events';
-import { newUuid } from '../../utils/uuid';
+import {
+  buildCreateEventRequest,
+  buildUpdateEventRequest,
+  toEventFormValues,
+  type ICreateEventDraft,
+} from '../../utils/eventRequests';
+import { createEvent, fetchEventById, updateEvent } from '../../api/api.events';
+import { useCanManageEvents } from '../../hooks/useCanManageEvents';
 import { useEntityStore } from '../../stores/entityStore';
 import { useTagStore } from '../../stores/tagStore';
 
@@ -55,22 +61,8 @@ function defaultStart(): string {
   return toDateTimeLocal(date);
 }
 
-interface IFormState {
-  organizationId: string;
-  name: string;
-  description: string;
-  location: string;
-  notes: string;
-  secondsBetweenAthletes: string;
-  lengthOfRecordingInSeconds: string;
-  scheduleType: EventScheduleType;
-  startDate: string;
-  endDate: string;
-  interval: string;
-  occurrances: string;
-  daysOfWeek: DayOfWeek[];
-  lengthInMinutes: string;
-}
+/** The form's own fields — the roster and tags are held as selected-id arrays. */
+type IFormState = Omit<ICreateEventDraft, 'athleteIds' | 'organizerIds' | 'tagIds'>;
 
 const EMPTY_FORM: IFormState = {
   organizationId: '',
@@ -92,6 +84,8 @@ const EMPTY_FORM: IFormState = {
 function EventFormPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { id } = useParams<{ id: string }>();
+  const isEditing = Boolean(id);
 
   const { entities, loadEntities, entityUsers, loadEntityUsers } = useEntityStore();
   const { tags, loadTags } = useTagStore();
@@ -106,16 +100,55 @@ function EventFormPage() {
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadingEvent, setLoadingEvent] = useState(isEditing);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
-  // `EventSchedule.id` is a required uuid and the client mints it — the server
-  // cannot supply it because the id travels up in the request. Minted once so a
-  // retry of the same form sends the same schedule id.
-  const [scheduleId] = useState(newUuid);
+  // Create mode is authorized by the organization in the query string; edit mode
+  // by the organization the loaded event belongs to.
+  const { allowed, checking } = useCanManageEvents(
+    isEditing ? editingEvent?.organizationId : form.organizationId || null,
+  );
 
   useEffect(() => {
     loadEntities();
     loadTags();
   }, [loadEntities, loadTags]);
+
+  // Load the event being edited and fill the form from it.
+  useEffect(() => {
+    if (!id) return;
+
+    let cancelled = false;
+    setLoadingEvent(true);
+    setLoadError(null);
+
+    fetchEventById(id)
+      .then((event) => {
+        if (cancelled) return;
+        if (!event) {
+          setLoadError('That event could not be found.');
+          return;
+        }
+        const values = toEventFormValues(event);
+        setEditingEvent(event);
+        setForm(values);
+        setAthleteIds(values.athleteIds);
+        setOrganizerIds(values.organizerIds);
+        setTagIds(values.tagIds);
+      })
+      .catch((err) => {
+        console.error('Failed to load event:', err);
+        if (!cancelled) setLoadError('Failed to load the event. Please try again.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingEvent(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   // Members of the chosen organization feed the athlete/organizer pickers.
   useEffect(() => {
@@ -139,61 +172,91 @@ function EventFormPage() {
   const isScheduled = form.scheduleType !== 'None';
   const isValid = Boolean(form.organizationId && form.name.trim()) && (!isScheduled || Boolean(form.startDate));
 
+  // An update replaces the event's schedule, which means naming the schedule row
+  // it should have; without one there is nothing the API will accept.
+  const scheduleId = editingEvent?.schedule?.id;
+  const missingSchedule = isEditing && !scheduleId;
+  const canSubmit = isValid && !missingSchedule && !submitting;
+
   const handleSubmit = useCallback(async () => {
-    if (!isValid) return;
+    if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
 
-    const toNumber = (value: string) => {
-      const parsed = Number(value);
-      return value.trim() === '' || Number.isNaN(parsed) ? undefined : parsed;
-    };
-
-    const dto: CreateEventRequest = {
-      organizationId: form.organizationId,
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
-      location: form.location.trim() || undefined,
-      notes: form.notes.trim() || undefined,
-      secondsBetweenAthletes: toNumber(form.secondsBetweenAthletes),
-      lengthOfRecordingInSeconds: toNumber(form.lengthOfRecordingInSeconds),
-      schedule: isScheduled
-        ? {
-            id: scheduleId,
-            eventScheduleType: form.scheduleType,
-            startDate: form.startDate ? new Date(form.startDate).toISOString() : undefined,
-            endDate: form.endDate ? new Date(form.endDate).toISOString() : null,
-            interval: toNumber(form.interval) ?? 1,
-            occurrances: toNumber(form.occurrances) ?? null,
-            daysOfWeek: form.scheduleType === 'Weekly' ? form.daysOfWeek : null,
-            lengthInMinutes: toNumber(form.lengthInMinutes) ?? 60,
-          }
-        : undefined,
-      athleteIds: athleteIds.length ? athleteIds : null,
-      organizerIds: organizerIds.length ? organizerIds : null,
-      tagIds: tagIds.length ? tagIds : null,
-    };
+    const draft = { ...form, athleteIds, organizerIds, tagIds };
 
     try {
-      await createEvent(dto);
-      navigate('/events');
+      if (isEditing && id && scheduleId) {
+        await updateEvent(id, buildUpdateEventRequest(draft, scheduleId));
+        navigate(`/events/${id}`);
+      } else {
+        await createEvent(buildCreateEventRequest(draft));
+        navigate('/events');
+      }
     } catch (err) {
-      console.error('Failed to create event:', err);
-      setError('Failed to create event. Please try again.');
+      console.error('Failed to save event:', err);
+      setError('Failed to save the event. Please try again.');
     } finally {
       setSubmitting(false);
     }
-  }, [form, isScheduled, athleteIds, organizerIds, tagIds, isValid, navigate, scheduleId]);
+  }, [canSubmit, form, athleteIds, organizerIds, tagIds, isEditing, id, scheduleId, navigate]);
+
+  const backTarget = isEditing && id ? `/events/${id}` : '/events';
+
+  if (loadingEvent || checking) {
+    return (
+      <div className="event-form-page">
+        <div className="empty-state-large">
+          <div className="spinner" />
+          <p>{loadingEvent ? 'Loading event...' : 'Checking permissions...'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="event-form-page">
+        <div className="empty-state-large">
+          <h3>Event not found</h3>
+          <p>{loadError}</p>
+          <button className="secondary-btn" onClick={() => navigate('/events')}>
+            Back to Events
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // A global admin's permission is known without an organization; anyone else
+  // needs one selected before their role can be resolved.
+  const blocked = !allowed && (isEditing || Boolean(form.organizationId));
+  if (blocked) {
+    return (
+      <div className="event-form-page">
+        <div className="empty-state-large">
+          <h3>You cannot edit events here</h3>
+          <p>
+            Events can be created and changed by a global admin, or by an organization admin for
+            their own organization.
+          </p>
+          <button className="secondary-btn" onClick={() => navigate(backTarget)}>
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="event-form-page">
       <section className="section">
         <div className="section-header">
-          <button className="back-btn" onClick={() => navigate('/events')}>
+          <button className="back-btn" onClick={() => navigate(backTarget)}>
             <FontAwesomeIcon icon={faArrowLeft} />
             <span>Back</span>
           </button>
-          <h2>New Event</h2>
+          <h2>{isEditing ? 'Edit Event' : 'New Event'}</h2>
           <div />
         </div>
 
@@ -211,20 +274,30 @@ function EventFormPage() {
 
             <div className="form-group">
               <label htmlFor="event-org">Organization *</label>
-              <StyledSelect
-                id="event-org"
-                value={form.organizationId}
-                onChange={(v) => setField('organizationId', v)}
-                placeholder="Select an organization"
-              >
-                <option value="">— Select an organization —</option>
-                {entities.map((entity) => (
-                  <option key={entity.id} value={entity.id}>
-                    {entity.name}
-                    {entity.entityType ? ` (${entity.entityType})` : ''}
-                  </option>
-                ))}
-              </StyledSelect>
+              {isEditing ? (
+                <input
+                  id="event-org"
+                  type="text"
+                  readOnly
+                  value={editingEvent?.organization?.name ?? form.organizationId}
+                />
+              ) : (
+                <StyledSelect
+                  id="event-org"
+                  value={form.organizationId}
+                  onChange={(v) => setField('organizationId', v)}
+                  placeholder="Select an organization"
+                >
+                  <option value="">— Select an organization —</option>
+                  {entities.map((entity) => (
+                    <option key={entity.id} value={entity.id}>
+                      {entity.name}
+                      {entity.entityType ? ` (${entity.entityType})` : ''}
+                    </option>
+                  ))}
+                </StyledSelect>
+              )}
+              {isEditing && <span className="field-hint">An event cannot move to another organization.</span>}
             </div>
 
             <div className="form-group">
@@ -495,23 +568,30 @@ function EventFormPage() {
           </fieldset>
 
           <div className="form-actions">
-            <button className="cancel-btn" onClick={() => navigate('/events')} disabled={submitting}>
+            <button className="cancel-btn" onClick={() => navigate(backTarget)} disabled={submitting}>
               Cancel
             </button>
-            <button className="submit-btn" disabled={!isValid || submitting} onClick={handleSubmit}>
+            <button className="submit-btn" disabled={!canSubmit} onClick={handleSubmit}>
               {submitting ? (
                 <FontAwesomeIcon icon={faSpinner} spin />
               ) : (
-                <FontAwesomeIcon icon={faCalendarPlus} style={{ marginRight: 6 }} />
+                <FontAwesomeIcon icon={isEditing ? faCheck : faCalendarPlus} style={{ marginRight: 6 }} />
               )}
-              Create Event
+              {isEditing ? 'Save Changes' : 'Create Event'}
             </button>
           </div>
 
+          {missingSchedule && (
+            <p className="field-hint">
+              This event has no schedule row yet, so the API cannot accept an update for it.
+            </p>
+          )}
+
           <p className="field-hint">
             <FontAwesomeIcon icon={faCheck} style={{ marginRight: 6 }} />
-            Sessions are recorded against the event once it exists — this page only creates the
-            event definition and its schedule.
+            {isEditing
+              ? 'Saving replaces the event’s schedule, roster and tags with what is on this page. Sessions already recorded against it are untouched.'
+              : 'Sessions are recorded against the event once it exists — this page only creates the event definition and its schedule.'}
           </p>
         </div>
       </section>

@@ -704,7 +704,7 @@ export interface paths {
                 path: {
                     /** @description The unique identifier of the event. */
                     eventId: string;
-                    /** @description The instance id: the id the client's device gave the instance. */
+                    /** @description The unique identifier of the event instance. */
                     id: string;
                 };
                 cookie?: never;
@@ -737,7 +737,7 @@ export interface paths {
                 path: {
                     /** @description The unique identifier of the event. */
                     eventId: string;
-                    /** @description The instance id: the id the client's device gave the instance. */
+                    /** @description The unique identifier of the event instance. */
                     id: string;
                 };
                 cookie?: never;
@@ -773,7 +773,7 @@ export interface paths {
                 path: {
                     /** @description The unique identifier of the event. */
                     eventId: string;
-                    /** @description The instance id: the id the client's device gave the instance. */
+                    /** @description The unique identifier of the event instance. */
                     id: string;
                 };
                 cookie?: never;
@@ -839,13 +839,11 @@ export interface paths {
         put?: never;
         /**
          * Opens an event instance by recording its first state (`Initiated`).
-         * @description The id the client's device gave the instance <em>is</em> the instance's id, so nothing is
-         *     minted and the client can address the instance with the id it already holds. A client that
-         *     works offline generates that id, records the instance's states on the device and sends them
-         *     once it reconnects (see `POST /events/instances/sync`). Opening an instance the server
-         *     already holds returns it untouched, so reconnecting never restarts one. Limited to a global
-         *     admin or a user holding the OrganizationAdmin, Coach or ServiceAccount role on the event's
-         *     organization.
+         * @description A client that works offline generates the id, records the instance's states on the device and
+         *     sends them once it reconnects (see `POST /events/instances/sync`). Opening an instance
+         *     the server already holds returns it untouched, so reconnecting never restarts one. Limited to
+         *     a global admin or a user holding the OrganizationAdmin, Coach or ServiceAccount role on the
+         *     event's organization.
          */
         post: {
             parameters: {
@@ -942,13 +940,11 @@ export interface paths {
         put?: never;
         /**
          * Records the instances a client captured while offline, all in one call.
-         * @description Each instance carries the id the client's device gave it, and its states carry the states
-         *     themselves, the times they happened and the ids of the runs they belong to. They are applied
-         *     in the order they happened, so an instance recorded offline arrives whole even when its late
-         *     states reach the server after later ones; a batch that only partly made it can be sent again,
-         *     as a state the instance already holds is skipped. Every instance in the batch is checked for
-         *     write permission before any of it is written. Limited to a global admin or a user holding the
-         *     OrganizationAdmin, Coach or ServiceAccount role on the event's organization.
+         * @description States are applied in the order they happened, so an instance recorded offline arrives whole
+         *     even when its late states reach the server after later ones. A batch that only partly made it
+         *     can be sent again: a state the instance already holds is skipped. Every instance in the batch
+         *     is checked for write permission before any of it is written. Limited to a global admin or a
+         *     user holding the OrganizationAdmin, Coach or ServiceAccount role on the event's organization.
          */
         post: {
             parameters: {
@@ -4072,9 +4068,7 @@ export interface components {
         CreateEventInstanceRequest: {
             /**
              * Format: uuid
-             * @description The id the client's device gave the instance — a client recording one while offline generates
-             *     it. The server mints the instance's own id and returns it; the client id is what the instance
-             *     is recognised by when it is pushed up, and is kept for audit.
+             * @description The id the client's device gave the instance.
              */
             clientSessionId: string;
             /**
@@ -4140,13 +4134,44 @@ export interface components {
              * @description Length of each recording, in seconds.
              */
             lengthOfRecordingInSeconds?: number;
-            schedule?: components["schemas"]["EventSchedule"];
+            schedule: components["schemas"]["CreateEventScheduleRequest"];
             /** @description Optional list of athlete user ids attending the event. */
             athleteIds?: string[] | null;
             /** @description Optional list of organizer user ids for the event. */
             organizerIds?: string[] | null;
             /** @description Optional list of tag ids applied to the event. */
             tagIds?: string[] | null;
+        };
+        /** @description The schedule of a new event. */
+        CreateEventScheduleRequest: {
+            eventScheduleType: components["schemas"]["EventScheduleType"];
+            /**
+             * Format: date-time
+             * @description When the schedule starts; for a recurring one, the time of day an occurrence starts.
+             */
+            startDate: string;
+            /**
+             * Format: date-time
+             * @description When the schedule stops; null = open-ended.
+             */
+            endDate?: string | null;
+            /**
+             * Format: int32
+             * @description For recurring schedules: the interval between occurrences.
+             */
+            interval?: number;
+            /**
+             * Format: int32
+             * @description For recurring schedules: the number of occurrences; null = no limit.
+             */
+            occurrances?: number | null;
+            /** @description For weekly schedules: the days of the week it runs on. */
+            daysOfWeek?: components["schemas"]["DayOfWeek"][] | null;
+            /**
+             * Format: int32
+             * @description How long each occurrence lasts, in minutes.
+             */
+            lengthInMinutes?: number;
         };
         /** @description Request model for creating a new machine. */
         CreateMachineRequest: {
@@ -4873,13 +4898,49 @@ export interface components {
              * @description Length of each recording, in seconds.
              */
             lengthOfRecordingInSeconds?: number;
-            schedule?: components["schemas"]["EventSchedule"];
+            schedule: components["schemas"]["UpdateEventScheduleRequest"];
             /** @description Optional list of athlete user ids attending the event (replaces the existing roster). */
             athleteIds?: string[] | null;
             /** @description Optional list of organizer user ids for the event (replaces the existing roster). */
             organizerIds?: string[] | null;
             /** @description Optional list of tag ids applied to the event (replaces the existing tags). */
             tagIds?: string[] | null;
+        };
+        /** @description The schedule an event should have after an update. */
+        UpdateEventScheduleRequest: {
+            /**
+             * Format: uuid
+             * @description The id of the event's schedule row.
+             */
+            id: string;
+            eventScheduleType: components["schemas"]["EventScheduleType"];
+            /**
+             * Format: date-time
+             * @description When the schedule starts; for a recurring one, the time of day an occurrence starts.
+             */
+            startDate: string;
+            /**
+             * Format: date-time
+             * @description When the schedule stops; null = open-ended.
+             */
+            endDate?: string | null;
+            /**
+             * Format: int32
+             * @description For recurring schedules: the interval between occurrences.
+             */
+            interval?: number;
+            /**
+             * Format: int32
+             * @description For recurring schedules: the number of occurrences; null = no limit.
+             */
+            occurrances?: number | null;
+            /** @description For weekly schedules: the days of the week it runs on. */
+            daysOfWeek?: components["schemas"]["DayOfWeek"][] | null;
+            /**
+             * Format: int32
+             * @description How long each occurrence lasts, in minutes.
+             */
+            lengthInMinutes?: number;
         };
         /** @description Request model for updating machine info (device details). */
         UpdateMachineInfoRequest: {

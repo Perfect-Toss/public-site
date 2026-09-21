@@ -4,9 +4,9 @@
  * An *event* is a definition (name, schedule, roster, tags) owned by an
  * organization. An *event occurrence* — called an **instance** by the API and
  * addressed under `/api/v1/events/{eventId}/instances` — is a session that
- * actually happened: it carries the ordered list of its state changes, and its
- * id is the `clientSessionId` the recording device minted (so a client working
- * offline can address it before it ever reaches the server).
+ * actually happened: the server mints its id and returns it in the `EventInstance`,
+ * while the `clientSessionId` a recording device generates is what a client that
+ * worked offline sends up (see `syncEventInstances`).
  *
  * Types are re-exported directly from the auto-generated schema so that
  * any schema rename/removal produces a compile-time error at every usage site.
@@ -17,7 +17,9 @@ import type { components } from './schema';
 
 export type Event = components['schemas']['Event'];
 export type CreateEventRequest = components['schemas']['CreateEventRequest'];
+export type CreateEventScheduleRequest = components['schemas']['CreateEventScheduleRequest'];
 export type UpdateEventRequest = components['schemas']['UpdateEventRequest'];
+export type UpdateEventScheduleRequest = components['schemas']['UpdateEventScheduleRequest'];
 export type EventSchedule = components['schemas']['EventSchedule'];
 export type EventScheduleType = components['schemas']['EventScheduleType'];
 export type EventIEnumerablePagedResponse = components['schemas']['EventIEnumerablePagedResponse'];
@@ -76,8 +78,9 @@ export async function fetchEventById(id: string): Promise<Event | null> {
 }
 
 /**
- * Create a new event. The caller must be a global admin or hold the
- * OrganizationAdmin role on the event's organization.
+ * Create a new event with its schedule. The caller must be a global admin or
+ * hold the OrganizationAdmin role on the event's organization. The schedule id
+ * is minted by the server, so `schedule` is a `CreateEventScheduleRequest`.
  */
 export async function createEvent(eventData: CreateEventRequest): Promise<Event | null> {
   const { data, error } = await api.POST('/api/v1/events', {
@@ -94,7 +97,8 @@ export async function createEvent(eventData: CreateEventRequest): Promise<Event 
 
 /**
  * Update an existing event. The organization is immutable; the schedule, roster
- * and tags are replaced with the provided values (empty/omitted = cleared).
+ * and tags are replaced with the provided values. `schedule` is an
+ * `UpdateEventScheduleRequest`, which names the existing schedule row's id.
  */
 export async function updateEvent(id: string, eventData: UpdateEventRequest): Promise<Event | null> {
   const { data, error } = await api.PUT('/api/v1/events/{id}', {
@@ -172,7 +176,7 @@ export async function fetchAllEventInstances(
 }
 
 /**
- * Get a single stored occurrence by its id (the id the client's device gave it)
+ * Get a single stored occurrence by its id (the id the server minted for it)
  */
 export async function fetchEventInstance(eventId: string, id: string): Promise<EventInstance | null> {
   const { data, error } = await api.GET('/api/v1/events/{eventId}/instances/{id}', {
@@ -189,8 +193,9 @@ export async function fetchEventInstance(eventId: string, id: string): Promise<E
 
 /**
  * Open an occurrence by recording its first state (`Initiated`).
- * The client-minted id *is* the occurrence's id, so resending an occurrence the
- * server already holds returns it untouched — reconnecting never restarts one.
+ * The `clientSessionId` is minted by the client and kept for reconciliation, so
+ * a device that recorded the session offline can push it up later; an occurrence
+ * the server already holds is returned untouched, so reconnecting never restarts one.
  */
 export async function createEventInstance(
   eventId: string,
