@@ -12,8 +12,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import type { DayOfWeek, Event, EventScheduleType } from '../../api/api.events';
+import { Role } from '../../api/api.users';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { OrganizationPicker, StyledSelect } from '../common';
+import { OrganizationPicker, StyledSelect, UserPicker } from '../common';
 import {
   buildCreateEventRequest,
   buildUpdateEventRequest,
@@ -487,33 +488,27 @@ function EventFormPage() {
             <legend>Roster &amp; tags</legend>
 
             <div className="form-group">
-              <label>Athletes</label>
+              <label htmlFor="event-athletes">Athletes</label>
               {!form.organizationId ? (
                 <p className="field-hint">Pick an organization to choose its members.</p>
               ) : members.length === 0 ? (
                 <p className="field-hint">No members found for this organization.</p>
               ) : (
-                <div className="member-picker">
-                  {members.map((member) => (
-                    <label key={member.id} className="member-option">
-                      <input
-                        type="checkbox"
-                        checked={athleteIds.includes(member.id)}
-                        onChange={() => setAthleteIds((ids) => toggleId(ids, member.id))}
-                      />
-                      <span>
-                        {[member.firstName, member.lastName].filter(Boolean).join(' ') ||
-                          member.email ||
-                          member.id}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+                <UserPicker
+                  id="event-athletes"
+                  users={members}
+                  values={athleteIds}
+                  onChange={setAthleteIds}
+                  onlyRoles={[Role.Athlete]}
+                  placeholder="Add athletes"
+                  searchPlaceholder="Search athletes..."
+                  emptyMessage="No athletes found for this organization."
+                />
               )}
             </div>
 
             <div className="form-group">
-              <label>Organizers</label>
+              <label htmlFor="event-organizers">Organizers</label>
               {members.length === 0 ? (
                 <p className="field-hint">
                   {form.organizationId
@@ -521,22 +516,16 @@ function EventFormPage() {
                     : 'Pick an organization to choose its members.'}
                 </p>
               ) : (
-                <div className="member-picker">
-                  {members.map((member) => (
-                    <label key={member.id} className="member-option">
-                      <input
-                        type="checkbox"
-                        checked={organizerIds.includes(member.id)}
-                        onChange={() => setOrganizerIds((ids) => toggleId(ids, member.id))}
-                      />
-                      <span>
-                        {[member.firstName, member.lastName].filter(Boolean).join(' ') ||
-                          member.email ||
-                          member.id}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+                <UserPicker
+                  id="event-organizers"
+                  users={members}
+                  values={organizerIds}
+                  onChange={setOrganizerIds}
+                  onlyRoles={[Role.Coach]}
+                  placeholder="Add organizers"
+                  searchPlaceholder="Search coaches..."
+                  emptyMessage="No coaches found for this organization."
+                />
               )}
             </div>
 

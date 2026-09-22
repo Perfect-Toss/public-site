@@ -5,10 +5,12 @@ export {
   type OrganizationPickerProps,
 } from './OrganizationPicker';
 export { SnackbarProvider } from './Snackbar';
+export { RoleMemberPicker, type RoleMemberPickerProps } from './RoleMemberPicker';
 export { StyledSelect, type StyledSelectProps } from './StyledSelect';
 export { useSnackbar, type SnackbarKind } from './useSnackbar';
 export { UserAvatar, type UserAvatarProps } from './UserAvatar';
 export { UserInfo, type UserInfoProps } from './UserInfo';
+export { UserPicker, type UserPickerProps } from './UserPicker';
 export {
   VirtualizedSelect,
   type VirtualizedSelectProps,

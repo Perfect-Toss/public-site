@@ -2,6 +2,7 @@ import '../../styles/page.css';
 import '../../styles/admin-form.css';
 import './AdminOrganizationsPage.css';
 
+import { OrganizationPicker, RoleMemberPicker } from '../common';
 import {
   faArrowLeft,
   faCheck,
@@ -12,7 +13,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { OrganizationPicker } from '../common';
+import { Role } from '../../api/api.users';
 import type { UpdateEntityRequest } from '../../api/api.entities';
 import { useEntityStore } from '../../stores/entityStore';
 
@@ -168,6 +169,34 @@ function EditOrganizationPage() {
             </button>
           </div>
         </div>
+
+        {/* Staff and devices get their roles here, not on the Members tab. */}
+        {orgId && (
+          <div className="admin-form-card">
+            <h3 style={{ marginTop: 0 }}>Coaches, Admins &amp; Service Accounts</h3>
+            <RoleMemberPicker
+              id="edit-org-coaches"
+              organizationId={orgId}
+              role={Role.Coach}
+              label="Coaches"
+              placeholder="Add coaches"
+            />
+            <RoleMemberPicker
+              id="edit-org-admins"
+              organizationId={orgId}
+              role={Role.OrganizationAdmin}
+              label="Admins"
+              placeholder="Add admins"
+            />
+            <RoleMemberPicker
+              id="edit-org-service-accounts"
+              organizationId={orgId}
+              role={Role.ServiceAccount}
+              label="Service Accounts"
+              placeholder="Add service accounts"
+            />
+          </div>
+        )}
       </section>
     </div>
   );

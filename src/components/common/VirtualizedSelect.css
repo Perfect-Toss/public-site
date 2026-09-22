@@ -123,6 +123,16 @@
   overscroll-behavior: contain;
 }
 
+/* Multi-select selection box. Clicks belong to the row, so it stays inert. */
+.vs-option-check {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  pointer-events: none;
+  accent-color: #1a1f24;
+}
+
 .vs-option {
   box-sizing: border-box;
   display: flex;
