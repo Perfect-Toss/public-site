@@ -300,3 +300,98 @@
   object-fit: contain;
   max-height: none;
 }
+
+/* ─── Mobile / touch ─────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .cvp-chrome {
+    padding: 10px 10px 6px;
+    gap: 4px;
+  }
+
+  .cvp-controls {
+    /* Safety valve: a wide time readout can push the row past a 320px screen. */
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .cvp-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Phones have hardware volume and iOS ignores programmatic volume, so the
+     slider is dead weight in a narrow control row. */
+  .cvp-volume {
+    display: none;
+  }
+
+  .cvp-anchor-row-head {
+    flex-wrap: wrap;
+  }
+
+  .cvp-menu,
+  .cvp-help {
+    max-width: calc(100vw - 24px);
+  }
+
+  .cvp-player:fullscreen {
+    height: 100dvh;
+  }
+}
+
+@media (max-width: 700px) {
+  .cvp-time {
+    font-size: 11px;
+  }
+
+  .cvp-topbar {
+    padding: 10px 12px;
+  }
+
+  .cvp-help-keys {
+    min-width: 72px;
+  }
+}
+
+/* ─── Stacked player (phones, and any short viewport) ──────────────────────
+   The chrome (anchor bar + review timeline + scrub bar + controls) is taller
+   than a phone's 16:9 picture, so overlaying it would cover the video. Below
+   the picture the player becomes a dark slab holding the metadata strip and
+   the controls instead. Fullscreen keeps the overlay layout.
+   Keep the media condition in step with VideoDetailPage.css's stage rule. */
+
+@media (max-width: 700px), (max-height: 500px) {
+  .cvp-player:not(:fullscreen) {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  .cvp-player:not(:fullscreen) .cvp-video {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    /* Prefer the clip's own shape — tablet recordings can be portrait — and
+       fall back to 16:9 until the metadata arrives. */
+    aspect-ratio: auto 16 / 9;
+    max-height: 55dvh;
+  }
+
+  /* Metadata strip — static, so it reads as part of the slab rather than
+     sitting on top of the picture. */
+  .cvp-player:not(:fullscreen) .cvp-topbar {
+    position: static;
+    flex: 0 0 auto;
+    padding: 10px 12px 0;
+    background: none;
+  }
+
+  .cvp-player:not(:fullscreen) .cvp-chrome {
+    position: static;
+    flex: 0 0 auto;
+    gap: 8px;
+    padding: 10px 12px 12px;
+    background: #1a1f24;
+  }
+}

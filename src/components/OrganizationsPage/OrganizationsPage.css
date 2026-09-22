@@ -4,7 +4,9 @@
 
 .organizations-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  /* min() keeps the column count honest on narrow screens instead of forcing
+     a 200px column into a 320px viewport. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
   gap: 1rem;
 }
 
@@ -62,4 +64,19 @@
   color: #999;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* ─── Mobile ───────────────────────────────────────────────────────────────
+   Duplicated in HomePage.css: both files define .organization-card, so the
+   mobile values have to be declared in each to survive import ordering. */
+
+@media (max-width: 700px) {
+  .organization-card {
+    gap: 0.5rem;
+    padding: 16px 14px;
+  }
+
+  .org-icon {
+    font-size: 1.5rem;
+  }
 }

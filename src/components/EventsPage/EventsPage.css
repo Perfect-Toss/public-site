@@ -157,22 +157,66 @@
 
 /* ─── Responsive ────────────────────────────────────────────────────────── */
 
-@media (max-width: 1100px) {
+@media (max-width: 1024px) {
   .calendar-week {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .calendar-day {
-    min-height: 180px;
+    min-height: 200px;
   }
 }
 
 @media (max-width: 700px) {
+  /* A week reads as a vertical agenda on a phone: one day per row, and empty
+     days collapse to their header (the date is already in the header). */
   .calendar-week {
     grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .calendar-day {
+    min-height: 0;
+  }
+
+  .calendar-day-header {
+    padding: 8px 12px;
+  }
+
+  .calendar-day-name {
+    font-size: 12px;
+  }
+
+  .calendar-day-body {
+    padding: 8px 10px 10px;
+  }
+
+  .calendar-day-empty {
+    display: none;
   }
 
   .calendar-toolbar {
     flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* Title owns the first line; the nav and the summary share the second. */
+  .calendar-title {
+    order: -1;
+    flex: 1 1 100%;
+    font-size: 15px;
+  }
+
+  .calendar-nav .icon-only-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .calendar-summary {
+    margin-left: auto;
+  }
+
+  .event-chip {
+    padding: 10px 12px;
   }
 }

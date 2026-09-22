@@ -410,3 +410,89 @@
 .sortable-header:hover {
   color: #1a1f24;
 }
+
+/* ─── Responsive ────────────────────────────────────────────────────────
+   Shared primitives only. Anything owned by a single page lives in that
+   page's stylesheet. */
+
+/* The main-content layout metrics are declared by .home-page (mobile shell). */
+
+@media (max-width: 1024px) {
+  /* Keep the floating action button clear of the mobile tab bar. */
+  .fab {
+    right: 20px;
+    bottom: calc(
+      var(--mobile-tabbar-h, 0px) + 20px + env(safe-area-inset-bottom, 0px)
+    );
+    width: 52px;
+    height: 52px;
+  }
+
+  .table-wrapper {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 700px) {
+  .section {
+    margin-bottom: 32px;
+  }
+
+  /* Section actions (search, filters, buttons) drop below the title and take
+     the full width — a 250px search column doesn't fit beside a heading. */
+  .section-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+  }
+
+  .header-actions {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-input,
+  .search-input:focus {
+    width: 100%;
+  }
+
+  .info-card {
+    padding: 16px;
+  }
+
+  .info-card-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .empty-state-large {
+    padding: 48px 16px;
+  }
+
+  .loading-container,
+  .error-container {
+    padding: 40px 16px;
+    margin: 0;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 10px 12px;
+  }
+
+  /* iOS Safari zooms the page in when a focused control's text is under 16px,
+     and never zooms back out. !important is needed because the per-page field
+     rules (`.form-field input { font-size: 14px }`) are more specific than a
+     bare element selector. */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

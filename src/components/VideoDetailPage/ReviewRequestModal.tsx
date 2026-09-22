@@ -2,23 +2,20 @@ import './VideoReviewsPanel.css';
 
 import {
   faBuilding,
-  faCheck,
-  faChevronDown,
   faClipboardList,
-  faSearch,
   faSpinner,
   faTimes,
+  faUser,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useCallback, useEffect, useState } from 'react';
 import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 import { fetchAllEntities, type Entity } from '../../api/api.entities';
 import { fetchAllUsers, type User } from '../../api/api.users';
 import { createVideoReviewRequest } from '../../api/api.videos';
 import { getDisplayName } from '../../utils/user';
-import { UserAvatar } from '../common';
+import { OrganizationPicker, UserAvatar, VirtualizedSelect } from '../common';
 
 export interface ReviewRequestModalProps {
   videoId: string;
@@ -30,25 +27,18 @@ export interface ReviewRequestModalProps {
 
 /**
  * Popup for requesting a review of a video from a specific user or entity the
- * current user can access. Mirrors the share modal's user/entity picker.
+ * current user can access. Uses the same user/entity toggle and the same
+ * pickers as the share modal, so a target is chosen the same way everywhere.
  */
 export function ReviewRequestModal({ videoId, onClose, onCreated }: ReviewRequestModalProps) {
   const [note, setNote] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
-  const [selection, setSelection] = useState<{ kind: 'user' | 'entity'; id: string } | null>(
-    null,
-  );
-  const [query, setQuery] = useState('');
-  const [open, setOpen] = useState(false);
+  const [target, setTarget] = useState<'user' | 'entity'>('user');
+  const [reviewerId, setReviewerId] = useState('');
+  const [entityId, setEntityId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [panelPos, setPanelPos] = useState<{ top: number; left: number; width: number } | null>(
-    null,
-  );
-  const containerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
 
   // Load the users/entities the current user can access (same as the share picker).
   useEffect(() => {
@@ -69,83 +59,13 @@ export function ReviewRequestModal({ videoId, onClose, onCreated }: ReviewReques
     };
   }, []);
 
-  // Close the dropdown on outside click / Escape. The panel is portaled to
-  // <body>, so both the trigger and the panel count as "inside".
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (ev: MouseEvent | TouchEvent) => {
-      const node = ev.target as Node;
-      const inTrigger = containerRef.current?.contains(node);
-      const inPanel = panelRef.current?.contains(node);
-      if (!inTrigger && !inPanel) setOpen(false);
-    };
-    const onKey = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('touchstart', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('touchstart', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
-  // Measure the trigger so the portaled panel can sit just below it, and keep
-  // it aligned if the page scrolls or resizes while open.
-  const updatePanelPos = useCallback(() => {
-    const el = triggerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    setPanelPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-  }, []);
-
-  useEffect(() => {
-    if (!open) {
-      setPanelPos(null);
-      return;
-    }
-    updatePanelPos();
-    window.addEventListener('resize', updatePanelPos);
-    window.addEventListener('scroll', updatePanelPos, true);
-    return () => {
-      window.removeEventListener('resize', updatePanelPos);
-      window.removeEventListener('scroll', updatePanelPos, true);
-    };
-  }, [open, updatePanelPos]);
-
-  const q = query.trim().toLowerCase();
-  const filteredUsers = users
-    .filter((u) => getDisplayName(u).toLowerCase().includes(q))
-    .sort((a, b) => getDisplayName(a).localeCompare(getDisplayName(b)));
-  const filteredEntities = entities
-    .filter((e) => (e.name ?? '').toLowerCase().includes(q))
-    .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
-
-  const selectedUser =
-    selection?.kind === 'user' ? users.find((u) => u.id === selection.id) : undefined;
-  const selectedEntity =
-    selection?.kind === 'entity' ? entities.find((e) => e.id === selection.id) : undefined;
-
-  const selectOption = useCallback((kind: 'user' | 'entity', id: string) => {
-    setSelection({ kind, id });
-    setQuery('');
-    setOpen(false);
-  }, []);
-
-  const clearSelection = useCallback(() => {
-    setSelection(null);
-    setQuery('');
-  }, []);
-
   const submit = useCallback(async () => {
     setSubmitting(true);
     setError(null);
     try {
       await createVideoReviewRequest(videoId, {
-        reviewerId: selection?.kind === 'user' ? selection.id : null,
-        entityId: selection?.kind === 'entity' ? selection.id : null,
+        reviewerId: target === 'user' ? reviewerId || null : null,
+        entityId: target === 'entity' ? entityId || null : null,
         requestNote: note.trim() || null,
       });
       await onCreated();
@@ -156,20 +76,13 @@ export function ReviewRequestModal({ videoId, onClose, onCreated }: ReviewReques
     } finally {
       setSubmitting(false);
     }
-  }, [videoId, selection, note, onCreated, onClose]);
+  }, [videoId, target, reviewerId, entityId, note, onCreated, onClose]);
 
-  // Escape cancels the dialog; Enter submits. The dropdown's own Escape handler
-  // (registered later, when it opens) runs after this one, so while the dropdown
-  // is open Escape only closes the dropdown first.
+  // Escape cancels the dialog, Enter submits. A picker with an open panel stops
+  // Escape at the panel, so the dialog only closes on the next press.
   useModalKeyboard({
     active: true,
-    onCancel: () => {
-      if (open) {
-        setOpen(false);
-      } else {
-        onClose();
-      }
-    },
+    onCancel: onClose,
     onAccept: () => void submit(),
     busy: submitting,
   });
@@ -203,142 +116,54 @@ export function ReviewRequestModal({ videoId, onClose, onCreated }: ReviewReques
 
           <div className="form-group">
             <label htmlFor="review-request-target">Request from (optional)</label>
-            <div className="review-target" ref={containerRef}>
+
+            <div className="rr-toggle" role="group" aria-label="Request from">
               <button
-                ref={triggerRef}
                 type="button"
-                className="review-target-trigger"
-                onClick={() => setOpen((o) => !o)}
-                aria-expanded={open}
-                aria-haspopup="listbox"
+                className={target === 'user' ? 'active' : ''}
+                onClick={() => setTarget('user')}
               >
-                {selectedUser ? (
-                  <span className="review-target-selected">
-                    <UserAvatar user={selectedUser} size={22} />
-                    <span>{getDisplayName(selectedUser)}</span>
-                  </span>
-                ) : selectedEntity ? (
-                  <span className="review-target-selected">
-                    <FontAwesomeIcon icon={faBuilding} />
-                    <span>{selectedEntity.name || 'Untitled entity'}</span>
-                  </span>
-                ) : (
-                  <span className="review-target-placeholder">
-                    Select a user or entity (optional)...
-                  </span>
-                )}
-                {selection ? (
-                  <button
-                    type="button"
-                    className="review-target-clear"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      clearSelection();
-                    }}
-                    aria-label="Clear selection"
-                  >
-                    <FontAwesomeIcon icon={faTimes} />
-                  </button>
-                ) : (
-                  <FontAwesomeIcon
-                    icon={faChevronDown}
-                    className={`review-target-chevron${open ? ' open' : ''}`}
-                  />
-                )}
+                <FontAwesomeIcon icon={faUser} /> User
               </button>
-
-              {open &&
-                panelPos &&
-                createPortal(
-                <div
-                  className="review-target-panel"
-                  ref={panelRef}
-                  role="listbox"
-                  aria-label="Users and entities"
-                  style={{ top: panelPos.top, left: panelPos.left, width: panelPos.width }}
-                >
-                  <div className="review-target-search">
-                    <FontAwesomeIcon icon={faSearch} />
-                    <input
-                      autoFocus
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Search users and entities..."
-                      aria-label="Search users and entities"
-                    />
-                  </div>
-                  <div className="review-target-groups">
-                    <div className="review-target-group-label">Entities</div>
-                    {filteredEntities.length === 0 ? (
-                      <p className="review-target-empty">No matching entities</p>
-                    ) : (
-                      filteredEntities.map((e) => {
-                        const name = e.name || 'Untitled entity';
-                        const detail = e.description || e.entityType || null;
-                        return (
-                          <button
-                            key={`entity-${e.id}`}
-                            type="button"
-                            role="option"
-                            aria-selected={selection?.kind === 'entity' && selection.id === e.id}
-                            className={`review-target-option${
-                              selection?.kind === 'entity' && selection.id === e.id ? ' selected' : ''
-                            }`}
-                            onClick={() => selectOption('entity', e.id)}
-                          >
-                            <span className="review-target-kind-icon">
-                              <FontAwesomeIcon icon={faBuilding} />
-                            </span>
-                            <span className="review-target-option-text">
-                              <span className="review-target-option-primary">{name}</span>
-                              {detail && (
-                                <span className="review-target-option-secondary">{detail}</span>
-                              )}
-                            </span>
-                            {selection?.kind === 'entity' && selection.id === e.id && (
-                              <FontAwesomeIcon icon={faCheck} className="review-target-check" />
-                            )}
-                          </button>
-                        );
-                      })
-                    )}
-
-                    <div className="review-target-group-label">Users</div>
-                    {filteredUsers.length === 0 ? (
-                      <p className="review-target-empty">No matching users</p>
-                    ) : (
-                      filteredUsers.map((u) => {
-                        const name = getDisplayName(u);
-                        return (
-                          <button
-                            key={`user-${u.id}`}
-                            type="button"
-                            role="option"
-                            aria-selected={selection?.kind === 'user' && selection.id === u.id}
-                            className={`review-target-option${
-                              selection?.kind === 'user' && selection.id === u.id ? ' selected' : ''
-                            }`}
-                            onClick={() => selectOption('user', u.id)}
-                          >
-                            <UserAvatar user={u} size={28} />
-                            <span className="review-target-option-text">
-                              <span className="review-target-option-primary">{name}</span>
-                              {u.email && u.email !== name && (
-                                <span className="review-target-option-secondary">{u.email}</span>
-                              )}
-                            </span>
-                            {selection?.kind === 'user' && selection.id === u.id && (
-                              <FontAwesomeIcon icon={faCheck} className="review-target-check" />
-                            )}
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>,
-                document.body,
-              )}
+              <button
+                type="button"
+                className={target === 'entity' ? 'active' : ''}
+                onClick={() => setTarget('entity')}
+              >
+                <FontAwesomeIcon icon={faBuilding} /> Entity
+              </button>
             </div>
+
+            {target === 'user' ? (
+              <VirtualizedSelect
+                id="review-request-target"
+                items={users}
+                value={reviewerId}
+                onChange={(v) => setReviewerId(v ?? '')}
+                getOptionValue={(u) => u.id}
+                getOptionLabel={(u) => getDisplayName(u)}
+                renderOption={(u) => (
+                  <>
+                    <UserAvatar user={u} size={28} />
+                    <span className="vs-option-text">{getDisplayName(u)}</span>
+                  </>
+                )}
+                placeholder="Select a user..."
+                searchPlaceholder="Search users..."
+                emptyMessage="No users available"
+                clearable
+              />
+            ) : (
+              <OrganizationPicker
+                id="review-request-target"
+                organizations={entities}
+                value={entityId}
+                onChange={setEntityId}
+                showType
+                placeholder="Select an organization..."
+                searchPlaceholder="Search organizations..."
+              />
+            )}
           </div>
 
           {error && <p className="share-error">{error}</p>}
