@@ -44,7 +44,7 @@ import {
 import { fetchAllEntities, type Entity } from '../../api/api.entities';
 import { fetchAllUsers, type User } from '../../api/api.users';
 import { getDisplayName } from '../../utils/user';
-import { MetadataItem, StyledSelect, UserAvatar, UserInfo, VirtualizedSelect } from '../common';
+import { MetadataItem, OrganizationPicker, StyledSelect, UserAvatar, UserInfo, VirtualizedSelect } from '../common';
 import {
   formatAspectRatio,
   formatBoolean,
@@ -317,7 +317,8 @@ function VideoDetailPage() {
 
   // Users/entities not already granted access, for the share picker.
   const shareableUsers = allUsers.filter((u) => !accessUsers.some((a) => a.user.id === u.id));
-  const shareableEntities = allEntities.filter((e) => !accessEntities.some((a) => a.entity.id === e.id));
+  // The picker drops an excluded organization together with its descendants.
+  const sharedEntityIds = accessEntities.map((a) => a.entity.id);
 
   const renderContent = () => {
     if (loading) {
@@ -348,7 +349,11 @@ function VideoDetailPage() {
     return (
       <>
         <div className="video-detail-header">
-          <button className="back-button" onClick={() => navigate('/videos')}>
+          <button
+            className="back-button"
+            onClick={() => navigate('/videos')}
+            aria-label="Back to videos"
+          >
             <FontAwesomeIcon icon={faArrowLeft} />
             <span>Back to videos</span>
           </button>
@@ -684,25 +689,15 @@ function VideoDetailPage() {
                       clearable
                     />
                   ) : (
-                    <VirtualizedSelect
+                    <OrganizationPicker
                       id="share-target"
-                      items={shareableEntities}
+                      organizations={allEntities}
                       value={shareEntityId}
-                      onChange={(v) => setShareEntityId(v ?? '')}
-                      getOptionValue={(e) => e.id}
-                      getOptionLabel={(e) => e.name || 'Untitled entity'}
-                      renderOption={(e) => (
-                        <>
-                          <span className="vs-option-icon">
-                            <FontAwesomeIcon icon={faBuilding} />
-                          </span>
-                          <span className="vs-option-text">{e.name || 'Untitled entity'}</span>
-                        </>
-                      )}
-                      placeholder="Select an entity..."
-                      searchPlaceholder="Search entities..."
-                      emptyMessage="No entities available"
-                      clearable
+                      onChange={setShareEntityId}
+                      excludeIds={sharedEntityIds}
+                      showType
+                      placeholder="Select an organization..."
+                      searchPlaceholder="Search organizations..."
                     />
                   )}
                 </div>

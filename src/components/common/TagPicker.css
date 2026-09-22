@@ -58,3 +58,17 @@
   font-size: 12px;
   color: #888;
 }
+
+/* ─── Mobile ───────────────────────────────────────────────────────────────
+   Roomier chips: the +3px vertical padding keeps the unpicked/picked outer
+   sizes equal (the picked chip trades one border pixel for padding). */
+
+@media (max-width: 700px) {
+  .tp-badge {
+    padding: 6px 12px;
+  }
+
+  .tp-badge-picked {
+    padding: 5px 11px;
+  }
+}

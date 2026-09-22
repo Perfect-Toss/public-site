@@ -6,7 +6,7 @@
 
 .videos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   gap: 20px;
 }
 
@@ -91,6 +91,16 @@
 .video-card:focus-within .video-card-delete,
 .video-card-delete:focus-visible {
   opacity: 1;
+}
+
+/* Touch devices never hover, so the button would be unreachable. */
+@media (hover: none) {
+  .video-card-delete {
+    width: 38px;
+    height: 38px;
+    font-size: 16px;
+    opacity: 1;
+  }
 }
 
 .video-card-delete:hover {
@@ -213,4 +223,22 @@
   width: 24px;
   height: 24px;
   border-width: 2px;
+}
+
+/* ─── Mobile ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 700px) {
+  .videos-grid {
+    gap: 14px;
+  }
+
+  .video-card-body {
+    padding: 12px 14px 14px;
+  }
+
+  /* One card per row means the title can have the full line. */
+  .video-card-title {
+    white-space: normal;
+    overflow: visible;
+  }
 }

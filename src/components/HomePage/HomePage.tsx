@@ -11,6 +11,7 @@ import {
   faChevronLeft,
   faChevronRight,
   faChevronUp,
+  faEllipsis,
   faHome,
   faRightFromBracket,
   faScrewdriverWrench,
@@ -39,6 +40,24 @@ const REFERENCE_SUB_LINKS = [
   { to: '/admin/reference/tablet-types', label: 'Tablet Types' },
   { to: '/admin/reference/tags', label: 'Tags' },
 ] as const;
+
+/**
+ * Destinations pinned to the mobile tab bar. Everything else lives in the
+ * "More" sheet — these four are the ones reached daily.
+ */
+const MOBILE_TABS = [
+  { to: '/', label: 'Home', icon: faHome, end: true },
+  { to: '/organizations', label: 'Orgs', icon: faBuilding, end: false },
+  { to: '/events', label: 'Events', icon: faCalendarDays, end: false },
+  { to: '/videos', label: 'Videos', icon: faVideo, end: false },
+] as const;
+
+/** True when the active route is not one of the tab bar's own destinations. */
+function isMoreActive(pathname: string) {
+  return !MOBILE_TABS.some((tab) =>
+    tab.end ? pathname === tab.to : pathname.startsWith(tab.to),
+  );
+}
 
 function NavLinks({ links }: { links: readonly { to: string; label: string }[] }) {
   return (
@@ -134,6 +153,97 @@ function NavGroup({ label, icon, expanded, onToggle, locked = false, collapsed, 
   );
 }
 
+const navItemClass = ({ isActive }: { isActive: boolean }) =>
+  `nav-item ${isActive ? 'active' : ''}`;
+
+interface MobileSheetProps {
+  open: boolean;
+  isAdmin: boolean;
+  versionLabel: string;
+  versionTitle?: string;
+  onClose: () => void;
+  onLogout: () => void;
+}
+
+/**
+ * Bottom sheet behind the tab bar's "More" button. It carries everything the
+ * tab bar can't hold (account, logout, the admin section, the version) and is
+ * only visible under the mobile breakpoint — see HomePage.css.
+ */
+function MobileSheet({
+  open,
+  isAdmin,
+  versionLabel,
+  versionTitle,
+  onClose,
+  onLogout,
+}: MobileSheetProps) {
+  return (
+    <>
+      <div
+        className={`mobile-sheet-backdrop${open ? ' open' : ''}`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div
+        className={`mobile-sheet${open ? ' open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="More navigation"
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') onClose();
+        }}
+      >
+        <div className="mobile-sheet-grip" aria-hidden="true" />
+
+        <nav className="mobile-sheet-body">
+          <NavLink to="/account" className={navItemClass}>
+            <span className="nav-icon"><FontAwesomeIcon icon={faUser} /></span>
+            <span>ACCOUNT</span>
+          </NavLink>
+
+          {isAdmin && (
+            <>
+              <div className="nav-spacer" />
+              <div className="nav-section-label">Admin</div>
+
+              <NavLink to="/admin/dashboard" className={navItemClass}>
+                <span className="nav-icon"><FontAwesomeIcon icon={faChartBar} /></span>
+                <span>DASHBOARD</span>
+              </NavLink>
+
+              <div className="nav-section-label">Devices</div>
+              <NavLinks links={DEVICE_SUB_LINKS} />
+
+              <div className="nav-section-label">Reference</div>
+              <NavLinks links={REFERENCE_SUB_LINKS} />
+
+              <NavLink to="/admin/organizations" className={navItemClass}>
+                <span className="nav-icon"><FontAwesomeIcon icon={faSitemap} /></span>
+                <span>ORGANIZATIONS</span>
+              </NavLink>
+
+              <NavLink to="/admin/users" className={navItemClass}>
+                <span className="nav-icon"><FontAwesomeIcon icon={faUsers} /></span>
+                <span>USERS</span>
+              </NavLink>
+            </>
+          )}
+
+          <button type="button" className="nav-item" onClick={onLogout}>
+            <span className="nav-icon"><FontAwesomeIcon icon={faRightFromBracket} /></span>
+            <span>LOGOUT</span>
+          </button>
+
+          <div className="sidebar-version" title={versionTitle}>
+            {versionLabel}
+          </div>
+        </nav>
+      </div>
+    </>
+  );
+}
+
 function HomePage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -141,6 +251,7 @@ function HomePage() {
   const [collapsed, setCollapsed] = useLocalStorage(STORAGE_KEYS.SIDEBAR_COLLAPSED, false);
   const [devicesExpanded, setDevicesExpanded] = useLocalStorage(STORAGE_KEYS.DEVICES_NAV_EXPANDED, true);
   const [referenceExpanded, setReferenceExpanded] = useLocalStorage(STORAGE_KEYS.REFERENCE_NAV_EXPANDED, true);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const isDevicesRoute = location.pathname.startsWith('/admin/devices');
   const isReferenceRoute = location.pathname.startsWith('/admin/reference');
@@ -220,11 +331,33 @@ function HomePage() {
   }, []);
 
   const handleLogout = async () => {
+    setSheetOpen(false);
     const { success } = await logout();
     if (success) {
       console.log('Successfully logged out');
     }
   };
+
+  // The sheet is a navigation surface — any route change dismisses it.
+  useEffect(() => {
+    setSheetOpen(false);
+  }, [location.pathname]);
+
+  // While the sheet covers the page: Escape closes it and the page behind it
+  // holds still, so a scroll gesture doesn't leak through to the content.
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSheetOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sheetOpen]);
 
   return (
     <div className={`home-page${collapsed ? ' sidebar-collapsed' : ''}`}>
@@ -405,6 +538,57 @@ function HomePage() {
       <main className="main-content">
         <Outlet />
       </main>
+
+      {/* ── Mobile shell (visible under the mobile breakpoint) ── */}
+      <header className="mobile-topbar">
+        <button
+          type="button"
+          className="mobile-topbar-logo"
+          onClick={() => navigate('/')}
+          aria-label="Perfect Toss home"
+        >
+          <span className="logo-icon" />
+          <span className="logo-text">PERFECT TOSS</span>
+        </button>
+      </header>
+
+      <nav className="mobile-tabbar" aria-label="Primary">
+        {MOBILE_TABS.map((tab) => (
+          <NavLink
+            key={tab.to}
+            to={tab.to}
+            end={tab.end}
+            className={({ isActive }) => `mobile-tab ${isActive ? 'active' : ''}`}
+          >
+            <FontAwesomeIcon icon={tab.icon} className="mobile-tab-icon" />
+            <span className="mobile-tab-label">{tab.label}</span>
+          </NavLink>
+        ))}
+
+        <button
+          type="button"
+          className={`mobile-tab ${isMoreActive(location.pathname) ? 'active' : ''}`}
+          onClick={() => setSheetOpen((open) => !open)}
+          aria-expanded={sheetOpen}
+          aria-haspopup="dialog"
+        >
+          <FontAwesomeIcon icon={faEllipsis} className="mobile-tab-icon" />
+          <span className="mobile-tab-label">More</span>
+        </button>
+      </nav>
+
+      <MobileSheet
+        open={sheetOpen}
+        isAdmin={isAdmin}
+        versionLabel={formatVersion()}
+        versionTitle={
+          IS_PRODUCTION
+            ? undefined
+            : `Built ${new Date(APP_VERSION.buildTime).toLocaleString()}`
+        }
+        onClose={() => setSheetOpen(false)}
+        onLogout={handleLogout}
+      />
     </div>
   );
 }

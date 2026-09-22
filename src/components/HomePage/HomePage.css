@@ -9,6 +9,12 @@
      of descendants like the video detail header. */
   overflow-x: clip;
   background-color: #f5f5f5;
+
+  /* Explicit component heights so .main-content can reserve exactly the right
+     space and descendants can position themselves against the fixed bars.
+     Both are raised by the mobile breakpoint at the bottom of this file. */
+  --mobile-topbar-h: 0px;
+  --mobile-tabbar-h: 0px;
 }
 
 /* Sidebar Styles */
@@ -523,7 +529,12 @@
   flex: 1;
   margin-left: 250px;
   min-width: 0;
-  padding: 40px;
+  /* Content gutters live in variables: descendants that bleed to the edges
+     (e.g. the sticky video detail header) read them instead of hard-coding a
+     value per breakpoint. */
+  --content-pad-x: 40px;
+  --content-pad-y: 40px;
+  padding: var(--content-pad-y) var(--content-pad-x);
   background-color: white;
   transition: margin-left 0.3s ease;
 }
@@ -537,7 +548,9 @@
 /* Organizations Grid */
 .organizations-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  /* min() inside minmax keeps the column count honest on narrow screens —
+     a 280px floor would otherwise overflow a 320px phone. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   gap: 20px;
 }
 
@@ -747,70 +760,243 @@
   font-size: 14px;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .sidebar {
-    width: 80px;
-  }
+/* ─── Mobile shell ───────────────────────────────────────────────────────────
+   Under the mobile breakpoint the sidebar is replaced by a fixed top bar, a
+   bottom tab bar, and a "More" sheet holding everything the tabs can't fit.
+   The three containers are always mounted (so no JS media query is needed to
+   swap markup) and only displayed from the media query at the bottom. */
 
-  .sidebar-header .logo-text {
-    display: none;
-  }
-
-  .nav-item span:not(.nav-icon) {
-    display: none;
-  }
-
-  .nav-section-label {
-    visibility: hidden;
-  }
-
-  .logout-button span:not(.nav-icon) {
-    display: none;
-  }
-
-  /* Narrow sidebar: hide inline accordion, use flyout on hover */
-  .nav-group-children {
-    display: none !important;
-  }
-
-  .nav-group-header .nav-group-chevron {
-    display: none;
-  }
-
-  .nav-group:hover .nav-group-flyout {
-    display: block;
-  }
-
-  .main-content {
-    margin-left: 80px;
-  }
+.mobile-topbar,
+.mobile-tabbar,
+.mobile-sheet,
+.mobile-sheet-backdrop {
+  display: none;
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-    flex-direction: row;
-    padding: 10px;
+.mobile-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+  height: var(--mobile-topbar-h);
+  align-items: center;
+  padding: 0 16px;
+  background-color: #1a1f24;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobile-topbar-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.mobile-topbar .logo-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.mobile-topbar .logo-text {
+  font-size: 13px;
+}
+
+.mobile-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 120;
+  height: calc(var(--mobile-tabbar-h) + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background-color: #1a1f24;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobile-tab {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 2px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: inherit;
+  font-size: 18px;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-tab-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobile-tab.active {
+  color: #cfff04;
+}
+
+/* ─── "More" sheet ───────────────────────────────────────────────────────── */
+
+.mobile-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 118;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.mobile-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 119;
+  flex-direction: column;
+  max-height: 82dvh;
+  background-color: #1a1f24;
+  color: #fff;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.35);
+  /* Kept out of the tab order while closed. */
+  visibility: hidden;
+  transform: translateY(100%);
+  transition: transform 0.22s ease, visibility 0.22s;
+}
+
+.mobile-sheet-grip {
+  flex-shrink: 0;
+  width: 40px;
+  height: 4px;
+  margin: 8px auto 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.mobile-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The sheet reuses the sidebar's item styles, minus the collapse behaviour. */
+.mobile-sheet .nav-item,
+.mobile-sheet .nav-group-child {
+  padding: 12px 18px;
+  border-left-width: 0;
+}
+
+.mobile-sheet .nav-section-label {
+  padding: 12px 18px 4px;
+}
+
+.mobile-sheet .sidebar-version {
+  border-top: none;
+  padding: 10px 16px 0;
+}
+
+/* ─── Responsive Design ──────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .home-page {
+    --mobile-topbar-h: 52px;
+    --mobile-tabbar-h: 62px;
   }
 
-  .sidebar-nav {
-    flex-direction: row;
-    padding: 0;
+  /* The sidebar is replaced wholesale by the tab bar + sheet. */
+  .sidebar {
+    display: none;
   }
 
   .main-content {
     margin-left: 0;
-    padding: 20px;
+    --content-pad-x: 20px;
+    --content-pad-y: 20px;
+    padding-top: calc(var(--mobile-topbar-h) + var(--content-pad-y));
+    padding-bottom: calc(
+      var(--mobile-tabbar-h) + var(--content-pad-y) +
+        env(safe-area-inset-bottom, 0px)
+    );
+    padding-left: max(var(--content-pad-x), env(safe-area-inset-left, 0px));
+    padding-right: max(var(--content-pad-x), env(safe-area-inset-right, 0px));
+  }
+
+  .mobile-topbar,
+  .mobile-tabbar,
+  .mobile-sheet {
+    display: flex;
+  }
+
+  .mobile-sheet-backdrop {
+    display: block;
+  }
+
+  .mobile-sheet.open {
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .mobile-sheet-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .organization-card {
+    padding: 20px 16px;
+  }
+
+  .org-logo {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 14px;
+    font-size: 28px;
   }
 
   .review-card {
     flex-direction: column;
+    gap: 14px;
+    padding: 16px;
   }
 
   .review-thumbnail {
     width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .play-button {
+    font-size: 40px;
+  }
+
+  .review-status {
+    padding-right: 0;
+  }
+
+  .trending-placeholder {
+    padding: 32px 16px;
   }
 }

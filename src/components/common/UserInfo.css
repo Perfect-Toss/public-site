@@ -32,6 +32,16 @@
   white-space: nowrap;
 }
 
+@media (max-width: 700px) {
+  /* Emails are long and unbreakable — truncate them like the name so a chip
+     doesn't stretch its row past the screen. */
+  .user-info-email {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 /* Tooltip (rendered in a portal so overflow ancestors can't clip it) */
 .user-info-tooltip {
   position: fixed;

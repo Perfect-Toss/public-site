@@ -376,6 +376,9 @@ export function VirtualizedSelect<T>({
         moveHighlight(e.key === 'ArrowDown' ? 1 : -1);
       } else if (e.key === 'Escape' && open) {
         e.preventDefault();
+        // Keep the press from reaching a dialog's own Escape handler: the first
+        // Escape closes the panel, the next one closes the dialog.
+        e.stopPropagation();
         closePanel();
       }
     },
@@ -393,6 +396,8 @@ export function VirtualizedSelect<T>({
         if (item) selectOption(item);
       } else if (e.key === 'Escape') {
         e.preventDefault();
+        // See handleTriggerKeyDown: Escape belongs to the panel while it is open.
+        e.stopPropagation();
         closePanel();
       }
     },
@@ -405,12 +410,19 @@ export function VirtualizedSelect<T>({
     const el = triggerRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
+    // Panel can be at most the viewport minus an 8px gutter on each side.
+    const viewportWidth = window.innerWidth;
+    const maxWidth = Math.max(160, viewportWidth - 16);
+    // A trigger narrower than its content (or hard against the right edge)
+    // would otherwise push the panel off-screen — clamp it into the viewport.
+    const width = Math.min(rect.width > 0 ? rect.width : maxWidth, maxWidth);
+    const left = Math.max(8, Math.min(rect.left, viewportWidth - width - 8));
     // Tentatively open below the trigger. The measure effect flips the panel to
     // open upward only when it truly wouldn't fit in the viewport space below —
     // so compact panels open downward instead of floating up unnecessarily.
     setPanelPos({
-      left: rect.left,
-      width: rect.width,
+      left,
+      width,
       openUp: false,
       top: rect.bottom + 6,
     });

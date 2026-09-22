@@ -9,23 +9,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  /* Span the full content width with no gutters (counteract .main-content padding)
-     and pull up so there's no initial gap above the header. */
-  margin: -40px -40px 20px;
+  /* Span the full content width with no gutters (counteract .main-content
+     padding) and pull up so there's no initial gap above the header. The
+     padding variables come from .main-content, so this stays in step with
+     every breakpoint without a media query of its own. */
+  margin: calc(-1 * var(--content-pad-y, 40px)) calc(-1 * var(--content-pad-x, 40px)) 20px;
   position: sticky;
-  top: 0;
+  /* Stick below the mobile top bar (0 when the shell is desktop). */
+  top: var(--mobile-topbar-h, 0px);
   z-index: 50;
-  padding: 12px 40px;
+  padding: 12px var(--content-pad-x, 40px);
   background: #fff;
   border-bottom: 1px solid #e0e0e0;
-}
-
-/* Match .main-content's reduced padding on small screens. */
-@media (max-width: 768px) {
-  .video-detail-header {
-    margin: -20px -20px 20px;
-    padding: 12px 20px;
-  }
 }
 
 .back-button {
@@ -110,8 +105,10 @@
   margin-bottom: 20px;
   /* Fill the viewport below the sticky header, with a bottom gap that matches
      the space between the header and the video (65px header + 20px top gap +
-     video + 20px bottom gap = 100vh). */
+     video + 20px bottom gap = 100vh). dvh keeps that honest in mobile
+     browsers whose toolbars collapse on scroll. */
   height: calc(100vh - 65px - 40px);
+  height: calc(100dvh - 65px - 40px);
   min-height: 320px;
 }
 
@@ -586,4 +583,111 @@
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
+}
+
+/* ─── Mobile ───────────────────────────────────────────────────────────────
+   Kept in step by hand with the other per-page copies of the modal styles. */
+
+@media (max-width: 1024px) {
+  /* A viewport-filling player leaves nothing to scroll on a phone, but a
+     tablet still has the height for it: only the header gap is trimmed. */
+  .video-detail-stage {
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  .video-detail-header {
+    gap: 10px;
+  }
+
+  /* The player stacks on phones (see CustomVideoPlayer.css), so the stage
+     grows with its content instead of filling the viewport. Keep this media
+     condition in step with the stacked-player rule. */
+  .video-detail-stage {
+    height: auto;
+    min-height: 0;
+  }
+
+  .video-detail-header-title {
+    padding: 0 8px;
+    font-size: 14px;
+  }
+
+  /* Icon-only: the header has a title and three actions to fit. */
+  .back-button > span {
+    display: none;
+  }
+
+  .back-button {
+    padding: 8px 12px;
+  }
+
+  .video-detail-actions {
+    gap: 6px;
+  }
+
+  .video-detail-actions .icon-only-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* Section headers (Access, Reviews, Metadata) wrap instead of squeezing. */
+  .video-access-header,
+  .video-metadata-header,
+  .video-reviews-list-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .access-item {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .video-access-section,
+  .video-metadata-section,
+  .video-reviews-list-section {
+    margin-top: 24px;
+  }
+}
+
+@media (max-width: 700px), (max-height: 500px) {
+  /* Keep in step with the stacked-player media query in CustomVideoPlayer.css. */
+  .video-detail-stage {
+    height: auto;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .modal-overlay {
+    /* Bottom-anchored so the dialog reads as a sheet on a phone. */
+    align-items: flex-end;
+  }
+
+  .modal-content,
+  .modal-panel {
+    max-width: 100vw;
+    max-height: 88dvh;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-actions {
+    flex-wrap: wrap;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .modal-actions > button {
+    flex: 1 1 auto;
+    min-height: 44px;
+  }
 }
