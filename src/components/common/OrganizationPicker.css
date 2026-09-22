@@ -1,0 +1,68 @@
+/* ─── OrganizationPicker ────────────────────────────────────────────────── */
+
+.op-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  min-height: 24px;
+}
+
+/* One rail per ancestor level, so nested levels read as a tree. The negative
+   margins let each rail span the option's vertical padding and meet the rails
+   of the rows above and below it. */
+.op-indent {
+  flex: 0 0 14px;
+  align-self: stretch;
+  margin-block: -8px;
+  border-left: 1px solid #e6e9ec;
+}
+
+.op-toggle {
+  flex: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: #8a929b;
+  cursor: pointer;
+}
+
+.op-toggle:hover {
+  color: #1a1f24;
+  background: rgba(26, 31, 36, 0.06);
+}
+
+.op-toggle-leaf {
+  cursor: default;
+}
+
+.op-toggle-leaf:hover {
+  color: #8a929b;
+  background: none;
+}
+
+.op-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Rows listed only to show where a match sits in the hierarchy. */
+.op-row-context .op-name {
+  color: #8a929b;
+}
+
+.op-type {
+  flex-shrink: 0;
+  color: #8a929b;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.op-none {
+  color: #6b7480;
+}

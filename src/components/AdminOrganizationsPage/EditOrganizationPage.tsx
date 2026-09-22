@@ -8,11 +8,11 @@ import {
   faSpinner,
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { StyledSelect } from '../common';
+import { OrganizationPicker } from '../common';
 import type { UpdateEntityRequest } from '../../api/api.entities';
 import { useEntityStore } from '../../stores/entityStore';
 
@@ -26,6 +26,9 @@ function EditOrganizationPage() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loadingEntity, setLoadingEntity] = useState(false);
+
+  // The organization being edited can't be moved inside itself.
+  const excludeIds = useMemo(() => (orgId ? [orgId] : []), [orgId]);
 
   useEffect(() => {
     loadEntities();
@@ -130,18 +133,15 @@ function EditOrganizationPage() {
           </div>
           <div className="form-group">
             <label htmlFor="edit-parent">Parent Organization</label>
-            <StyledSelect
+            <OrganizationPicker
               id="edit-parent"
+              organizations={organizations}
               value={editForm.parentEntityId}
               onChange={(v) => setEditForm((f) => ({ ...f, parentEntityId: v }))}
-            >
-              <option value="">— None (root level) —</option>
-              {organizations
-                .filter((org) => org.id !== orgId)
-                .map((org) => (
-                  <option key={org.id} value={org.id}>{org.name}</option>
-                ))}
-            </StyledSelect>
+              allowNone
+              placeholder="— None (root level) —"
+              excludeIds={excludeIds}
+            />
           </div>
           <div className="form-group">
             <label htmlFor="edit-description">Description</label>

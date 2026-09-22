@@ -68,6 +68,11 @@ export interface VirtualizedSelectProps<T> {
   placeholder?: string;
   emptyMessage?: string;
   searchPlaceholder?: string;
+  /**
+   * Called with the search text whenever it changes — typing, opening the
+   * panel and selecting an option all report through it.
+   */
+  onSearchChange?: (search: string) => void;
   /** Show the search box. Defaults to true; set false for simple option lists. */
   searchable?: boolean;
   /** Show a clear (×) button when a value is selected. Defaults to false. */
@@ -113,6 +118,7 @@ export function VirtualizedSelect<T>({
   placeholder = 'Select...',
   emptyMessage = 'No options found',
   searchPlaceholder = 'Search...',
+  onSearchChange,
   searchable = true,
   clearable = false,
   disabled = false,
@@ -149,10 +155,20 @@ export function VirtualizedSelect<T>({
     setPanelPos(null);
   }, []);
 
+  // Single writer for the search text, so every change (typing, opening,
+  // selecting) is reported to `onSearchChange` and owners can't go stale.
+  const updateSearch = useCallback(
+    (next: string) => {
+      setSearch(next);
+      onSearchChange?.(next);
+    },
+    [onSearchChange],
+  );
+
   const openPanel = useCallback(() => {
     if (disabled) return;
     setOpen(true);
-    setSearch('');
+    updateSearch('');
     setHighlightedIndex(0);
     if (loadOptions) {
       setOptions([]);
@@ -161,7 +177,7 @@ export function VirtualizedSelect<T>({
       void loadPage(1, '', false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disabled, loadOptions]);
+  }, [disabled, loadOptions, updateSearch]);
 
   /* ── Paged loading ─────────────────────────────────────────────── */
 
@@ -268,10 +284,10 @@ export function VirtualizedSelect<T>({
     (item: T) => {
       if (isOptionDisabled?.(item)) return;
       onChange(getOptionValue(item));
-      setSearch('');
+      updateSearch('');
       closePanel();
     },
-    [onChange, getOptionValue, closePanel, isOptionDisabled],
+    [onChange, getOptionValue, closePanel, isOptionDisabled, updateSearch],
   );
 
   const moveHighlight = useCallback(
@@ -412,7 +428,7 @@ export function VirtualizedSelect<T>({
             <input
               autoFocus
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => updateSearch(e.target.value)}
               onKeyDown={handleSearchKeyDown}
               placeholder={searchPlaceholder}
               aria-label={searchPlaceholder}
