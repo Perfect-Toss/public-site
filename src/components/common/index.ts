@@ -7,6 +7,7 @@ export {
 export { SnackbarProvider } from './Snackbar';
 export { RoleMemberPicker, type RoleMemberPickerProps } from './RoleMemberPicker';
 export { StyledSelect, type StyledSelectProps } from './StyledSelect';
+export { TagPicker, type TagPickerProps } from './TagPicker';
 export { useSnackbar, type SnackbarKind } from './useSnackbar';
 export { UserAvatar, type UserAvatarProps } from './UserAvatar';
 export { UserInfo, type UserInfoProps } from './UserInfo';
