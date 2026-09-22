@@ -13,7 +13,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import type { DayOfWeek, Event, EventScheduleType } from '../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { StyledSelect } from '../common';
+import { OrganizationPicker, StyledSelect } from '../common';
 import {
   buildCreateEventRequest,
   buildUpdateEventRequest,
@@ -282,20 +282,14 @@ function EventFormPage() {
                   value={editingEvent?.organization?.name ?? form.organizationId}
                 />
               ) : (
-                <StyledSelect
+                <OrganizationPicker
                   id="event-org"
+                  organizations={entities}
                   value={form.organizationId}
                   onChange={(v) => setField('organizationId', v)}
                   placeholder="Select an organization"
-                >
-                  <option value="">— Select an organization —</option>
-                  {entities.map((entity) => (
-                    <option key={entity.id} value={entity.id}>
-                      {entity.name}
-                      {entity.entityType ? ` (${entity.entityType})` : ''}
-                    </option>
-                  ))}
-                </StyledSelect>
+                  showType
+                />
               )}
               {isEditing && <span className="field-hint">An event cannot move to another organization.</span>}
             </div>
