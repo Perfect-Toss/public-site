@@ -1,20 +1,20 @@
 import {
-  signInWithRedirect,
-  getRedirectResult,
-  signInWithEmailAndPassword,
+  ActionCodeSettings,
+  Unsubscribe,
+  User,
   createUserWithEmailAndPassword,
-  sendPasswordResetEmail,
-  sendSignInLinkToEmail,
+  getRedirectResult,
   isSignInWithEmailLink,
-  signInWithEmailLink,
-  signOut,
   onAuthStateChanged,
   sendEmailVerification,
-  User,
-  ActionCodeSettings,
-  Unsubscribe
+  sendPasswordResetEmail,
+  sendSignInLinkToEmail,
+  signInWithEmailAndPassword,
+  signInWithEmailLink,
+  signInWithRedirect,
+  signOut
 } from 'firebase/auth';
-import { auth, googleProvider, appleProvider } from './config';
+import { appleProvider, auth, googleProvider } from './config';
 
 interface AuthResult {
   user: User | null;
@@ -162,6 +162,13 @@ export const resetPassword = async (email: string): Promise<SuccessResult> => {
     console.error('Error resetting password:', error);
     return { success: false, error: (error as Error).message };
   }
+};
+
+// Current user's ID token. The SDK refreshes it once it is expired, and
+// `forceRefresh` mints one regardless of the cached token.
+export const getIdToken = async (forceRefresh = false): Promise<string | null> => {
+  const user = auth.currentUser;
+  return user ? user.getIdToken(forceRefresh) : null;
 };
 
 // Sign Out
