@@ -13,24 +13,73 @@ export const apiClient = createClient<paths>({
   baseUrl: API_BASE_URL,
 });
 
-// Holds the current auth token in memory
-let currentAuthToken: string | null = null;
-
 /**
- * Set authorization token for authenticated requests.
- * Uses a single persistent middleware that reads the latest token.
+ * Source of the Authorization header for every request, plus the reaction to a
+ * rejected session. Registered by AuthProvider so this module stays independent
+ * of the auth provider.
  */
-export function setAuthToken(token: string | null) {
-  currentAuthToken = token;
+export interface IAuthTokenProvider {
+  /** Token for the next request. `forceRefresh` bypasses any cached token. */
+  getToken(forceRefresh?: boolean): Promise<string | null>;
+  /** The API rejected a freshly minted token, so the session is no longer valid. */
+  onUnauthorized(): void;
 }
 
-// Single auth middleware that always uses the latest token
+let authTokenProvider: IAuthTokenProvider | null = null;
+
+/** Register (or clear) the provider that supplies auth tokens. */
+export function setAuthTokenProvider(provider: IAuthTokenProvider | null): void {
+  authTokenProvider = provider;
+}
+
+async function resolveToken(forceRefresh = false): Promise<string | null> {
+  if (!authTokenProvider) {
+    return null;
+  }
+  try {
+    return await authTokenProvider.getToken(forceRefresh);
+  } catch (error) {
+    console.error('Failed to resolve auth token:', error);
+    return null;
+  }
+}
+
+// Auth middleware. The token is resolved per request, so an expired token is
+// refreshed by the provider instead of being sent again.
 apiClient.use({
-  onRequest({ request }) {
-    if (currentAuthToken) {
-      request.headers.set('Authorization', `Bearer ${currentAuthToken}`);
+  async onRequest({ request }) {
+    const token = await resolveToken();
+    if (token) {
+      request.headers.set('Authorization', `Bearer ${token}`);
     }
     return request;
+  },
+});
+
+// Unauthorized middleware. A 401 forces a token refresh and replays the request
+// once. Requests with a body are not replayed (their stream is already
+// consumed) — the refreshed token is used by the next request instead.
+apiClient.use({
+  async onResponse({ request, response, options }) {
+    if (response.status !== 401 || request.body !== null) {
+      return response;
+    }
+
+    const token = await resolveToken(true);
+    if (!token) {
+      return response;
+    }
+
+    const headers = new Headers(request.headers);
+    headers.set('Authorization', `Bearer ${token}`);
+    const retried = await options.fetch(new Request(request, { headers }));
+
+    if (retried.status === 401) {
+      console.warn('API rejected a refreshed token — the session is no longer valid');
+      authTokenProvider?.onUnauthorized();
+    }
+
+    return retried;
   },
 });
 

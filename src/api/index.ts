@@ -24,5 +24,6 @@
  * });
  */
 
-export { apiClient as api, setAuthToken } from './client';
+export { apiClient as api, setAuthTokenProvider } from './client';
+export type { IAuthTokenProvider } from './client';
 export type { paths, components } from './schema';

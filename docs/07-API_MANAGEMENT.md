@@ -76,16 +76,20 @@ const { data, error } = await api.GET('/api/v1/eventlogs/user/{userId}/last', {
 
 ### 3. Authentication
 
-Set the auth token globally:
+The client asks a registered provider for a token on every request, so an expired token is refreshed instead of being sent again. `AuthProvider` registers the provider for you:
 
 ```typescript
-import { setAuthToken } from '@/api';
+import { setAuthTokenProvider } from '@/api';
 
-// After user logs in
-setAuthToken(userToken);
-
-// Now all requests will include the Authorization header
+setAuthTokenProvider({
+  // Called per request; forceRefresh bypasses the cached token.
+  getToken: (forceRefresh) => getIdToken(forceRefresh),
+  // Called when the API rejects a freshly minted token.
+  onUnauthorized: () => { /* sign out */ },
+});
 ```
+
+A `401` on a request without a body forces a token refresh and replays the request once. Requests with a body are never replayed, because their stream is already consumed.
 
 ### 4. Using Type Definitions
 

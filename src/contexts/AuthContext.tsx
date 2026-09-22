@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef } from 'react';
 
-import { onAuthStateChange, logout as firebaseLogout } from '../firebase/auth';
-import { setAuthToken } from '../api/client';
+import { onAuthStateChange, logout as firebaseLogout, getIdToken } from '../firebase/auth';
+import { setAuthTokenProvider } from '../api/client';
 import { useAuthStore } from '../stores/authStore';
 import { fetchCurrentUser, isAdminUser } from '../api/api.users';
 import { AuthContext, type AuthContextType } from './useAuth';
@@ -26,6 +26,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const setAuthErrorRef = useRef(setAuthError);
   setAuthErrorRef.current = setAuthError;
 
+  // The API client asks for a token per request, so Firebase refreshes an
+  // expired token instead of reusing it.
+  useEffect(() => {
+    setAuthTokenProvider({
+      getToken: (forceRefresh) => getIdToken(forceRefresh),
+      onUnauthorized: () => {
+        console.warn('[AuthProvider] Session rejected by the API — signing out');
+        setAuth(null, null);
+        setAuthError('Your session has expired. Please sign in again.');
+        void firebaseLogout();
+      },
+    });
+
+    return () => setAuthTokenProvider(null);
+  }, [setAuth, setAuthError]);
+
   useEffect(() => {
     console.log('[AuthProvider] Setting up auth state listener...');
 
@@ -38,9 +54,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (fbUser) {
         try {
-          const token = await fbUser.getIdToken();
-          setAuthToken(token);
-
           // Fetch the API user profile — failure means we sign out entirely.
           const apiUser = await fetchCurrentUser();
 
@@ -48,7 +61,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             // Firebase user exists but no matching API profile — invalid state.
             console.error('[AuthProvider] No API user found — signing out');
             await firebaseLogout();
-            setAuthToken(null);
             setAuthRef.current(null, null);
             setAuthErrorRef.current('No account found for this email. Please contact support.');
           } else {
@@ -59,13 +71,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // API call failed — keep state consistent by signing out of Firebase.
           console.error('[AuthProvider] Failed to fetch API user — signing out:', err);
           await firebaseLogout();
-          setAuthToken(null);
           setAuthRef.current(null, null);
           setAuthErrorRef.current('Could not verify your account. Please try again.');
         }
       } else {
-
-        setAuthToken(null);
         setAuthRef.current(null, null);
       }
     });
