@@ -37,8 +37,21 @@ export type LoadOptions<T> = (params: LoadOptionsParams) => Promise<PagedResult<
 
 export interface VirtualizedSelectProps<T> {
   /** Controlled selection (the option value, or null/'' when nothing is selected). */
-  value: string | null;
-  onChange: (value: string | null) => void;
+  value?: string | null;
+  onChange?: (value: string | null) => void;
+  /** Multi-select mode: `values` + `onChangeValues` replace `value` + `onChange`. */
+  multiple?: boolean;
+  /** Selected values in multi-select mode. */
+  values?: readonly string[];
+  onChangeValues?: (values: string[]) => void;
+  /** Keep the panel open after choosing an option. Defaults to `multiple`. */
+  keepOpenOnSelect?: boolean;
+  /**
+   * Custom trigger content, e.g. the selected pills in multi-select mode.
+   * Receives the current selection; returning nothing falls back to the
+   * label/placeholder.
+   */
+  renderTrigger?: (selectedValues: readonly string[]) => ReactNode;
   /** Map an option to its stable value (also used for deduping across pages). */
   getOptionValue: (item: T) => string;
   /** Map an option to its display text. */
@@ -99,6 +112,9 @@ const DEFAULT_ITEM_HEIGHT = 40;
  *   so huge option sets stay responsive.
  * - **Paged loading**: with `loadOptions`, pages are appended to an in-memory
  *   collection (deduped by value) as the user scrolls near the bottom.
+ * - **Single or multi select**: `value`/`onChange` pick one option; `multiple`
+ *   with `values`/`onChangeValues` picks several, giving every row a checkbox
+ *   and keeping the panel open between clicks.
  *
  * The dropdown panel renders in a portal so it is never clipped by ancestors
  * with `overflow` (e.g. modals, tables). It supports keyboard navigation
@@ -107,6 +123,11 @@ const DEFAULT_ITEM_HEIGHT = 40;
 export function VirtualizedSelect<T>({
   value,
   onChange,
+  multiple = false,
+  values,
+  onChangeValues,
+  keepOpenOnSelect,
+  renderTrigger,
   getOptionValue,
   getOptionLabel,
   renderOption,
@@ -148,6 +169,15 @@ export function VirtualizedSelect<T>({
     width: number;
     openUp: boolean;
   } | null>(null);
+
+  /** Multi-select keeps the panel open so several options can be picked in a row. */
+  const stayOpenOnSelect = keepOpenOnSelect ?? multiple;
+
+  const selectedValues = useMemo<readonly string[]>(
+    () => (multiple ? (values ?? []) : value ? [value] : []),
+    [multiple, values, value],
+  );
+  const selectedSet = useMemo(() => new Set(selectedValues), [selectedValues]);
 
   const closePanel = useCallback(() => {
     requestRef.current++; // Cancel any in-flight paged load.
@@ -267,7 +297,6 @@ export function VirtualizedSelect<T>({
   }, [highlightedIndex, open]);
 
   const hasMore = Boolean(loadOptions) && options.length < totalCount;
-
   // Load the next page when the user scrolls near the bottom (paged mode).
   const handleListScroll = useCallback(() => {
     const el = listRef.current;
@@ -283,11 +312,35 @@ export function VirtualizedSelect<T>({
   const selectOption = useCallback(
     (item: T) => {
       if (isOptionDisabled?.(item)) return;
-      onChange(getOptionValue(item));
+      const itemValue = getOptionValue(item);
+
+      if (multiple) {
+        // Clicking a selected option takes it back out again.
+        onChangeValues?.(
+          selectedSet.has(itemValue)
+            ? selectedValues.filter((v) => v !== itemValue)
+            : [...selectedValues, itemValue],
+        );
+        if (stayOpenOnSelect) return;
+      } else {
+        onChange?.(itemValue);
+      }
+
       updateSearch('');
       closePanel();
     },
-    [onChange, getOptionValue, closePanel, isOptionDisabled, updateSearch],
+    [
+      isOptionDisabled,
+      getOptionValue,
+      multiple,
+      onChangeValues,
+      selectedSet,
+      selectedValues,
+      stayOpenOnSelect,
+      onChange,
+      updateSearch,
+      closePanel,
+    ],
   );
 
   const moveHighlight = useCallback(
@@ -412,7 +465,16 @@ export function VirtualizedSelect<T>({
     return source.find((it) => getOptionValue(it) === value) ?? null;
   }, [items, options, value, getOptionValue]);
 
-  const triggerLabel = selected ? getOptionLabel(selected) : value || '';
+  const triggerLabel = multiple
+    ? selectedValues.length === 0
+      ? ''
+      : `${selectedValues.length} selected`
+    : selected
+      ? getOptionLabel(selected)
+      : value || '';
+
+  const hasSelection = selectedValues.length > 0;
+  const customTrigger = renderTrigger?.(selectedValues);
 
   const panel = open && panelPos ? (
     createPortal(
@@ -420,6 +482,7 @@ export function VirtualizedSelect<T>({
         ref={panelRef}
         id={id ? `${id}-listbox` : undefined}
         role="listbox"
+        aria-multiselectable={multiple || undefined}
         className="vs-panel"
         style={{ top: panelPos.top, left: panelPos.left, width: panelPos.width }}
       >
@@ -454,7 +517,7 @@ export function VirtualizedSelect<T>({
                 const item = displayOptions[row.index];
                 const itemValue = getOptionValue(item);
                 const isActive = row.index === highlightedIndex;
-                const isSelected = itemValue === value;
+                const isSelected = selectedSet.has(itemValue);
                 const isDisabled = Boolean(isOptionDisabled?.(item));
                 return (
                   <div
@@ -481,6 +544,15 @@ export function VirtualizedSelect<T>({
                       if (!isDisabled) selectOption(item);
                     }}
                   >
+                    {multiple && (
+                      <input
+                        type="checkbox"
+                        className="vs-option-check"
+                        checked={isSelected}
+                        readOnly
+                        tabIndex={-1}
+                      />
+                    )}
                     {renderOption ? renderOption(item) : getOptionLabel(item)}
                   </div>
                 );
@@ -511,10 +583,12 @@ export function VirtualizedSelect<T>({
         aria-expanded={open}
         aria-controls={open && id ? `${id}-listbox` : undefined}
       >
-        <span className={`vs-trigger-label${triggerLabel ? '' : ' vs-placeholder'}`}>
-          {triggerLabel || placeholder}
-        </span>
-        {clearable && value && !disabled && (
+        {customTrigger ?? (
+          <span className={`vs-trigger-label${triggerLabel ? '' : ' vs-placeholder'}`}>
+            {triggerLabel || placeholder}
+          </span>
+        )}
+        {clearable && hasSelection && !disabled && (
           <span
             role="button"
             tabIndex={-1}
@@ -522,7 +596,8 @@ export function VirtualizedSelect<T>({
             className="vs-clear"
             onClick={(e) => {
               e.stopPropagation();
-              onChange(null);
+              if (multiple) onChangeValues?.([]);
+              else onChange?.(null);
             }}
           >
             ×

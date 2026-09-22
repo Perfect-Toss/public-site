@@ -3,6 +3,8 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
+import { Role } from '../../../api/api.users';
+import { RoleMemberPicker } from '../../common';
 import type { UpdateEntityRequest } from '../../../api/api.entities';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useState } from 'react';
@@ -133,6 +135,36 @@ function SettingsView() {
             </div>
           </>
         )}
+      </div>
+
+      {/* Staff and devices get their roles here, not on the Members tab. */}
+      <div className="info-card" style={{ marginBottom: 20 }}>
+        <div className="info-card-header">
+          <span className="info-card-title">Coaches, Admins &amp; Service Accounts</span>
+        </div>
+        <div className="edit-form">
+          <RoleMemberPicker
+            id="org-coaches"
+            organizationId={organization.id}
+            role={Role.Coach}
+            label="Coaches"
+            placeholder="Add coaches"
+          />
+          <RoleMemberPicker
+            id="org-admins"
+            organizationId={organization.id}
+            role={Role.OrganizationAdmin}
+            label="Admins"
+            placeholder="Add admins"
+          />
+          <RoleMemberPicker
+            id="org-service-accounts"
+            organizationId={organization.id}
+            role={Role.ServiceAccount}
+            label="Service Accounts"
+            placeholder="Add service accounts"
+          />
+        </div>
       </div>
 
       {/* Danger Zone */}
