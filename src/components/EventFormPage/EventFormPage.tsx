@@ -14,7 +14,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { DayOfWeek, Event, EventScheduleType } from '../../api/api.events';
 import { Role } from '../../api/api.users';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { OrganizationPicker, StyledSelect, UserPicker } from '../common';
+import { OrganizationPicker, StyledSelect, TagPicker, UserPicker } from '../common';
 import {
   buildCreateEventRequest,
   buildUpdateEventRequest,
@@ -531,22 +531,7 @@ function EventFormPage() {
 
             <div className="form-group">
               <label>Tags</label>
-              {tags.length === 0 ? (
-                <p className="field-hint">No tags available.</p>
-              ) : (
-                <div className="member-picker">
-                  {tags.map((tag) => (
-                    <label key={tag.id} className="member-option">
-                      <input
-                        type="checkbox"
-                        checked={tagIds.includes(tag.id)}
-                        onChange={() => setTagIds((ids) => toggleId(ids, tag.id))}
-                      />
-                      <span>{tag.name}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
+              <TagPicker tags={tags} values={tagIds} onChange={setTagIds} />
             </div>
           </fieldset>
 
