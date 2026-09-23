@@ -217,10 +217,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Gets all entities in the system. */
+        /** Gets the entities the current user has access to (every entity in the system for admins). */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description When true, each entity also carries its members with the roles they hold on it. */
+                    includeUsers?: boolean;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -233,9 +236,9 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "text/plain": components["schemas"]["Entity"][];
-                        "application/json": components["schemas"]["Entity"][];
-                        "text/json": components["schemas"]["Entity"][];
+                        "text/plain": components["schemas"]["EntityMembership"][];
+                        "application/json": components["schemas"]["EntityMembership"][];
+                        "text/json": components["schemas"]["EntityMembership"][];
                     };
                 };
             };
@@ -4334,6 +4337,40 @@ export interface components {
              * @description Gets the entity identifier.
              */
             entityId: string;
+        };
+        EntityMember: {
+            user: components["schemas"]["UserInfo"];
+            roles: components["schemas"]["Roles"][] | null;
+        };
+        EntityMembership: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
+            name: string | null;
+            description?: string | null;
+            entityType?: string | null;
+            /** Format: uuid */
+            parentEntityId?: string | null;
+            logoPath?: string | null;
+            /** Format: int32 */
+            logoVersion?: number;
+            logoUrl?: string | null;
+            users?: components["schemas"]["EntityMember"][] | null;
         };
         Event: {
             /** Format: uuid */

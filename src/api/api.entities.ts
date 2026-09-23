@@ -6,6 +6,9 @@ import { api } from './index';
 import type { components } from './schema';
 
 export type Entity = components['schemas']['Entity'];
+export type EntityMembership = components['schemas']['EntityMembership'];
+export type EntityMember = components['schemas']['EntityMember'];
+export type UserInfo = components['schemas']['UserInfo'];
 export type CreateEntityRequest = components['schemas']['CreateEntityRequest'];
 export type UpdateEntityRequest = components['schemas']['UpdateEntityRequest'];
 export type AddUserToEntityRequest = components['schemas']['AddUserToEntityRequest'];
@@ -26,17 +29,20 @@ export async function fetchEntities(): Promise<Entity[]> {
 }
 
 /**
- * Fetch all entities in the system
+ * Fetch the entities the current user has access to (every entity for admins).
+ * Pass `includeUsers` to have each entity carry its members and their roles.
  */
-export async function fetchAllEntities(): Promise<Entity[]> {
-  const { data, error } = await api.GET('/api/v1/entities/all', {});
-  
+export async function fetchAllEntities(includeUsers = false): Promise<EntityMembership[]> {
+  const { data, error } = await api.GET('/api/v1/entities/all', {
+    params: { query: { includeUsers } },
+  });
+
   if (error) {
     console.error('Failed to fetch all entities:', error);
     throw new Error('Failed to fetch all entities');
   }
-  
-  return (data || []) as Entity[];
+
+  return data || [];
 }
 
 /**
