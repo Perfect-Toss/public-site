@@ -93,6 +93,13 @@ function renderSettings() {
 const panelNames = () =>
   Array.from(document.querySelectorAll('.vs-option .up-name')).map((el) => el.textContent);
 
+/** The members the staff card lists as already holding the picker's role. */
+const rosterNames = (pickerId: string) => {
+  const field = document.getElementById(pickerId)?.closest('.rmp-field');
+  if (!field) throw new Error(`No staff field for "${pickerId}"`);
+  return Array.from(field.querySelectorAll('.rmp-member-name')).map((el) => el.textContent);
+};
+
 describe('SettingsView staff pickers', () => {
   it('gives each staff role its own picker', () => {
     const view = renderSettings();
@@ -103,6 +110,17 @@ describe('SettingsView staff pickers', () => {
     expect(document.getElementById('org-coaches')).not.toBeNull();
     expect(document.getElementById('org-admins')).not.toBeNull();
     expect(document.getElementById('org-service-accounts')).not.toBeNull();
+  });
+
+  it('lists the users already given each staff role', () => {
+    useEntityStore.setState({ entityUsers: { 'org-1': [coach, admin, tablet, athlete] } });
+    renderSettings();
+
+    expect(rosterNames('org-coaches')).toEqual(['Casey Coach']);
+    expect(rosterNames('org-admins')).toEqual(['Ana Admin']);
+    expect(rosterNames('org-service-accounts')).toEqual(['Court 1']);
+    // The athlete is a member but no staff role, so no picker claims them.
+    expect(document.querySelectorAll('.rmp-member')).toHaveLength(3);
   });
 
   it('offers each picker only the users holding its role', () => {

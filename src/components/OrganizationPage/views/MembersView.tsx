@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { RoleMemberPicker } from '../../common';
 import type { OrganizationPageContext } from '../OrganizationPage';
 import { Role, type User } from '../../../api/api.users';
+import { hasRole } from '../../../utils/user';
 import { useEntityStore } from '../../../stores/entityStore';
 
 function MembersView() {
@@ -34,9 +35,10 @@ function MembersView() {
     loadMembers();
   }, [organization.id, loadMembers]);
 
-  // Derive members list from entity users store
+  // This tab is the athlete roster; staff roles are granted on the Settings tab.
   const members = useMemo(
-    () => entityUsers[organization.id] ?? [],
+    () =>
+      (entityUsers[organization.id] ?? []).filter((member) => hasRole(member.roles, Role.Athlete)),
     [entityUsers, organization.id],
   );
 
@@ -78,6 +80,7 @@ function MembersView() {
             placeholder="Add athletes"
             filterByOverallRole={false}
             emptyMessage="Every user is already a member."
+            showMembers={false}
           />
         </div>
       )}
@@ -98,8 +101,8 @@ function MembersView() {
       {!loading && !error && members.length === 0 && (
         <div className="empty-state-large">
           <FontAwesomeIcon icon={faUsers} size="3x" style={{ opacity: 0.2 }} />
-          <h3>No members yet</h3>
-          <p>Add users to this organization to get started.</p>
+          <h3>No athletes yet</h3>
+          <p>Add athletes to this organization to get started.</p>
         </div>
       )}
 
