@@ -163,4 +163,25 @@ describe('MembersView', () => {
     expect(document.getElementById('add-member-picker')).toBeNull();
     expect(view.container.querySelector('.members-table-wrap')).not.toBeNull();
   });
+
+  it('lists athletes only — staff roles belong to the Settings tab', async () => {
+    useEntityStore.setState({ entityUsers: { 'org-1': [coach, member, athlete] } });
+    const view = await renderMembers();
+
+    const names = Array.from(view.container.querySelectorAll('.member-name')).map(
+      (el) => el.textContent,
+    );
+    expect(names).toEqual([
+      'Athlete, Ada (ada@example.com)',
+      'Member, Mira (mira@example.com)',
+    ]);
+  });
+
+  it('says there are no athletes when the organization only has staff', async () => {
+    useEntityStore.setState({ entityUsers: { 'org-1': [coach] } });
+    const view = render(<MembersView />);
+
+    expect(await view.findByText('No athletes yet')).toBeDefined();
+    expect(view.container.querySelector('.members-table-wrap')).toBeNull();
+  });
 });

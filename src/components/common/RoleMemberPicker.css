@@ -13,6 +13,47 @@
   color: #1a1f24;
 }
 
+/* ─── Assigned members ─────────────────────────────────────────────────── */
+
+.rmp-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rmp-member {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 10px 3px 4px;
+  border: 1px solid #e0e4e8;
+  border-radius: 999px;
+  background: #f7f9fa;
+  font-size: 13px;
+  color: #1a1f24;
+}
+
+.rmp-member-name {
+  white-space: nowrap;
+}
+
+.rmp-member-email {
+  overflow: hidden;
+  font-size: 12px;
+  color: #8a939b;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rmp-members-empty {
+  font-size: 12px;
+  color: #999;
+}
+
 .rmp-actions {
   display: flex;
   align-items: center;

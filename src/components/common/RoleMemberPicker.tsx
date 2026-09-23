@@ -1,8 +1,10 @@
 import './RoleMemberPicker.css';
 
+import { getDisplayName, hasRole, sortUsersByName } from '../../utils/user';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { Role } from '../../api/api.users';
+import { UserAvatar } from './UserAvatar';
 import { UserPicker } from './UserPicker';
 import { useEntityStore } from '../../stores/entityStore';
 import { useUserStore } from '../../stores/userStore';
@@ -24,6 +26,8 @@ export interface RoleMemberPickerProps {
   filterByOverallRole?: boolean;
   /** Wording for an empty list. */
   emptyMessage?: string;
+  /** List the members who already hold the role above the picker. */
+  showMembers?: boolean;
   id?: string;
 }
 
@@ -48,6 +52,7 @@ export function RoleMemberPicker({
   emptyMessage = filterByOverallRole
     ? `No ${label.toLowerCase()} left to add.`
     : 'No users left to add.',
+  showMembers = true,
   id,
 }: RoleMemberPickerProps) {
   const { users, loadUsers } = useUserStore();
@@ -70,6 +75,15 @@ export function RoleMemberPicker({
     const memberIds = new Set((entityUsers[organizationId] ?? []).map((member) => member.id));
     return users.filter((user) => !memberIds.has(user.id));
   }, [users, entityUsers, organizationId]);
+
+  /** The organization's members who hold this role — i.e. who it was given to. */
+  const assignedMembers = useMemo(
+    () =>
+      sortUsersByName(
+        (entityUsers[organizationId] ?? []).filter((member) => hasRole(member.roles, role)),
+      ),
+    [entityUsers, organizationId, role],
+  );
   const handleAdd = useCallback(async () => {
     if (selectedUserIds.length === 0) return;
     setAdding(true);
@@ -95,6 +109,21 @@ export function RoleMemberPicker({
   return (
     <div className="rmp-field">
       <label htmlFor={id}>{label}</label>
+      {showMembers && (
+        <ul className="rmp-members">
+          {assignedMembers.length === 0 ? (
+            <li className="rmp-members-empty">No {label.toLowerCase()} yet.</li>
+          ) : (
+            assignedMembers.map((member) => (
+              <li key={member.id} className="rmp-member">
+                <UserAvatar user={member} size={22} />
+                <span className="rmp-member-name">{getDisplayName(member)}</span>
+                {member.email ? <span className="rmp-member-email">{member.email}</span> : null}
+              </li>
+            ))
+          )}
+        </ul>
+      )}
       <UserPicker
         id={id}
         users={candidates}

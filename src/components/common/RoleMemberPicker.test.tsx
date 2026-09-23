@@ -98,6 +98,10 @@ function renderCoachPicker(props: Partial<Parameters<typeof RoleMemberPicker>[0]
 const panelNames = () =>
   Array.from(document.querySelectorAll('.vs-option .up-name')).map((el) => el.textContent);
 
+/** The members listed above the picker as already holding the role. */
+const memberNames = () =>
+  Array.from(document.querySelectorAll('.rmp-member-name')).map((el) => el.textContent);
+
 /** The rendered option row whose text contains `text`. */
 const optionWith = (text: string) => {
   const option = Array.from(document.body.querySelectorAll('.vs-option')).find((el) =>
@@ -173,6 +177,27 @@ describe('RoleMemberPicker', () => {
     const view = renderCoachPicker();
 
     expect((view.getByText('Add Coaches') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('lists the members who already hold the role', () => {
+    useEntityStore.setState({ entityUsers: { 'org-1': [athlete, coachTwo, coach] } });
+    renderCoachPicker();
+
+    expect(memberNames()).toEqual(['Casey Coach', 'Kim Klub']);
+  });
+
+  it('says so when nobody holds the role yet', () => {
+    useEntityStore.setState({ entityUsers: { 'org-1': [] } });
+    const view = renderCoachPicker();
+
+    expect(view.getByText('No coaches yet.')).toBeDefined();
+  });
+
+  it('can leave the roster out', () => {
+    renderCoachPicker({ showMembers: false });
+
+    expect(memberNames()).toEqual([]);
+    expect(document.querySelector('.rmp-members')).toBeNull();
   });
 
   it('grants the role it was given, not the one the user already holds', async () => {
