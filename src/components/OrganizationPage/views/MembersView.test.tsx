@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 
+import { AuthContext, type AuthContextType } from '../../../contexts/useAuth';
 import MembersView from './MembersView';
 import type { User } from '../../../api/api.users';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -31,6 +32,17 @@ vi.mock('react-router-dom', async (importOriginal) => ({
 
 function makeUser(id: string, fields: Partial<User> = {}): User {
   return { ...fields, id, email: fields.email ?? null };
+}
+
+/** The acting user for these views — an admin who may grant every role offered. */
+function authValue(): AuthContextType {
+  return {
+    currentUser: makeUser('actor-1', { firstName: 'Ada', lastName: 'Admin', roles: ['Admin'] }),
+    firebaseUser: null,
+    initializing: false,
+    isAdmin: true,
+    canCreateEvents: true,
+  };
 }
 
 const member = makeUser('member', {
@@ -83,7 +95,11 @@ beforeEach(() => {
 
 /** Renders the tab and waits for the roster to settle. */
 async function renderMembers() {
-  const view = render(<MembersView />);
+  const view = render(
+    <AuthContext.Provider value={authValue()}>
+      <MembersView />
+    </AuthContext.Provider>,
+  );
 
   await waitFor(() =>
     expect(view.container.querySelector('.members-table-wrap')).not.toBeNull(),
@@ -179,7 +195,11 @@ describe('MembersView', () => {
 
   it('says there are no athletes when the organization only has staff', async () => {
     useEntityStore.setState({ entityUsers: { 'org-1': [coach] } });
-    const view = render(<MembersView />);
+    const view = render(
+      <AuthContext.Provider value={authValue()}>
+        <MembersView />
+      </AuthContext.Provider>,
+    );
 
     expect(await view.findByText('No athletes yet')).toBeDefined();
     expect(view.container.querySelector('.members-table-wrap')).toBeNull();

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 
+import { AuthContext, type AuthContextType } from '../../contexts/useAuth';
 import { Role, type User } from '../../api/api.users';
 import { useEntityStore } from '../../stores/entityStore';
 import { useUserStore } from '../../stores/userStore';
@@ -51,17 +52,46 @@ const serviceAccount = makeUser('tablet-1', {
   email: 'court1@devices.example.com',
   roles: ['ServiceAccount'],
 });
+const coachAthlete = makeUser('coach-4', {
+  firstName: 'Jo',
+  lastName: 'Jumper',
+  email: 'jo@example.com',
+  roles: ['Coach', 'Athlete'],
+});
 
 const loadEntityUsers = vi.fn(async () => undefined);
 const addUserToEntity = vi.fn(async () => true);
+const updateEntityUserRoles = vi.fn(async () => true);
+const removeUserFromEntity = vi.fn(async () => true);
+
+/** The acting user — an admin whose level covers every staff role. */
+let actor: User | null = makeUser('actor-1', { roles: ['Admin'] });
+
+function authValue(): AuthContextType {
+  return {
+    currentUser: actor,
+    firebaseUser: null,
+    initializing: false,
+    isAdmin: true,
+    canCreateEvents: true,
+  };
+}
 
 // Vitest globals are off, so testing-library's automatic cleanup is not registered.
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 beforeEach(() => {
+  actor = makeUser('actor-1', { roles: ['Admin'] });
   loadEntityUsers.mockClear();
   addUserToEntity.mockClear();
   addUserToEntity.mockResolvedValue(true);
+  updateEntityUserRoles.mockClear();
+  updateEntityUserRoles.mockResolvedValue(true);
+  removeUserFromEntity.mockClear();
+  removeUserFromEntity.mockResolvedValue(true);
 
   useUserStore.setState({
     users: [coach, coachTwo, coachThree, athlete, serviceAccount],
@@ -71,19 +101,23 @@ beforeEach(() => {
     entityUsers: { 'org-1': [coach] },
     loadEntityUsers,
     addUserToEntity,
+    updateEntityUserRoles,
+    removeUserFromEntity,
   });
 });
 
 function renderCoachPicker(props: Partial<Parameters<typeof RoleMemberPicker>[0]> = {}) {
   const view = render(
-    <RoleMemberPicker
-      id="coaches"
-      organizationId="org-1"
-      role={Role.Coach}
-      label="Coaches"
-      placeholder="Add coaches"
-      {...props}
-    />,
+    <AuthContext.Provider value={authValue()}>
+      <RoleMemberPicker
+        id="coaches"
+        organizationId="org-1"
+        role={Role.Coach}
+        label="Coaches"
+        placeholder="Add coaches"
+        {...props}
+      />
+    </AuthContext.Provider>,
   );
 
   const trigger = () => document.getElementById(props.id ?? 'coaches') as HTMLElement;
@@ -198,6 +232,111 @@ describe('RoleMemberPicker', () => {
 
     expect(memberNames()).toEqual([]);
     expect(document.querySelector('.rmp-members')).toBeNull();
+  });
+
+  it('keeps a role above the acting user’s level out of reach', () => {
+    actor = makeUser('actor-2', { roles: ['Coach'] });
+    const view = renderCoachPicker({
+      id: 'admins',
+      role: Role.OrganizationAdmin,
+      label: 'Admins',
+      placeholder: 'Add admins',
+    });
+
+    expect(document.getElementById('admins')).toBeNull();
+    expect(view.getByText('You cannot grant the OrganizationAdmin role here.')).toBeDefined();
+  });
+
+  it('lets an organization admin grant their own level and below', () => {
+    actor = makeUser('actor-3', { roles: [Role.OrganizationAdmin] });
+    const view = renderCoachPicker({
+      id: 'admins',
+      role: Role.OrganizationAdmin,
+      label: 'Admins',
+      placeholder: 'Add admins',
+    });
+
+    expect(document.getElementById('admins')).not.toBeNull();
+    expect(view.queryByText(/cannot grant/)).toBeNull();
+  });
+
+  it('counts a role the acting user holds on this organization', () => {
+    actor = makeUser('actor-4', { roles: [Role.Athlete] });
+    useEntityStore.setState({
+      entityUsers: {
+        'org-1': [makeUser('actor-4', { firstName: 'Org', roles: [Role.OrganizationAdmin] })],
+      },
+    });
+
+    renderCoachPicker({
+      id: 'admins',
+      role: Role.OrganizationAdmin,
+      label: 'Admins',
+      placeholder: 'Add admins',
+    });
+
+    expect(document.getElementById('admins')).not.toBeNull();
+  });
+
+  it('removes the membership when the role was their only one here', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const view = renderCoachPicker();
+
+    fireEvent.click(view.getByLabelText('Remove Casey Coach from Coaches'));
+
+    await waitFor(() => expect(removeUserFromEntity).toHaveBeenCalledWith('org-1', 'coach-1'));
+    expect(addUserToEntity).not.toHaveBeenCalled();
+    expect(updateEntityUserRoles).not.toHaveBeenCalled();
+  });
+
+  it('replaces the roles they keep when the role is not their last one here', async () => {
+    useEntityStore.setState({ entityUsers: { 'org-1': [coachAthlete] } });
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const view = renderCoachPicker();
+
+    fireEvent.click(view.getByLabelText('Remove Jo Jumper from Coaches'));
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      'Remove Jo Jumper as a Coach? They keep their other roles on this organization.',
+    );
+    await waitFor(() =>
+      expect(updateEntityUserRoles).toHaveBeenCalledWith('org-1', 'coach-4', { roles: ['Athlete'] }),
+    );
+    expect(addUserToEntity).not.toHaveBeenCalled();
+    expect(removeUserFromEntity).not.toHaveBeenCalled();
+  });
+
+  it('names the person in the confirmation and keeps them when it is rejected', () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const view = renderCoachPicker();
+
+    fireEvent.click(view.getByLabelText('Remove Casey Coach from Coaches'));
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      'Remove Casey Coach from this organization? Coach is the only role they hold on it.',
+    );
+    expect(removeUserFromEntity).not.toHaveBeenCalled();
+  });
+
+  it('reports a failed role update', async () => {
+    useEntityStore.setState({ entityUsers: { 'org-1': [coachAthlete] } });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    updateEntityUserRoles.mockResolvedValue(false);
+    const view = renderCoachPicker();
+
+    fireEvent.click(view.getByLabelText('Remove Jo Jumper from Coaches'));
+
+    expect(await view.findByText('Could not remove Jo Jumper. Please try again.')).toBeDefined();
+  });
+
+  it('reports a failed removal', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    removeUserFromEntity.mockResolvedValue(false);
+    const view = renderCoachPicker();
+
+    fireEvent.click(view.getByLabelText('Remove Casey Coach from Coaches'));
+
+    expect(await view.findByText('Could not remove Casey Coach. Please try again.')).toBeDefined();
   });
 
   it('grants the role it was given, not the one the user already holds', async () => {

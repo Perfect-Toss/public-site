@@ -38,6 +38,52 @@ export const ADMIN_ROLES: Role[] = [Role.Admin, Role.SuperUser];
 export const EVENT_CREATOR_ROLES: Role[] = [Role.Admin, Role.SuperUser, Role.OrganizationAdmin];
 
 /**
+ * Roles ordered by the authority they carry, strongest first.
+ *
+ * Assignment is level-based: a user may hand out their own level and anything
+ * below it. So an organization admin can grant organization admins but not
+ * global admins, and only a super user can grant the super user role.
+ */
+export const ROLE_AUTHORITY: Role[] = [
+  Role.SuperUser,
+  Role.Admin,
+  Role.OrganizationAdmin,
+  Role.EntityAdmin,
+  Role.Coach,
+  Role.ServiceAccount,
+  Role.AlphaTester,
+  Role.BetaTester,
+  Role.Athlete,
+];
+
+/**
+ * Where a role sits in the authority order — higher is stronger, 0 is a role
+ * that isn't in the order at all (unknown values carry no authority).
+ */
+export function roleAuthority(role: string): number {
+  const index = ROLE_AUTHORITY.indexOf(role as Role);
+  return index === -1 ? 0 : ROLE_AUTHORITY.length - index;
+}
+
+/** Authority of the strongest role in a set, 0 when the set is empty. */
+export function highestAuthority(roles?: readonly string[] | null): number {
+  if (!roles?.length) return 0;
+  return roles.reduce((top, role) => Math.max(top, roleAuthority(role)), 0);
+}
+
+/** True when `roles` may grant `role` — their own level or anything below it. */
+export function canAssignRole(roles: readonly string[] | null | undefined, role: Role): boolean {
+  const target = roleAuthority(role);
+  return target > 0 && highestAuthority(roles) >= target;
+}
+
+/** The roles `roles` may grant, strongest first. */
+export function assignableRoles(roles?: readonly string[] | null): Role[] {
+  const top = highestAuthority(roles);
+  return ROLE_AUTHORITY.filter((role) => roleAuthority(role) <= top);
+}
+
+/**
  * Check whether a user's roles include admin or super-user privileges.
  * Accepts the schema's `roles` array type directly — no cast needed.
  */

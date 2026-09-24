@@ -692,6 +692,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/entities/{entityId}/users/{userId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replaces the roles a user holds on an entity. Send the full set of roles the user
+         *     should end up with, not just the ones being added or removed.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the entity. */
+                    entityId: string;
+                    /** @description The unique identifier of the user. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            /** @description The request containing the roles to set. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateUserRolesForEntityRequest"];
+                    "text/json": components["schemas"]["UpdateUserRolesForEntityRequest"];
+                    "application/*+json": components["schemas"]["UpdateUserRolesForEntityRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/events/{eventId}/instances/{id}": {
         parameters: {
             query?: never;
@@ -5118,6 +5167,11 @@ export interface components {
             birthdate?: string | null;
             /** @description Gets or sets the roles assigned to the user. */
             roles?: components["schemas"]["Roles"][] | null;
+        };
+        /** @description Request model for replacing the roles a user holds on an entity. */
+        UpdateUserRolesForEntityRequest: {
+            /** @description Gets the roles the user should hold on the entity. */
+            roles: components["schemas"]["Roles"][] | null;
         };
         /** @description Request model for updating an existing video metadata record. */
         UpdateVideoRequest: {

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 
+import { AuthContext, type AuthContextType } from '../../../contexts/useAuth';
 import SettingsView from './SettingsView';
 import type { User } from '../../../api/api.users';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -32,6 +33,17 @@ vi.mock('react-router-dom', async (importOriginal) => ({
 
 function makeUser(id: string, fields: Partial<User> = {}): User {
   return { ...fields, id, email: fields.email ?? null };
+}
+
+/** The acting user for these views — an admin who may grant every role offered. */
+function authValue(): AuthContextType {
+  return {
+    currentUser: makeUser('actor-1', { firstName: 'Ada', lastName: 'Admin', roles: ['Admin'] }),
+    firebaseUser: null,
+    initializing: false,
+    isAdmin: true,
+    canCreateEvents: true,
+  };
 }
 
 const coach = makeUser('coach-1', {
@@ -79,7 +91,11 @@ beforeEach(() => {
 });
 
 function renderSettings() {
-  const view = render(<SettingsView />);
+  const view = render(
+    <AuthContext.Provider value={authValue()}>
+      <SettingsView />
+    </AuthContext.Provider>,
+  );
 
   const open = (pickerId: string) => {
     const trigger = document.getElementById(pickerId) as HTMLElement;

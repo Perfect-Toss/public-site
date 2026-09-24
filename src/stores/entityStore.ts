@@ -9,12 +9,15 @@ import {
   fetchEntitiesForUser,
   fetchEntityUsers,
   addUserToEntity,
+  updateEntityUserRoles,
   removeUserFromEntity,
+  type AddUserToEntityRequest,
+  type UpdateUserRolesForEntityRequest,
   type Entity,
   type CreateEntityRequest,
   type UpdateEntityRequest,
 } from '../api/api.entities';
-import { Role, type User } from '../api/api.users';
+import type { User } from '../api/api.users';
 
 /** Rebuild a hierarchy map from a flat entity list. */
 function buildEntityMap(flat: Entity[]): Record<string, Entity[]> {
@@ -45,7 +48,8 @@ interface EntityState {
   loadChildEntities: (parentId: string) => Promise<Entity[]>;
   loadEntitiesForUser: (userId: string) => Promise<Entity[]>;
   loadEntityUsers: (entityId: string) => Promise<void>;
-  addUserToEntity: (entityId: string, userId: string, roles: { roles: Role[] | null }) => Promise<boolean>;
+  addUserToEntity: (entityId: string, userId: string, roles: AddUserToEntityRequest) => Promise<boolean>;
+  updateEntityUserRoles: (entityId: string, userId: string, roles: UpdateUserRolesForEntityRequest) => Promise<boolean>;
   removeUserFromEntity: (entityId: string, userId: string) => Promise<boolean>;
 }
 
@@ -124,9 +128,19 @@ export const useEntityStore = create<EntityState>((set, get) => ({
     }
   },
 
-  addUserToEntity: async (entityId, userId, roles: { roles: Role[] | null }) => {
+  addUserToEntity: async (entityId, userId, roles: AddUserToEntityRequest) => {
     try {
       await addUserToEntity(entityId, userId, roles);
+      await get().loadEntityUsers(entityId);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  updateEntityUserRoles: async (entityId, userId, roles) => {
+    try {
+      await updateEntityUserRoles(entityId, userId, roles);
       await get().loadEntityUsers(entityId);
       return true;
     } catch {
