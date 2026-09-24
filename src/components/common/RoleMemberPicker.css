@@ -29,7 +29,7 @@
   align-items: center;
   gap: 6px;
   max-width: 100%;
-  padding: 3px 10px 3px 4px;
+  padding: 3px 4px;
   border: 1px solid #e0e4e8;
   border-radius: 999px;
   background: #f7f9fa;
@@ -54,6 +54,32 @@
   color: #999;
 }
 
+.rmp-member-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #8a939b;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.rmp-member-remove:hover:not(:disabled) {
+  background: #e53935;
+  color: #fff;
+}
+
+.rmp-member-remove:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .rmp-actions {
   display: flex;
   align-items: center;
@@ -63,4 +89,10 @@
 .rmp-error {
   font-size: 12px;
   color: #dc3545;
+}
+
+.rmp-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #8a939b;
 }

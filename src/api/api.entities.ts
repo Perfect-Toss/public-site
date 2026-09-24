@@ -12,6 +12,7 @@ export type UserInfo = components['schemas']['UserInfo'];
 export type CreateEntityRequest = components['schemas']['CreateEntityRequest'];
 export type UpdateEntityRequest = components['schemas']['UpdateEntityRequest'];
 export type AddUserToEntityRequest = components['schemas']['AddUserToEntityRequest'];
+export type UpdateUserRolesForEntityRequest = components['schemas']['UpdateUserRolesForEntityRequest'];
 export type EntityUserRole = components['schemas']['Roles'];
 
 /**
@@ -196,6 +197,28 @@ export async function addUserToEntity(
     throw new Error('Failed to add user to entity');
   }
   
+  return true;
+}
+
+/**
+ * Replace the roles a user holds on an entity. Send the full set they should
+ * end up with, not just the additions or removals.
+ */
+export async function updateEntityUserRoles(
+  entityId: string,
+  userId: string,
+  roles: UpdateUserRolesForEntityRequest,
+): Promise<boolean> {
+  const { error } = await api.PUT('/api/v1/entities/{entityId}/users/{userId}/roles', {
+    params: { path: { entityId, userId } },
+    body: roles,
+  });
+
+  if (error) {
+    console.error('Failed to update entity user roles:', error);
+    throw new Error('Failed to update entity user roles');
+  }
+
   return true;
 }
 

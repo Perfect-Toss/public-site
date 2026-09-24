@@ -10,6 +10,7 @@ import {
   uploadUserThumbnail,
 } from '../../api/api.users';
 import type { Role as RoleType } from '../../utils/roles';
+import { assignableRoles, canAssignRole } from '../../utils/roles';
 import {
   faArrowLeft,
   faBuilding,
@@ -24,6 +25,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { getDisplayName, renderRoleBadges } from '../../utils/user';
 import { UserAvatar } from '../common';
+import { useAuth } from '../../contexts/useAuth';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -79,6 +81,17 @@ function UserDetailPage() {
   const [entitiesLoading, setEntitiesLoading] = useState(false);
   const { loadUserById, updateUser } = useUserStore();
   const { loadEntitiesForUser } = useEntityStore();
+  const { currentUser } = useAuth();
+
+  /** Roles the acting user may grant — their own authority level and below. */
+  const grantableRoles = assignableRoles(currentUser?.roles);
+
+  /**
+   * Roles the edited user holds that the acting user may not grant. They stay
+   * on the account and render locked, so a lower admin can neither add nor
+   * strip them.
+   */
+  const lockedRoles = editForm.roles.filter((r) => !canAssignRole(currentUser?.roles, r));
 
   useEffect(() => {
     if (!id) return;
@@ -288,7 +301,7 @@ function UserDetailPage() {
                           <>
                             <div className="multi-select-backdrop" onClick={() => setRoleDropdownOpen(false)} />
                             <div className="multi-select-dropdown">
-                              {Object.values(Role).map((role) => (
+                              {grantableRoles.map((role) => (
                                 <label
                                   key={role}
                                   className={`multi-select-option ${editForm.roles.includes(role) ? 'selected' : ''}`}
@@ -308,6 +321,22 @@ function UserDetailPage() {
                                   <span className={`role-badge ${role.toLowerCase()}`}>{role}</span>
                                 </label>
                               ))}
+                              {lockedRoles.map((role) => (
+                                <label
+                                  key={role}
+                                  className="multi-select-option selected multi-select-option-locked"
+                                  title={`Only a user with the ${role} role can change this role.`}
+                                >
+                                  <input type="checkbox" checked disabled />
+                                  <span className={`role-badge ${role.toLowerCase()}`}>{role}</span>
+                                </label>
+                              ))}
+                              {lockedRoles.length > 0 && (
+                                <div className="multi-select-note">
+                                  Roles above your own level are locked — only someone who holds them can
+                                  change them.
+                                </div>
+                              )}
                             </div>
                           </>
                         )}

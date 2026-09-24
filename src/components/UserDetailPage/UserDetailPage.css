@@ -391,6 +391,24 @@
   flex-shrink: 0;
 }
 
+/* A role above the acting user's own level: shown, but not theirs to change. */
+.multi-select-option-locked {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.multi-select-option-locked:hover {
+  background: #f0fbd8;
+}
+
+.multi-select-note {
+  padding: 6px 8px 2px;
+  border-top: 1px solid #eee;
+  color: #8a939b;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 /* ─── Associated Entities ──────────────────────────────────────── */
 
 .entities-list {
