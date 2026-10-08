@@ -18,7 +18,7 @@ import {
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 import { CustomVideoPlayer } from './CustomVideoPlayer';
 import { ReviewRequestModal } from './ReviewRequestModal';
@@ -345,6 +345,9 @@ function VideoDetailPage() {
 
     const poster = thumbnailSrc(video);
     const notUploaded = video.uploadStatus === 'NotUploaded' || video.uploadStatus === 'Pending';
+    // The API embeds the event itself; the id alone is the fallback.
+    const event = video.event;
+    const eventId = event?.id ?? video.eventId;
 
     return (
       <>
@@ -607,6 +610,18 @@ function VideoDetailPage() {
             <MetadataItem
               label="Associated entities"
               value={formatEntityNames(video.associatedEntities)}
+            />
+            <MetadataItem
+              label="Event"
+              value={
+                eventId ? (
+                  <Link className="table-link" to={`/events/${eventId}`}>
+                    {event?.name || eventId}
+                  </Link>
+                ) : (
+                  '—'
+                )
+              }
             />
             <MetadataItem label="Coaches" value={formatUserNames(video.coaches)} />
             <MetadataItem label="Tags" value={formatTagNames(video.tags)} />
