@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/react';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 
 import { AuthContext, type AuthContextType } from '../../../contexts/useAuth';
+import type { Entity, UpdateEntityRequest } from '../../../api/api.entities';
 import SettingsView from './SettingsView';
 import type { User } from '../../../api/api.users';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -20,14 +21,17 @@ vi.mock('@tanstack/react-virtual', () => ({
 }));
 
 const navigate = vi.fn();
+const onUpdated = vi.fn();
 let mockIsAdmin = true;
+/** The organization the view is a tab of; tests mutate it to add a parent etc. */
+let mockOrganization: Entity = { id: 'org-1', name: 'Club' };
 vi.mock('react-router-dom', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-router-dom')>()),
   useNavigate: () => navigate,
   useOutletContext: () => ({
-    organization: { id: 'org-1', name: 'Club' },
+    organization: mockOrganization,
     isAdmin: mockIsAdmin,
-    onUpdated: vi.fn(),
+    onUpdated,
   }),
 }));
 
@@ -35,13 +39,20 @@ function makeUser(id: string, fields: Partial<User> = {}): User {
   return { ...fields, id, email: fields.email ?? null };
 }
 
-/** The acting user for these views — an admin who may grant every role offered. */
+/** Whether the acting user is a global admin (Admin / SuperUser). */
+let mockIsGlobalAdmin = true;
+
+/**
+ * The acting user for these views — a global admin who may grant every role
+ * offered, including the right to move the organization to another parent.
+ */
 function authValue(): AuthContextType {
+  const roles: User['roles'] = mockIsGlobalAdmin ? ['Admin'] : ['OrganizationAdmin'];
   return {
-    currentUser: makeUser('actor-1', { firstName: 'Ada', lastName: 'Admin', roles: ['Admin'] }),
+    currentUser: makeUser('actor-1', { firstName: 'Ada', lastName: 'Admin', roles }),
     firebaseUser: null,
     initializing: false,
-    isAdmin: true,
+    isAdmin: mockIsGlobalAdmin,
     canCreateEvents: true,
   };
 }
@@ -73,19 +84,28 @@ const athlete = makeUser('athlete-1', {
 // Vitest globals are off, so testing-library's automatic cleanup is not registered.
 afterEach(cleanup);
 
+/** Records the payloads the view PUTs to the entity endpoint. */
+const updateEntity = vi.fn(async (_id: string, _data: UpdateEntityRequest) => undefined);
+
 beforeEach(() => {
   mockIsAdmin = true;
+  mockIsGlobalAdmin = true;
+  mockOrganization = { id: 'org-1', name: 'Club' };
   navigate.mockClear();
+  onUpdated.mockClear();
+  updateEntity.mockClear();
 
   useUserStore.setState({
     users: [coach, admin, tablet, athlete],
     loadUsers: vi.fn(async () => undefined),
   });
   useEntityStore.setState({
+    entities: [],
     entityUsers: { 'org-1': [] },
+    loadEntities: vi.fn(async () => undefined),
     loadEntityUsers: vi.fn(async () => undefined),
     addUserToEntity: vi.fn(async () => true),
-    updateEntity: vi.fn(async () => undefined),
+    updateEntity,
     deleteEntity: vi.fn(async () => undefined),
   });
 });
@@ -115,6 +135,14 @@ const rosterNames = (pickerId: string) => {
   if (!field) throw new Error(`No staff field for "${pickerId}"`);
   return Array.from(field.querySelectorAll('.rmp-member-name')).map((el) => el.textContent);
 };
+
+/** The organizations listed in the open organization picker. */
+const orgPanelNames = () =>
+  Array.from(document.querySelectorAll('.vs-option .op-name')).map((el) => el.textContent);
+
+/** Enter edit mode on the General card — the only card with an Edit button. */
+const startEditing = (view: ReturnType<typeof renderSettings>) =>
+  fireEvent.click(view.getByText('Edit'));
 
 describe('SettingsView staff pickers', () => {
   it('gives each staff role its own picker', () => {
@@ -158,5 +186,70 @@ describe('SettingsView staff pickers', () => {
 
     expect(view.getByText('You do not have permission to view this page.')).toBeDefined();
     expect(document.getElementById('org-coaches')).toBeNull();
+  });
+});
+
+describe('SettingsView parent organization', () => {
+  const club: Entity = { id: 'org-1', name: 'Club' };
+  const league: Entity = { id: 'org-2', name: 'League' };
+
+  beforeEach(() => {
+    useEntityStore.setState({ entities: [club, league] });
+  });
+
+  it('lets a global admin re-parent the organization, never onto itself', () => {
+    const view = renderSettings();
+    startEditing(view);
+
+    expect(document.getElementById('org-parent')).not.toBeNull();
+
+    view.open('org-parent');
+    // The organization itself is left out, so it can't be its own parent.
+    expect(orgPanelNames()).toEqual(['League']);
+  });
+
+  it('names the current parent once editing is closed', () => {
+    mockOrganization = { ...club, parentEntityId: league.id };
+    const view = renderSettings();
+
+    expect(view.getByText('League')).toBeDefined();
+  });
+
+  it('hides the parent field from everyone but a global admin', () => {
+    mockIsGlobalAdmin = false;
+    mockOrganization = { ...club, parentEntityId: league.id };
+    const view = renderSettings();
+
+    expect(view.queryByText('Parent Organization')).toBeNull();
+    startEditing(view);
+    expect(document.getElementById('org-parent')).toBeNull();
+  });
+
+  it('keeps the existing parent when a non-admin saves', async () => {
+    mockIsGlobalAdmin = false;
+    mockOrganization = { ...club, parentEntityId: league.id };
+    const view = renderSettings();
+    startEditing(view);
+
+    fireEvent.click(view.getByText('Save Changes'));
+
+    await waitFor(() => expect(updateEntity).toHaveBeenCalledTimes(1));
+    expect(updateEntity.mock.calls[0][1]).toMatchObject({ parentEntityId: league.id });
+  });
+
+  it('saves the picked parent for a global admin', async () => {
+    const view = renderSettings();
+    startEditing(view);
+
+    view.open('org-parent');
+    const leagueRow = Array.from(document.querySelectorAll('.vs-option')).find((row) =>
+      row.textContent?.includes('League'),
+    ) as HTMLElement;
+    fireEvent.click(leagueRow);
+
+    fireEvent.click(view.getByText('Save Changes'));
+
+    await waitFor(() => expect(updateEntity).toHaveBeenCalledTimes(1));
+    expect(updateEntity.mock.calls[0]).toEqual(['org-1', expect.objectContaining({ parentEntityId: league.id })]);
   });
 });

@@ -1,29 +1,48 @@
 import { faEdit, faSave, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
+import { OrganizationPicker, RoleMemberPicker } from '../../common';
 import { Role } from '../../../api/api.users';
-import { RoleMemberPicker } from '../../common';
 import type { UpdateEntityRequest } from '../../../api/api.entities';
+import { useAuth } from '../../../contexts/useAuth';
 import { useEntityStore } from '../../../stores/entityStore';
-import { useState } from 'react';
 
 function SettingsView() {
   const { organization, isAdmin, onUpdated } = useOutletContext<OrganizationPageContext>();
   const navigate = useNavigate();
+  const { isAdmin: isGlobalAdmin } = useAuth();
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const { updateEntity, deleteEntity } = useEntityStore();
+  const { entities, loadEntities, updateEntity, deleteEntity } = useEntityStore();
+
+  // Moving an organization to another parent is reserved for the global admins.
+  const canEditParent = isGlobalAdmin;
 
   const [form, setForm] = useState<UpdateEntityRequest>({
     name: organization.name ?? '',
     description: organization.description ?? '',
     entityType: organization.entityType ?? '',
+    parentEntityId: organization.parentEntityId ?? '',
   });
+
+  useEffect(() => {
+    if (canEditParent) loadEntities();
+  }, [canEditParent, loadEntities]);
+
+  const parentName = useMemo(
+    () => entities.find((entity) => entity.id === organization.parentEntityId)?.name ?? null,
+    [entities, organization.parentEntityId],
+  );
+
+  // Excluding the organization excludes its descendants too, so the picker
+  // can never move it inside itself.
+  const excludeIds = useMemo(() => [organization.id], [organization.id]);
 
   if (!isAdmin) {
     return (
@@ -38,8 +57,15 @@ function SettingsView() {
     setSaving(true);
     setSaveError(null);
     try {
-      await updateEntity(organization.id, form);
-      onUpdated({ ...organization, ...form });
+      const dto: UpdateEntityRequest = {
+        ...form,
+        // Without the right to move it, the organization keeps the parent it has.
+        parentEntityId: canEditParent
+          ? form.parentEntityId || null
+          : organization.parentEntityId ?? null,
+      };
+      await updateEntity(organization.id, dto);
+      onUpdated({ ...organization, ...dto });
       setEditing(false);
     } catch {
       setSaveError('Failed to save. Please try again.');
@@ -101,6 +127,20 @@ function SettingsView() {
                 onChange={(e) => setForm((f) => ({ ...f, entityType: e.target.value }))}
               />
             </div>
+            {canEditParent && (
+              <div className="form-field">
+                <label htmlFor="org-parent">Parent Organization</label>
+                <OrganizationPicker
+                  id="org-parent"
+                  organizations={entities}
+                  value={form.parentEntityId ?? ''}
+                  onChange={(value) => setForm((f) => ({ ...f, parentEntityId: value }))}
+                  allowNone
+                  placeholder="— None (root level) —"
+                  excludeIds={excludeIds}
+                />
+              </div>
+            )}
             {saveError && (
               <p style={{ color: '#e53935', fontSize: 13, margin: 0 }}>{saveError}</p>
             )}
@@ -133,6 +173,14 @@ function SettingsView() {
                 {organization.entityType || '—'}
               </span>
             </div>
+            {canEditParent && (
+              <div className="info-row">
+                <span className="info-label">Parent Organization</span>
+                <span className={`info-value${!organization.parentEntityId ? ' empty' : ''}`}>
+                  {organization.parentEntityId ? parentName ?? 'Unknown' : 'None — root level'}
+                </span>
+              </div>
+            )}
           </>
         )}
       </div>

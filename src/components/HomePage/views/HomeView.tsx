@@ -1,9 +1,10 @@
 import '../../../styles/page.css';
 
-import { faCircle, faPlay } from '@fortawesome/free-solid-svg-icons';
+import { faBuilding, faPlay } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { OrganizationCard } from '../../common';
 import { useEntityStore } from '../../../stores/entityStore';
 
 export interface PendingReview {
@@ -64,38 +65,31 @@ function HomeView() {
         <>
           {/* Organizations Section */}
           <section className="section">
-            <div className="section-header">
-              <h2>Organizations</h2>
-              <button className="view-all-btn">VIEW ALL</button>
-            </div>
-
-            <div className="organizations-grid">
+            <div className="organizations-scroll">
               {organizations.length > 0 ? (
                 organizations.map(org => (
-                  <div key={org.id} className="organization-card">
-                    <div className="org-logo">
-                      <FontAwesomeIcon icon={faCircle} />
-                    </div>
-                    <h3 className="org-name">{org.name}</h3>
-                    {org.description && <p className="org-description">{org.description}</p>}
-                  </div>
+                  <OrganizationCard key={org.id} organization={org} />
                 ))
               ) : (
-                <p className="empty-state">No organizations found</p>
+                <div className="empty-state-large">
+                  <FontAwesomeIcon icon={faBuilding} size="3x" style={{ opacity: 0.3 }} />
+                  <h3>No organizations yet</h3>
+                  <p>Create or join an organization to get started</p>
+                </div>
               )}
             </div>
           </section>
 
-          {/* Pending Review Section */}
-          <section className="section">
-            <div className="section-header">
-              <h2>Pending Review</h2>
-              <button className="view-all-btn">VIEW ALL</button>
-            </div>
+          {/* Pending Review Section — hidden when there is nothing to review */}
+          {pendingReviews.length > 0 && (
+            <section className="section">
+              <div className="section-header">
+                <h2>Pending Review</h2>
+                <button className="view-all-btn">VIEW ALL</button>
+              </div>
 
-            <div className="reviews-list">
-              {pendingReviews.length > 0 ? (
-                pendingReviews.map(review => (
+              <div className="reviews-list">
+                {pendingReviews.map(review => (
                   <div key={review.id} className="review-card">
                     <div className="review-thumbnail">
                       <div className="play-button">
@@ -117,28 +111,24 @@ function HomeView() {
                       <span>{review.status}</span>
                     </div>
                   </div>
-                ))
-              ) : (
-                <p className="empty-state">No pending reviews</p>
-              )}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
+          )}
 
-          {/* Trending Content Section */}
-          <section className="section">
-            <div className="section-header">
-              <h2>Trending Content</h2>
-            </div>
-            <div className="trending-placeholder">
-              {trendingContent.length > 0 ? (
+          {/* Trending Content Section — hidden when there is nothing trending */}
+          {trendingContent.length > 0 && (
+            <section className="section">
+              <div className="section-header">
+                <h2>Trending Content</h2>
+              </div>
+              <div className="trending-placeholder">
                 <div className="trending-list">
                   <p>Trending content coming soon</p>
                 </div>
-              ) : (
-                <p>No trending content available</p>
-              )}
-            </div>
-          </section>
+              </div>
+            </section>
+          )}
         </>
       )}
     </>
