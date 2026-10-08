@@ -37,7 +37,7 @@ function OrganizationsPage() {
   return (
     <div className="organizations-page">
       <section className="section">
-        <div className="section-header">
+        <div className="section-header pinned-header">
           <h2>Organizations</h2>
           <div className="header-actions">
             <div className="search-box">

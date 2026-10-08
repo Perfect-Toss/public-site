@@ -14,12 +14,12 @@ import {
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 
 import type { Entity } from '../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatDate } from '../../utils/format';
 import { useEntityStore } from '../../stores/entityStore';
+import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 
 /* ─── Component ───────────────────────────────────────────────────── */
 
@@ -162,8 +162,30 @@ function AdminOrganizationsPage() {
   return (
     <div className="admin-orgs-page">
       <section className="section">
-        <div className="section-header">
-          <h2>Organization Management</h2>
+        <div className="pinned-header admin-orgs-header">
+          <div className="section-header">
+            <h2>Organization Management</h2>
+          </div>
+
+        {/* ── Organizations List ──────────────────────────────── */}
+          <div className="table-toolbar">
+            <div className="search-box">
+              <FontAwesomeIcon icon={faSearch} className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search by name, type, or description..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+            </div>
+            {!loading && !error && (
+              <span className="table-result-count">
+                {visibleRows.length} of {organizations.length} organization
+                {visibleRows.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
         </div>
 
         <button
@@ -173,26 +195,6 @@ function AdminOrganizationsPage() {
         >
           <FontAwesomeIcon icon={faPlus} />
         </button>
-
-        {/* ── Organizations List ──────────────────────────────── */}
-            <div className="table-toolbar">
-              <div className="search-box">
-                <FontAwesomeIcon icon={faSearch} className="search-icon" />
-                <input
-                  type="text"
-                  placeholder="Search by name, type, or description..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="search-input"
-                />
-              </div>
-              {!loading && !error && (
-                <span className="table-result-count">
-                  {visibleRows.length} of {organizations.length} organization
-                  {visibleRows.length !== 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
 
             {loading && (
               <div className="empty-state-large">

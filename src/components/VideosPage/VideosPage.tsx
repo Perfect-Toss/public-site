@@ -348,7 +348,7 @@ function VideosPage() {
   return (
     <div className="videos-page">
       <section className="section">
-        <div className="section-header">
+        <div className="section-header pinned-header">
           <h2>Videos</h2>
           <div className="header-actions">
             <div className="search-box">
