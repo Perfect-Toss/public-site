@@ -128,8 +128,41 @@ function EventsPage() {
   return (
     <div className="events-page">
       <section className="section">
-        <div className="section-header">
-          <h2>Events</h2>
+        <div className="pinned-header events-header">
+          <div className="section-header">
+            <h2>Events</h2>
+          </div>
+
+          <div className="calendar-toolbar">
+            <div className="calendar-nav">
+              <button
+                className="icon-only-btn secondary-btn"
+                onClick={goToPreviousWeek}
+                aria-label="Previous week"
+              >
+                <FontAwesomeIcon icon={faChevronLeft} />
+              </button>
+              <button className="secondary-btn" onClick={goToToday}>
+                Today
+              </button>
+              <button
+                className="icon-only-btn secondary-btn"
+                onClick={goToNextWeek}
+                aria-label="Next week"
+              >
+                <FontAwesomeIcon icon={faChevronRight} />
+              </button>
+            </div>
+            <div className="calendar-title">
+              <FontAwesomeIcon icon={faCalendarDays} />
+              <span>{formatWeekLabel(weekStart)}</span>
+            </div>
+            <div className="calendar-summary">
+              {loading
+                ? 'Loading…'
+                : `${occurrenceCount} ${occurrenceCount === 1 ? 'event' : 'events'} this week`}
+            </div>
+          </div>
         </div>
 
         {canCreateEvents && (
@@ -137,37 +170,6 @@ function EventsPage() {
             <FontAwesomeIcon icon={faPlus} />
           </button>
         )}
-
-        <div className="calendar-toolbar">
-          <div className="calendar-nav">
-            <button
-              className="icon-only-btn secondary-btn"
-              onClick={goToPreviousWeek}
-              aria-label="Previous week"
-            >
-              <FontAwesomeIcon icon={faChevronLeft} />
-            </button>
-            <button className="secondary-btn" onClick={goToToday}>
-              Today
-            </button>
-            <button
-              className="icon-only-btn secondary-btn"
-              onClick={goToNextWeek}
-              aria-label="Next week"
-            >
-              <FontAwesomeIcon icon={faChevronRight} />
-            </button>
-          </div>
-          <div className="calendar-title">
-            <FontAwesomeIcon icon={faCalendarDays} />
-            <span>{formatWeekLabel(weekStart)}</span>
-          </div>
-          <div className="calendar-summary">
-            {loading
-              ? 'Loading…'
-              : `${occurrenceCount} ${occurrenceCount === 1 ? 'event' : 'events'} this week`}
-          </div>
-        </div>
 
         {showError ? (
           <div className="error-container">

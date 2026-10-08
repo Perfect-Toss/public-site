@@ -510,3 +510,28 @@
     font-size: 16px !important;
   }
 }
+
+/* ─── Pinned Header ─────────────────────────────────────────────────────────
+
+   A page opts in with `.pinned-header` on the block holding its page title and
+   search (or its calendar controls) to keep that block at the top of the
+   viewport while the list below scrolls. Only the mobile shell pins — the
+   desktop layout has room for both.
+
+   The bar is deliberately the same object as the one at rest: its offsets
+   cancel out (`margin-top` pulled into the .main-content padding, `padding-top`
+   putting it back inside the bar), so it sits exactly where it does without the
+   class, and keeps that same gap under the mobile top bar once it is stuck. The
+   bottom rule repeats the one `.section-header` already draws. */
+
+@media (max-width: 1024px) {
+  .pinned-header {
+    position: sticky;
+    top: var(--mobile-topbar-h, 0px);
+    z-index: 40;
+    margin-top: calc(-1 * var(--content-pad-y, 0px));
+    padding-top: var(--content-pad-y, 0px);
+    background-color: #fff;
+    border-bottom: 2px solid #e0e0e0;
+  }
+}
