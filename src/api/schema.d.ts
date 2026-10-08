@@ -4437,6 +4437,11 @@ export interface components {
              */
             sizeInBytes: number;
             deviceOrientation: components["schemas"]["DeviceOrientation"];
+            /**
+             * Format: uuid
+             * @description Gets the event the video was recorded at, or null when it is not tied to one.
+             */
+            eventId?: string | null;
             /** @description Gets the optional list of associated entity identifiers. */
             associatedEntityIds?: string[] | null;
             /** @description Gets the optional list of tag identifiers. */
@@ -4562,6 +4567,12 @@ export interface components {
             /** Format: int32 */
             totalCount?: number;
             items?: components["schemas"]["Event"][] | null;
+        };
+        EventInfo: {
+            /** Format: uuid */
+            id?: string;
+            name: string | null;
+            location?: string | null;
         };
         EventInstance: {
             /** Format: uuid */
@@ -5291,6 +5302,11 @@ export interface components {
              */
             aspectRatio?: number | null;
             deviceOrientation: components["schemas"]["DeviceOrientation"];
+            /**
+             * Format: uuid
+             * @description Gets the event the video was recorded at, or null when it is not tied to one.
+             */
+            eventId?: string | null;
             /** @description Gets the optional list of associated entity identifiers. */
             associatedEntityIds?: string[] | null;
             /** @description Gets the optional list of tag identifiers. */
@@ -5383,6 +5399,9 @@ export interface components {
             associatedEntities?: components["schemas"]["Entity"][] | null;
             tags?: components["schemas"]["Tag"][] | null;
             coaches?: components["schemas"]["User"][] | null;
+            /** Format: uuid */
+            eventId?: string | null;
+            event?: components["schemas"]["EventInfo"];
             label?: string | null;
             thumbnailUrl?: string | null;
             filmstripUrl?: string | null;
