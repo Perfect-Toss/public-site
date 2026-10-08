@@ -188,8 +188,8 @@ describe('MembersView', () => {
       (el) => el.textContent,
     );
     expect(names).toEqual([
-      'Athlete, Ada (ada@example.com)',
-      'Member, Mira (mira@example.com)',
+      'Athlete, Ada',
+      'Member, Mira',
     ]);
   });
 

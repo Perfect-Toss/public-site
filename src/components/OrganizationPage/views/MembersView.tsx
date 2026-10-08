@@ -52,10 +52,10 @@ function MembersView() {
     }
   }
 
+  /** "Last, First", or an em dash when the member has no name on file. */
   const getDisplayName = (u: User) => {
     const full = [u.lastName, u.firstName].filter(Boolean).join(', ');
-    if (full && u.email) return `${full} (${u.email})`;
-    return full || u.email || u.id || '—';
+    return full || '—';
   };
 
   const sortUsers = (users: User[]) =>
