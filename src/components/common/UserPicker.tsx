@@ -11,9 +11,14 @@ import { VirtualizedSelect } from './VirtualizedSelect';
 export interface UserPickerProps {
   /** Every user that may be picked, in any order — the list is sorted by name. */
   users: User[];
-  /** Selected user ids. */
+  /** Selected user ids. In single-select mode this holds zero or one id. */
   values: readonly string[];
   onChange: (values: string[]) => void;
+  /**
+   * Allow more than one user. Defaults to true. In single-select mode
+   * (`multiple={false}`) at most one id is ever reported.
+   */
+  multiple?: boolean;
   id?: string;
   name?: string;
   disabled?: boolean;
@@ -22,7 +27,7 @@ export interface UserPickerProps {
   searchPlaceholder?: string;
   listHeight?: number;
   className?: string;
-  /** Pills shown in the trigger before the rest collapse into a "+N more" pill. */
+  /** Pills shown in the trigger before the rest collapse into a "+N more" pill. Multi-select only. */
   maxPills?: number;
   /** Keep only users holding at least one of these roles, e.g. only coaches. */
   onlyRoles?: readonly Role[];
@@ -35,7 +40,37 @@ const DEFAULT_MAX_PILLS = 3;
 const MAX_ROLES = 3;
 
 /**
- * Multi-select dropdown for picking users.
+ * One user row — avatar, name, muted email and role chips. Owns the `.up-*`
+ * presentation for both single- and multi-select modes.
+ */
+function UserOptionRow({ user }: { user: User }) {
+  const roles = user.roles ?? [];
+  const shownRoles = roles.slice(0, MAX_ROLES);
+  const hiddenRoles = roles.length - shownRoles.length;
+
+  return (
+    <span className="up-row">
+      <UserAvatar user={user} size={24} />
+      <span className="up-name">{getDisplayName(user)}</span>
+      {user.email ? <span className="up-email">{user.email}</span> : null}
+      {roles.length > 0 && (
+        <span className="up-roles" title={roles.join(', ')}>
+          {shownRoles.map((role) => (
+            <span key={role} className={`up-role ${role.toLowerCase()}`}>
+              {role}
+            </span>
+          ))}
+          {hiddenRoles > 0 && <span className="up-role">+{hiddenRoles}</span>}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/**
+ * Dropdown for picking users — multi-select by default, single-select with
+ * `multiple={false}`. The selection is always reported as an array of ids, so
+ * single-select callers read `values[0]` (and pass `[]` when nothing is picked).
  *
  * Each row shows the avatar, name, email and the user's roles, and typing
  * filters on name and email. The list stays alphabetical, and `onlyRoles`
@@ -46,6 +81,7 @@ export function UserPicker({
   users,
   values,
   onChange,
+  multiple = true,
   id,
   name,
   disabled,
@@ -68,29 +104,10 @@ export function UserPicker({
 
   const emptyMessageText = search.trim() ? 'No users match your search' : emptyMessage;
 
-  const renderRow = useCallback((user: User): ReactNode => {
-    const roles = user.roles ?? [];
-    const shownRoles = roles.slice(0, MAX_ROLES);
-    const hiddenRoles = roles.length - shownRoles.length;
-
-    return (
-      <span className="up-row">
-        <UserAvatar user={user} size={24} />
-        <span className="up-name">{getDisplayName(user)}</span>
-        {user.email ? <span className="up-email">{user.email}</span> : null}
-        {roles.length > 0 && (
-          <span className="up-roles" title={roles.join(', ')}>
-            {shownRoles.map((role) => (
-              <span key={role} className={`up-role ${role.toLowerCase()}`}>
-                {role}
-              </span>
-            ))}
-            {hiddenRoles > 0 && <span className="up-role">+{hiddenRoles}</span>}
-          </span>
-        )}
-      </span>
-    );
-  }, []);
+  const renderRow = useCallback(
+    (user: User): ReactNode => <UserOptionRow user={user} />,
+    [],
+  );
 
   const renderTrigger = useCallback(
     (selectedIds: readonly string[]): ReactNode => {
@@ -137,15 +154,17 @@ export function UserPicker({
       name={name}
       disabled={disabled}
       className={className}
-      multiple
+      multiple={multiple}
       items={rows}
-      values={values}
-      onChangeValues={onChange}
+      value={multiple ? undefined : (values[0] ?? '')}
+      onChange={multiple ? undefined : (value) => onChange(value ? [value] : [])}
+      values={multiple ? values : undefined}
+      onChangeValues={multiple ? onChange : undefined}
       clearable
       getOptionValue={(user) => user.id}
       getOptionLabel={(user) => getDisplayName(user)}
       renderOption={renderRow}
-      renderTrigger={renderTrigger}
+      renderTrigger={multiple ? renderTrigger : undefined}
       // The rows already carry the search text and the role filter, so the
       // built-in label filter must not narrow them a second time.
       filterItems={() => true}

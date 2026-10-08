@@ -1,0 +1,105 @@
+.admin-cache-page {
+  max-width: 1100px;
+}
+
+.cache-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 20px;
+}
+
+.cache-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.cache-card-description {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #666;
+}
+
+/* ─── Stats ───────────────────────────────────────────────────────── */
+
+.cache-stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.cache-stat {
+  flex: 1 1 0;
+  padding: 14px 16px;
+  background: #f7f8f9;
+  border: 1px solid #eceff1;
+  border-radius: 8px;
+}
+
+.cache-stat-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1f24;
+}
+
+.cache-stat-label {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #888;
+}
+
+/* ─── Single-entry refresh ────────────────────────────────────────── */
+
+.cache-refresh-one {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.cache-refresh-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+}
+
+.cache-refresh-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cache-refresh-row > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cache-refresh-row .secondary-btn {
+  flex: 0 0 auto;
+}
+
+/* ─── Feedback ────────────────────────────────────────────────────── */
+
+.cache-message,
+.cache-error {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.cache-message {
+  background: #e6ffcc;
+  color: #3d6b00;
+}
+
+.cache-error {
+  background: #ffeaea;
+  color: #b3261e;
+}

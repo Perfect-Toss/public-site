@@ -17,6 +17,7 @@
  *   import { fetchTags } from '../api/api.tags';
  */
 
+export * from './api.admin';
 export * from './api.auth';
 export * from './api.eventLogs';
 export * from './api.events';

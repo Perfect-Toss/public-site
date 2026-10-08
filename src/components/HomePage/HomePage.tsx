@@ -11,6 +11,7 @@ import {
   faChevronLeft,
   faChevronRight,
   faChevronUp,
+  faDatabase,
   faEllipsis,
   faHome,
   faRightFromBracket,
@@ -226,6 +227,11 @@ function MobileSheet({
               <NavLink to="/admin/users" className={navItemClass}>
                 <span className="nav-icon"><FontAwesomeIcon icon={faUsers} /></span>
                 <span>USERS</span>
+              </NavLink>
+
+              <NavLink to="/admin/cache" className={navItemClass}>
+                <span className="nav-icon"><FontAwesomeIcon icon={faDatabase} /></span>
+                <span>CACHE</span>
               </NavLink>
             </>
           )}
@@ -468,6 +474,14 @@ function HomePage() {
               >
                 <span className="nav-icon"><FontAwesomeIcon icon={faUsers} /></span>
                 {!collapsed && <span>USERS</span>}
+              </NavLink>
+              <NavLink
+                to="/admin/cache"
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                data-tooltip="Cache"
+              >
+                <span className="nav-icon"><FontAwesomeIcon icon={faDatabase} /></span>
+                {!collapsed && <span>CACHE</span>}
               </NavLink>
             </>
           )}

@@ -10,6 +10,7 @@ import {
 import AccountPage from './components/AccountPage'
 import AddUserPage from './components/AddUserPage'
 import AdminAddOrganizationPage from './components/AdminAddOrganizationPage'
+import AdminCachePage from './components/AdminCachePage'
 import AdminDevicesPage from './components/AdminDevicesPage'
 import AdminOrganizationsPage from './components/AdminOrganizationsPage'
 import AdminPage from './components/AdminPage'
@@ -154,6 +155,7 @@ function AppContent() {
           <Route path="users/new" element={<AddUserPage />} />
           <Route path="users/import" element={<BulkImportPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
+          <Route path="cache" element={<AdminCachePage />} />
           <Route path="*" element={<AdminPage />} />
         </Route>
         <Route path="account" element={<AccountPage />} />
