@@ -51,6 +51,17 @@ export function formatAspectRatio(value?: number | null): string {
   return value.toFixed(2);
 }
 
+/** Format a position in seconds as a player clock, e.g. "3:07" or "1:03:07". */
+export function formatClock(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+  const total = Math.round(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+}
+
 /** Format a length in seconds as human-readable text, e.g. "1 hour 1 minute 1 second". */
 export function formatDuration(lengthInSeconds?: number): string {
   if (lengthInSeconds === undefined || lengthInSeconds == null || lengthInSeconds < 0) {
