@@ -1,7 +1,8 @@
 import '../../styles/page.css';
 import './OrganizationPage.css';
 
-import { NavLink, Outlet, useParams } from 'react-router-dom';
+import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Link, NavLink, Outlet, useParams } from 'react-router-dom';
 import {
   faBuildingUser,
   faCalendarDays,
@@ -12,7 +13,6 @@ import {
   faSpinner,
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
-import { useEffect, useState } from 'react';
 
 import type { Entity } from '../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -39,7 +39,13 @@ function OrganizationPage() {
   // TODO: Replace with real role check
   const isAdmin = MOCK_IS_ADMIN;
 
-  const { loadEntityById } = useEntityStore();
+  const { entities, loadEntities, loadEntityById } = useEntityStore();
+
+  // The breadcrumb names the organization's ancestors, so the flat list has to
+  // be on hand; a visit from the organizations page usually finds it loaded.
+  useEffect(() => {
+    if (entities.length === 0) loadEntities();
+  }, [entities.length, loadEntities]);
 
   useEffect(() => {
     if (!id) return;
@@ -58,6 +64,23 @@ function OrganizationPage() {
   const handleUpdated = (updated: Entity) => {
     setOrganization(updated);
   };
+
+  /** The organization's ancestors, root first, for the breadcrumb. */
+  const ancestors = useMemo(() => {
+    if (!organization) return [];
+    const byId = new Map(entities.map((entity) => [entity.id, entity]));
+    const chain: Entity[] = [];
+    const seen = new Set<string>([organization.id]);
+    let parentId = organization.parentEntityId ?? null;
+    while (parentId && !seen.has(parentId)) {
+      const parent = byId.get(parentId);
+      if (!parent) break;
+      chain.unshift(parent);
+      seen.add(parentId);
+      parentId = parent.parentEntityId ?? null;
+    }
+    return chain;
+  }, [organization, entities]);
 
   if (loading) {
     return (
@@ -91,10 +114,18 @@ function OrganizationPage() {
     <div className="org-page">
       {/* Breadcrumb */}
       <div className="org-breadcrumb">
-        <button className="back-btn" onClick={() => navigate('/organizations')}>
+        <Link className="back-btn" to="/organizations">
           <FontAwesomeIcon icon={faChevronLeft} />
           Organizations
-        </button>
+        </Link>
+        {ancestors.map((ancestor) => (
+          <Fragment key={ancestor.id}>
+            <span className="breadcrumb-separator">/</span>
+            <Link className="breadcrumb-link" to={`/organizations/${ancestor.id}`}>
+              {ancestor.name}
+            </Link>
+          </Fragment>
+        ))}
         <span className="breadcrumb-separator">/</span>
         <span className="breadcrumb-current">{organization.name}</span>
       </div>
