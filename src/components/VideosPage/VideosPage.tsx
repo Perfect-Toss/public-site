@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { deleteVideo, fetchVideos, type ReviewStatus, type Video } from '../../api/api.videos';
 import { UserInfo } from '../common';
 import { useModalKeyboard } from '../../hooks/useModalKeyboard';
+import { CACHE_KEYS, readCache, writeCache } from '../../utils/pageCache';
 import { formatBytes, formatDateTime, formatDuration, formatEnum } from '../../utils/format';
 import { ownerDisplayName, thumbnailSrc } from '../../utils/videos';
 
@@ -27,6 +28,13 @@ const REVIEW_STATUS_CLASS: Record<ReviewStatus, string> = {
   ReviewRequested: 'review-requested',
   Reviewed: 'reviewed',
 };
+
+/** Cached library: the rows on screen plus how many pages built them. */
+interface VideosSnapshot {
+  videos: Video[];
+  totalCount: number;
+  loadedPages: number;
+}
 
 function VideoCard({ video, onDelete }: { video: Video; onDelete: (video: Video) => void }) {
   const navigate = useNavigate();
@@ -124,10 +132,13 @@ function VideoCard({ video, onDelete }: { video: Video; onDelete: (video: Video)
 
 function VideosPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [initialLoading, setInitialLoading] = useState(true);
+  // A library that already loaded once paints from the snapshot while page 1
+  // refreshes it, so returning to this route does not show the loading state.
+  const snapshot = readCache<VideosSnapshot>(CACHE_KEYS.VIDEOS);
+  const [videos, setVideos] = useState<Video[]>(snapshot?.videos ?? []);
+  const [pageNumber, setPageNumber] = useState(snapshot ? snapshot.loadedPages + 1 : 1);
+  const [totalCount, setTotalCount] = useState(snapshot?.totalCount ?? 0);
+  const [initialLoading, setInitialLoading] = useState(snapshot === undefined);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -171,6 +182,25 @@ function VideosPage() {
     }
   }, []);
 
+  /**
+   * Refresh the library already on screen. Fresh page 1 rows lead the list and
+   * anything it no longer covers keeps its place behind them.
+   */
+  const revalidate = useCallback(async () => {
+    try {
+      const response = await fetchVideos(1, PAGE_SIZE);
+      const items = response.items ?? [];
+      setVideos((prev) => {
+        const fresh = new Set(items.map((video) => video.id));
+        return [...items, ...prev.filter((video) => !fresh.has(video.id))];
+      });
+      setTotalCount(response.totalCount ?? 0);
+    } catch (err) {
+      // The cached library stays on screen — a failed refresh needs no error state.
+      console.error('Failed to refresh videos:', err);
+    }
+  }, []);
+
   const handleDelete = useCallback(async () => {
     if (!pendingDelete) return;
     setDeleteSubmitting(true);
@@ -196,10 +226,25 @@ function VideosPage() {
     busy: deleteSubmitting,
   });
 
-  // Initial page load
+  // Initial page load (or a silent refresh when the library is already cached)
+  const warmStart = useRef(snapshot !== undefined);
+
   useEffect(() => {
-    loadPage(1);
-  }, [loadPage]);
+    if (warmStart.current) void revalidate();
+    else void loadPage(1);
+  }, [loadPage, revalidate]);
+
+  // Keep the snapshot in step with the list on screen, so the next visit can
+  // paint it. An empty library is not worth caching — a real load clears that.
+  useEffect(() => {
+    if (initialLoading) return;
+    if (videos.length === 0 && totalCount === 0) return;
+    writeCache<VideosSnapshot>(CACHE_KEYS.VIDEOS, {
+      videos,
+      totalCount,
+      loadedPages: pageNumber - 1,
+    });
+  }, [initialLoading, videos, totalCount, pageNumber]);
 
   // Infinite scroll: load the next page when the sentinel becomes visible.
   useEffect(() => {

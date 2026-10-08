@@ -17,16 +17,23 @@
 
 body {
   margin: 0;
-  min-width: 320px;
+  /* No min-width: a floor here makes the document wider than the viewport on
+     narrow screens, which is what lets the whole page be scrolled sideways. */
   min-height: 100vh;
 }
 
 /* Applied to the root only, so the value propagates to the viewport and the page
    can never be scrolled sideways by a wide descendant. Deliberately NOT set on
    body: that would make body its own scroll container and break position:
-   sticky for descendants like the video detail header. */
+   sticky for descendants like the video detail header.
+
+   `clip`, not just `hidden`: `hidden` removes the scrollbar but leaves the
+   viewport scrollable, so a touch device (or emulation) can still drag the whole
+   page sideways. `clip` removes the sideways scroll itself. `hidden` stays first
+   as the fallback for engines without `clip`. */
 html {
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 button {

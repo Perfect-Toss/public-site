@@ -13,6 +13,11 @@ function OrganizationsPage() {
   const { entityMap, loading, error, loadEntities } = useEntityStore();
   const organizations = useMemo(() => entityMap['root'] ?? [], [entityMap]);
 
+  // Entities the store already holds stay on screen while it refreshes them, so
+  // returning to this page does not show the loading state again.
+  const showLoading = loading && organizations.length === 0;
+  const showError = !showLoading && organizations.length === 0 ? error : null;
+
   useEffect(() => {
     loadEntities();
   }, [loadEntities]);
@@ -59,27 +64,27 @@ function OrganizationsPage() {
         )}
 
         <div className="organizations-grid">
-          {loading && (
+          {showLoading && (
             <div className="empty-state-large">
               <FontAwesomeIcon icon={faSpinner} size="3x" spin style={{ opacity: 0.5 }} />
               <p>Loading organizations...</p>
             </div>
           )}
-          {!loading && error && (
+          {!showLoading && showError && (
             <div className="empty-state-large">
               <FontAwesomeIcon icon={faBuilding} size="3x" style={{ opacity: 0.3 }} />
               <h3>Failed to load organizations</h3>
-              <p>{error}</p>
+              <p>{showError}</p>
             </div>
           )}
-          {!loading && !error && filteredOrganizations.length === 0 && (
+          {!showLoading && !showError && filteredOrganizations.length === 0 && (
             <div className="empty-state-large">
               <FontAwesomeIcon icon={faBuilding} size="3x" style={{ opacity: 0.3 }} />
               <h3>No organizations yet</h3>
               <p>Create or join an organization to get started</p>
             </div>
           )}
-          {!loading && !error && filteredOrganizations.map(org => (
+          {!showLoading && !showError && filteredOrganizations.map(org => (
             <OrganizationCard key={org.id} organization={org} />
           ))}
         </div>

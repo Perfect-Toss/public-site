@@ -23,7 +23,13 @@ vi.mock('../../firebase/auth', () => ({
 }));
 
 // Vitest globals are off, so testing-library's automatic cleanup never registers.
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  scrollTo.mockClear();
+});
+
+// jsdom has no layout, so the real window.scrollTo only logs "not implemented".
+const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
 
 function renderShell({ initialPath = '/', isAdmin = false } = {}) {
   return render(
@@ -114,6 +120,33 @@ describe('mobile shell', () => {
 
     await waitFor(() => expect(sheetOf(view).className).not.toContain('open'));
     expect(screen.getByText('videos outlet')).toBeTruthy();
+  });
+
+  it('starts a tapped destination at the top of the page', () => {
+    renderShell();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Videos' }));
+
+    expect(scrollTo).toHaveBeenCalledWith(0, 0);
+  });
+
+  it('starts a sheet destination at the top of the page', () => {
+    const view = renderShell();
+    openSheet(view);
+
+    // Scoped to the sheet: the sidebar renders an ACCOUNT link too.
+    fireEvent.click(within(sheetOf(view)).getByRole('link', { name: 'ACCOUNT' }));
+
+    expect(scrollTo).toHaveBeenCalledWith(0, 0);
+  });
+
+  it('leaves the scroll alone for sheet actions that stay on the page', () => {
+    const view = renderShell();
+    openSheet(view);
+
+    fireEvent.click(within(sheetOf(view)).getByRole('button', { name: 'LOGOUT' }));
+
+    expect(scrollTo).not.toHaveBeenCalled();
   });
 
   it('marks the more tab active for routes outside the tab bar', () => {

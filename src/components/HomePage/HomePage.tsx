@@ -28,7 +28,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { STORAGE_KEYS } from '../../utils/constants';
 import { logout } from '../../firebase/auth';
 import { useAuth } from '../../contexts/useAuth';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 /** Sub-navigation link lists for the admin accordion groups. */
@@ -58,6 +58,15 @@ function isMoreActive(pathname: string) {
   return !MOBILE_TABS.some((tab) =>
     tab.end ? pathname === tab.to : pathname.startsWith(tab.to),
   );
+}
+
+/**
+ * Tapping a destination in the mobile chrome opens it at the top, the way a
+ * fresh page load would — the previous page's scroll offset is not a sensible
+ * place for a different page to start.
+ */
+function resetPageScroll() {
+  window.scrollTo(0, 0);
 }
 
 function NavLinks({ links }: { links: readonly { to: string; label: string }[] }) {
@@ -164,6 +173,7 @@ interface MobileSheetProps {
   versionTitle?: string;
   onClose: () => void;
   onLogout: () => void;
+  onNavigate: (event: React.MouseEvent<HTMLElement>) => void;
 }
 
 /**
@@ -178,6 +188,7 @@ function MobileSheet({
   versionTitle,
   onClose,
   onLogout,
+  onNavigate,
 }: MobileSheetProps) {
   return (
     <>
@@ -197,7 +208,7 @@ function MobileSheet({
       >
         <div className="mobile-sheet-grip" aria-hidden="true" />
 
-        <nav className="mobile-sheet-body">
+        <nav className="mobile-sheet-body" onClick={onNavigate}>
           <NavLink to="/account" className={navItemClass}>
             <span className="nav-icon"><FontAwesomeIcon icon={faUser} /></span>
             <span>ACCOUNT</span>
@@ -258,6 +269,32 @@ function HomePage() {
   const [devicesExpanded, setDevicesExpanded] = useLocalStorage(STORAGE_KEYS.DEVICES_NAV_EXPANDED, true);
   const [referenceExpanded, setReferenceExpanded] = useLocalStorage(STORAGE_KEYS.REFERENCE_NAV_EXPANDED, true);
   const [sheetOpen, setSheetOpen] = useState(false);
+
+  // A tap in the mobile chrome opens its destination at the top of the page.
+  // The reset waits for the new route to commit: scrolling at click time snaps
+  // the outgoing page to its own top first, which reads as a reload.
+  const pendingScrollReset = useRef(false);
+
+  const handleMobileNavigate = (event: React.MouseEvent<HTMLElement>) => {
+    // The sheet's nav also holds the logout button; only links navigate.
+    if (!(event.target as Element).closest('a')) return;
+    // A modified or middle click opens another tab/window, not this document.
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    pendingScrollReset.current = true;
+  };
+
+  const handleMobileHome = () => {
+    pendingScrollReset.current = true;
+    navigate('/');
+  };
+
+  useLayoutEffect(() => {
+    if (!pendingScrollReset.current) return;
+    pendingScrollReset.current = false;
+    resetPageScroll();
+  }, [location.key]);
 
   const isDevicesRoute = location.pathname.startsWith('/admin/devices');
   const isReferenceRoute = location.pathname.startsWith('/admin/reference');
@@ -558,7 +595,7 @@ function HomePage() {
         <button
           type="button"
           className="mobile-topbar-logo"
-          onClick={() => navigate('/')}
+          onClick={handleMobileHome}
           aria-label="Perfect Toss home"
         >
           <span className="logo-icon" />
@@ -573,6 +610,7 @@ function HomePage() {
             to={tab.to}
             end={tab.end}
             className={({ isActive }) => `mobile-tab ${isActive ? 'active' : ''}`}
+            onClick={handleMobileNavigate}
           >
             <FontAwesomeIcon icon={tab.icon} className="mobile-tab-icon" />
             <span className="mobile-tab-label">{tab.label}</span>
@@ -602,6 +640,7 @@ function HomePage() {
         }
         onClose={() => setSheetOpen(false)}
         onLogout={handleLogout}
+        onNavigate={handleMobileNavigate}
       />
     </div>
   );
