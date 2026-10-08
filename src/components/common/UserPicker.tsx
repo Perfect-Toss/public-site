@@ -2,23 +2,17 @@ import './UserPicker.css';
 
 import type { Role, User } from '../../api/api.users';
 import { filterUsers, getDisplayName } from '../../utils/user';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { ReactNode } from 'react';
+import { TruncatedText } from './TruncatedText';
 import { UserAvatar } from './UserAvatar';
 import { VirtualizedSelect } from './VirtualizedSelect';
 
-export interface UserPickerProps {
+/** Props both selection modes share. */
+export interface UserPickerBaseProps {
   /** Every user that may be picked, in any order — the list is sorted by name. */
   users: User[];
-  /** Selected user ids. In single-select mode this holds zero or one id. */
-  values: readonly string[];
-  onChange: (values: string[]) => void;
-  /**
-   * Allow more than one user. Defaults to true. In single-select mode
-   * (`multiple={false}`) at most one id is ever reported.
-   */
-  multiple?: boolean;
   id?: string;
   name?: string;
   disabled?: boolean;
@@ -27,13 +21,31 @@ export interface UserPickerProps {
   searchPlaceholder?: string;
   listHeight?: number;
   className?: string;
-  /** Pills shown in the trigger before the rest collapse into a "+N more" pill. Multi-select only. */
-  maxPills?: number;
   /** Keep only users holding at least one of these roles, e.g. only coaches. */
   onlyRoles?: readonly Role[];
   /** Shown when the list has nothing to offer, in place of the built-in wording. */
   emptyMessage?: string;
 }
+
+/** Pick exactly one user. */
+export interface UserPickerSingleProps extends UserPickerBaseProps {
+  multiple: false;
+  /** Selected user id, or null/'' for none. */
+  value?: string | null;
+  onChange: (value: string | null) => void;
+}
+
+/** Pick zero or more users — the default. */
+export interface UserPickerMultiProps extends UserPickerBaseProps {
+  multiple?: true;
+  /** Selected user ids. */
+  values: readonly string[];
+  onChange: (values: string[]) => void;
+  /** Pills shown in the trigger before the rest collapse into a "+N more" pill. */
+  maxPills?: number;
+}
+
+export type UserPickerProps = UserPickerSingleProps | UserPickerMultiProps;
 
 const DEFAULT_MAX_PILLS = 3;
 /** Roles shown on a row before the rest collapse into a "+N" chip. */
@@ -51,8 +63,8 @@ function UserOptionRow({ user }: { user: User }) {
   return (
     <span className="up-row">
       <UserAvatar user={user} size={24} />
-      <span className="up-name">{getDisplayName(user)}</span>
-      {user.email ? <span className="up-email">{user.email}</span> : null}
+      <TruncatedText className="up-name" text={getDisplayName(user)} />
+      {user.email ? <TruncatedText className="up-email" text={user.email} /> : null}
       {roles.length > 0 && (
         <span className="up-roles" title={roles.join(', ')}>
           {shownRoles.map((role) => (
@@ -68,31 +80,35 @@ function UserOptionRow({ user }: { user: User }) {
 }
 
 /**
- * Dropdown for picking users — multi-select by default, single-select with
- * `multiple={false}`. The selection is always reported as an array of ids, so
- * single-select callers read `values[0]` (and pass `[]` when nothing is picked).
+ * Dropdown for picking users. Multi-select by default; `multiple={false}` gives
+ * single-select, which swaps the selection props for `value`/`onChange` — a
+ * discriminated union, so each mode only accepts its own API.
  *
  * Each row shows the avatar, name, email and the user's roles, and typing
  * filters on name and email. The list stays alphabetical, and `onlyRoles`
  * restricts it to users holding one of the given roles (e.g. an organizer
  * picker wants coaches).
  */
-export function UserPicker({
-  users,
-  values,
-  onChange,
-  multiple = true,
-  id,
-  name,
-  disabled,
-  placeholder = 'Select users',
-  searchPlaceholder = 'Search users...',
-  listHeight,
-  className,
-  maxPills = DEFAULT_MAX_PILLS,
-  onlyRoles,
-  emptyMessage = 'No users found',
-}: UserPickerProps) {
+export function UserPicker(props: UserPickerProps) {
+  const {
+    users,
+    id,
+    name,
+    disabled,
+    placeholder = 'Select users',
+    searchPlaceholder = 'Search users...',
+    listHeight,
+    className,
+    onlyRoles,
+    emptyMessage = 'No users found',
+  } = props;
+
+  const isSingle = props.multiple === false;
+  const selectedValues: readonly string[] =
+    props.multiple === false ? (props.value ? [props.value] : []) : props.values;
+  const maxPills =
+    props.multiple === false ? DEFAULT_MAX_PILLS : (props.maxPills ?? DEFAULT_MAX_PILLS);
+
   const [search, setSearch] = useState('');
 
   const rows = useMemo(
@@ -104,49 +120,54 @@ export function UserPicker({
 
   const emptyMessageText = search.trim() ? 'No users match your search' : emptyMessage;
 
-  const renderRow = useCallback(
-    (user: User): ReactNode => <UserOptionRow user={user} />,
-    [],
-  );
+  // Adapt the uniform id list to the active mode's callback shape.
+  function commit(next: string[]) {
+    if (props.multiple === false) {
+      props.onChange(next[0] ?? null);
+    } else {
+      props.onChange(next);
+    }
+  }
 
-  const renderTrigger = useCallback(
-    (selectedIds: readonly string[]): ReactNode => {
-      if (selectedIds.length === 0) return null;
+  function renderRow(user: User): ReactNode {
+    return <UserOptionRow user={user} />;
+  }
 
-      const pills = selectedIds.map((selectedId) => {
-        const user = usersById.get(selectedId);
-        return { id: selectedId, label: user ? getDisplayName(user) : selectedId };
-      });
-      // Once the pills no longer fit, keep one slot for the overflow counter.
-      const visibleCount = pills.length > maxPills ? Math.max(1, maxPills - 1) : pills.length;
-      const visible = pills.slice(0, visibleCount);
-      const hiddenCount = pills.length - visibleCount;
+  function renderTrigger(selectedIds: readonly string[]): ReactNode {
+    if (selectedIds.length === 0) return null;
 
-      return (
-        <span className="up-pills">
-          {visible.map((pill) => (
-            <span key={pill.id} className="up-pill">
-              <span className="up-pill-label">{pill.label}</span>
-              <span
-                role="button"
-                tabIndex={-1}
-                aria-label={`Remove ${pill.label}`}
-                className="up-pill-remove"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange(values.filter((value) => value !== pill.id));
-                }}
-              >
-                ×
-              </span>
+    const pills = selectedIds.map((selectedId) => {
+      const user = usersById.get(selectedId);
+      return { id: selectedId, label: user ? getDisplayName(user) : selectedId };
+    });
+    // Once the pills no longer fit, keep one slot for the overflow counter.
+    const visibleCount = pills.length > maxPills ? Math.max(1, maxPills - 1) : pills.length;
+    const visible = pills.slice(0, visibleCount);
+    const hiddenCount = pills.length - visibleCount;
+
+    return (
+      <span className="up-pills">
+        {visible.map((pill) => (
+          <span key={pill.id} className="up-pill">
+            <TruncatedText className="up-pill-label" text={pill.label} />
+            <span
+              role="button"
+              tabIndex={-1}
+              aria-label={`Remove ${pill.label}`}
+              className="up-pill-remove"
+              onClick={(e) => {
+                e.stopPropagation();
+                commit(selectedValues.filter((value) => value !== pill.id));
+              }}
+            >
+              ×
             </span>
-          ))}
-          {hiddenCount > 0 && <span className="up-pill up-pill-more">+{hiddenCount} more</span>}
-        </span>
-      );
-    },
-    [usersById, maxPills, onChange, values],
-  );
+          </span>
+        ))}
+        {hiddenCount > 0 && <span className="up-pill up-pill-more">+{hiddenCount} more</span>}
+      </span>
+    );
+  }
 
   return (
     <VirtualizedSelect<User>
@@ -154,17 +175,17 @@ export function UserPicker({
       name={name}
       disabled={disabled}
       className={className}
-      multiple={multiple}
+      multiple={!isSingle}
       items={rows}
-      value={multiple ? undefined : (values[0] ?? '')}
-      onChange={multiple ? undefined : (value) => onChange(value ? [value] : [])}
-      values={multiple ? values : undefined}
-      onChangeValues={multiple ? onChange : undefined}
+      value={isSingle ? (selectedValues[0] ?? '') : undefined}
+      onChange={isSingle ? (value) => commit(value ? [value] : []) : undefined}
+      values={isSingle ? undefined : selectedValues}
+      onChangeValues={isSingle ? undefined : commit}
       clearable
       getOptionValue={(user) => user.id}
       getOptionLabel={(user) => getDisplayName(user)}
       renderOption={renderRow}
-      renderTrigger={multiple ? renderTrigger : undefined}
+      renderTrigger={isSingle ? undefined : renderTrigger}
       // The rows already carry the search text and the role filter, so the
       // built-in label filter must not narrow them a second time.
       filterItems={() => true}

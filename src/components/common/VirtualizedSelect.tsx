@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { TruncatedText } from './TruncatedText';
 import './VirtualizedSelect.css';
 
 /**
@@ -596,9 +597,10 @@ export function VirtualizedSelect<T>({
         aria-controls={open && id ? `${id}-listbox` : undefined}
       >
         {customTrigger ?? (
-          <span className={`vs-trigger-label${triggerLabel ? '' : ' vs-placeholder'}`}>
-            {triggerLabel || placeholder}
-          </span>
+          <TruncatedText
+            className={`vs-trigger-label${triggerLabel ? '' : ' vs-placeholder'}`}
+            text={triggerLabel || placeholder}
+          />
         )}
         {clearable && hasSelection && !disabled && (
           <span

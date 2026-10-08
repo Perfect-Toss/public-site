@@ -227,8 +227,8 @@ function AdminCachePage() {
               <UserPicker
                 users={users}
                 multiple={false}
-                values={selectedUserId ? [selectedUserId] : []}
-                onChange={(ids) => setSelectedUserId(ids[0] ?? '')}
+                value={selectedUserId}
+                onChange={(value) => setSelectedUserId(value ?? '')}
                 placeholder="Select a user..."
                 searchPlaceholder="Search users..."
               />
