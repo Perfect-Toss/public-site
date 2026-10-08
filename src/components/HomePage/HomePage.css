@@ -863,7 +863,11 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 8px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+  /* Bottom padding clears the fixed tab bar (which sits above the sheet) so
+     the trailing items — logout and version — stay visible. */
+  padding: 8px 0 calc(
+    var(--mobile-tabbar-h) + 12px + env(safe-area-inset-bottom, 0px)
+  );
   overflow-y: auto;
   overscroll-behavior: contain;
 }
