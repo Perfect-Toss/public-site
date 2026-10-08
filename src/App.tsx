@@ -17,7 +17,6 @@ import AdminUsersPage from './components/AdminUsersPage'
 import { AuthProvider } from './contexts/AuthContext'
 import BulkImportPage from './components/BulkImportPage'
 import DashboardPage from './components/DashboardPage'
-import EditOrganizationPage from './components/AdminOrganizationsPage/EditOrganizationPage'
 import EventDetailPage from './components/EventDetailPage'
 import EventFormPage from './components/EventFormPage'
 import EventInstancesView from './components/OrganizationPage/views/EventInstancesView'
@@ -132,7 +131,6 @@ function AppContent() {
           <Route path="organizations">
             <Route index element={<AdminOrganizationsPage />} />
             <Route path="new" element={<AdminAddOrganizationPage />} />
-            <Route path=":orgId/edit" element={<EditOrganizationPage />} />
           </Route>
           <Route path="devices" element={<AdminDevicesPage />}>
             <Route index element={<Navigate to="machines" replace />} />

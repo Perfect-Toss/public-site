@@ -5,12 +5,11 @@ import { faBuilding, faPlus, faSearch, faSpinner } from '@fortawesome/free-solid
 import { useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { OrganizationCard } from '../common';
 import { useEntityStore } from '../../stores/entityStore';
-import { useNavigate } from 'react-router-dom';
 
 function OrganizationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate();
   const { entityMap, loading, error, loadEntities } = useEntityStore();
   const organizations = useMemo(() => entityMap['root'] ?? [], [entityMap]);
 
@@ -81,14 +80,7 @@ function OrganizationsPage() {
             </div>
           )}
           {!loading && !error && filteredOrganizations.map(org => (
-            <div key={org.id} className="organization-card" onClick={() => org.id && navigate(`/organizations/${org.id}`)}>
-              <FontAwesomeIcon icon={faBuilding} className="org-icon" />
-              <div className="org-details">
-                <h3 className="org-name">{org.name}</h3>
-                {org.description && <p className="org-description">{org.description}</p>}
-                {org.entityType && <span className="org-type">{org.entityType}</span>}
-              </div>
-            </div>
+            <OrganizationCard key={org.id} organization={org} />
           ))}
         </div>
       </section>

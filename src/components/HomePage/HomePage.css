@@ -545,55 +545,33 @@
 
 /* ─── Responsive Design ──────────────────────────────────────────────────── */
 
-/* Organizations Grid */
-.organizations-grid {
-  display: grid;
-  /* min() inside minmax keeps the column count honest on narrow screens —
-     a 280px floor would otherwise overflow a 320px phone. */
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
-  gap: 20px;
-}
-
-.organizations-grid .empty-state {
-  grid-column: 1 / -1;
-}
-
-.organizations-grid .empty-state-large {
-  grid-column: 1 / -1;
-}
-
-.organization-card {
-  padding: 30px;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  background: white;
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.organization-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: #cfff04;
-}
-
-.org-logo {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 20px;
-  background: linear-gradient(135deg, #cfff04, #a8cc00);
-  border-radius: 50%;
+/* Organizations — horizontal scroller on the home page (the full list lives on
+   /organizations). The cards themselves come from OrganizationCard.css. */
+.organizations-scroll {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  /* Scrollable, but with no visible scrollbar. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.org-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1a1f24;
-  letter-spacing: 0.5px;
+.organizations-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.organizations-scroll > .organization-card {
+  flex: 0 0 auto;
+  width: 200px;
+  scroll-snap-align: start;
+}
+
+.organizations-scroll .empty-state-large {
+  flex: 1 0 100%;
+  padding: 40px 20px;
 }
 
 /* Reviews List */
@@ -965,15 +943,8 @@
 }
 
 @media (max-width: 700px) {
-  .organization-card {
-    padding: 20px 16px;
-  }
-
-  .org-logo {
-    width: 56px;
-    height: 56px;
-    margin-bottom: 14px;
-    font-size: 28px;
+  .organizations-scroll > .organization-card {
+    width: 160px;
   }
 
   .review-card {

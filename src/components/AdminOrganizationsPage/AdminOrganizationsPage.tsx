@@ -131,7 +131,7 @@ function AdminOrganizationsPage() {
   /* ─── Edit Organization ────────────────────────────────────── */
 
   const openEdit = (org: Entity) => {
-    navigate(`/admin/organizations/${org.id}/edit`);
+    navigate(`/organizations/${org.id}/settings`);
   };
 
   /* ─── Delete Organization ──────────────────────────────────── */
