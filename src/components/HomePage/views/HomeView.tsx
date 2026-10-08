@@ -20,23 +20,18 @@ export interface PendingReview {
 
 function HomeView() {
   const [pendingReviews] = useState<PendingReview[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const { entityMap, loading: storeLoading, error: storeError, loadEntities } = useEntityStore();
   const organizations = useMemo(() => entityMap['root'] ?? [], [entityMap]);
 
+  // Entities the store already holds stay on screen while it refreshes them, so
+  // returning to this page does not show the loading state again.
+  const loading = storeLoading && organizations.length === 0;
+  const error = organizations.length === 0 ? storeError : null;
+
   useEffect(() => {
     loadEntities();
   }, [loadEntities]);
-
-  useEffect(() => {
-    setLoading(storeLoading);
-  }, [storeLoading]);
-
-  useEffect(() => {
-    setError(storeError);
-  }, [storeError]);
   return (
     <>
       {/* Loading State */}

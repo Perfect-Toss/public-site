@@ -26,6 +26,7 @@ import {
 import { fetchEvents } from '../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
+import { CACHE_KEYS, readCache, writeCache } from '../../utils/pageCache';
 import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
 
@@ -80,16 +81,20 @@ function OccurrenceCard({ occurrence }: { occurrence: IEventOccurrence }) {
 function EventsPage() {
   const navigate = useNavigate();
   const { canCreateEvents } = useAuth();
-  const [events, setEvents] = useState<Event[]>([]);
+  // Events already loaded once stay on screen while this route fetches them
+  // again, so coming back to the calendar does not show the loading state.
+  const cachedEvents = readCache<Event[]>(CACHE_KEYS.EVENTS);
+  const [events, setEvents] = useState<Event[]>(cachedEvents ?? []);
   const [weekStart, setWeekStart] = useState(() => startOfDay(new Date()));
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cachedEvents);
   const [error, setError] = useState<string | null>(null);
 
   const loadEvents = useCallback(async () => {
-    setLoading(true);
     setError(null);
     try {
-      setEvents(await fetchAllEvents());
+      const fresh = await fetchAllEvents();
+      writeCache(CACHE_KEYS.EVENTS, fresh);
+      setEvents(fresh);
     } catch (err) {
       console.error('Failed to load events:', err);
       setError('Failed to load events. Please try again.');
@@ -101,6 +106,10 @@ function EventsPage() {
   useEffect(() => {
     loadEvents();
   }, [loadEvents]);
+
+  // A refresh that failed is only worth reporting when there is nothing cached
+  // to fall back on.
+  const showError = error !== null && events.length === 0;
 
   const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart]);
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -160,7 +169,7 @@ function EventsPage() {
           </div>
         </div>
 
-        {error ? (
+        {showError ? (
           <div className="error-container">
             <p>{error}</p>
             <button className="retry-button" onClick={loadEvents}>
@@ -200,7 +209,7 @@ function EventsPage() {
           </div>
         )}
 
-        {!loading && !error && occurrenceCount === 0 && events.length === 0 && (
+        {!loading && !showError && occurrenceCount === 0 && events.length === 0 && (
           <div className="empty-state-large">
             <FontAwesomeIcon icon={faCalendarDays} size="3x" style={{ opacity: 0.3 }} />
             <h3>No events yet</h3>
@@ -208,7 +217,7 @@ function EventsPage() {
           </div>
         )}
 
-        {!loading && !error && occurrenceCount === 0 && events.length > 0 && (
+        {!loading && !showError && occurrenceCount === 0 && events.length > 0 && (
           <div className="empty-state-large">
             <FontAwesomeIcon icon={faCircleNotch} size="3x" style={{ opacity: 0.3 }} />
             <h3>Nothing scheduled this week</h3>
