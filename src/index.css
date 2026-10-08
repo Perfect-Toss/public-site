@@ -21,6 +21,14 @@ body {
   min-height: 100vh;
 }
 
+/* Applied to the root only, so the value propagates to the viewport and the page
+   can never be scrolled sideways by a wide descendant. Deliberately NOT set on
+   body: that would make body its own scroll container and break position:
+   sticky for descendants like the video detail header. */
+html {
+  overflow-x: hidden;
+}
+
 button {
   font-family: inherit;
 }

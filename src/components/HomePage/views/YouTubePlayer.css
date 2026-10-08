@@ -1,0 +1,171 @@
+/* Custom YouTube drill player — our own chrome, so YouTube's overlay, title
+   and logo never appear. */
+
+.ytp-root {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 8px;
+}
+
+.ytp-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+
+.ytp-host {
+  position: absolute;
+  inset: 0;
+}
+
+.ytp-host iframe {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Opaque cover until playback starts — hides YouTube's own poster, which
+   `controls=0` does not remove (title, channel, play button, logo). */
+.ytp-poster-btn {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.ytp-poster-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+}
+
+.ytp-poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ytp-play-disc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding-left: 4px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 20px;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.ytp-poster-btn:hover .ytp-play-disc,
+.ytp-poster-btn:focus-visible .ytp-play-disc {
+  background: rgba(0, 0, 0, 0.75);
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+/* Invisible layer over the iframe: YouTube never sees a pointer, so it never
+   draws its hover chrome. Clicking it plays or pauses. */
+.ytp-shield {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Controls overlay the bottom of the video and stay out of the way until the
+   pointer or keyboard focus is on the player. They remain visible while paused
+   so playback can always be restarted. */
+.ytp-controls {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px 10px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.ytp-root:hover .ytp-controls,
+.ytp-root:focus-within .ytp-controls,
+.ytp-root.is-paused .ytp-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ytp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.ytp-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.ytp-time {
+  font-size: 12px;
+  color: #e5e7eb;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ytp-scrub {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 4px;
+  margin: 0;
+  accent-color: #fff;
+  cursor: pointer;
+}
+
+.ytp-error {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.ytp-error a {
+  color: #1a1f24;
+}
+
+/* Fullscreen: the video fills the screen and the controls stay overlaid. */
+.ytp-root:fullscreen {
+  background: #000;
+}
+
+.ytp-root:fullscreen .ytp-media {
+  flex: 1 1 auto;
+  aspect-ratio: auto;
+  border-radius: 0;
+}

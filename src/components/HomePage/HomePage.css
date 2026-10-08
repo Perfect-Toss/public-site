@@ -3,7 +3,9 @@
 .home-page {
   display: flex;
   min-height: 100vh;
-  max-width: 100vw;
+  /* 100%, not 100vw: the vw unit counts a classic scrollbar, which would let the
+     shell sit wider than the space actually available. */
+  max-width: 100%;
   /* Use clip (not hidden) so this box clips overflow without becoming a
      scroll container — overflow-x: hidden silently breaks position: sticky
      of descendants like the video detail header. */
@@ -725,19 +727,6 @@
   font-style: italic;
 }
 
-/* Trending Content */
-.trending-placeholder {
-  padding: 60px;
-  text-align: center;
-  color: #999;
-}
-
-.trending-placeholder p {
-  padding: 0;
-  margin: 0;
-  font-size: 14px;
-}
-
 /* ─── Mobile shell ───────────────────────────────────────────────────────────
    Under the mobile breakpoint the sidebar is replaced by a fixed top bar, a
    bottom tab bar, and a "More" sheet holding everything the tabs can't fit.
@@ -965,9 +954,5 @@
 
   .review-status {
     padding-right: 0;
-  }
-
-  .trending-placeholder {
-    padding: 32px 16px;
   }
 }

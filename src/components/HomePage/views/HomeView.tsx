@@ -3,6 +3,7 @@ import '../../../styles/page.css';
 import { faBuilding, faPlay } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useMemo, useState } from 'react';
 
+import DrillsSection from './DrillsSection';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OrganizationCard } from '../../common';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -17,14 +18,8 @@ export interface PendingReview {
   status: string;
 }
 
-export interface TrendingContent {
-  id: string;
-  title: string;
-}
-
 function HomeView() {
   const [pendingReviews] = useState<PendingReview[]>([]);
-  const [trendingContent] = useState<TrendingContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,19 +111,8 @@ function HomeView() {
             </section>
           )}
 
-          {/* Trending Content Section — hidden when there is nothing trending */}
-          {trendingContent.length > 0 && (
-            <section className="section">
-              <div className="section-header">
-                <h2>Trending Content</h2>
-              </div>
-              <div className="trending-placeholder">
-                <div className="trending-list">
-                  <p>Trending content coming soon</p>
-                </div>
-              </div>
-            </section>
-          )}
+          {/* Drills — public YouTube videos */}
+          <DrillsSection />
         </>
       )}
     </>
