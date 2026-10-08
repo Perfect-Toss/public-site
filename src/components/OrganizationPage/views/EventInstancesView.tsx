@@ -2,12 +2,14 @@ import { faCirclePlay, faHistory, faListCheck } from '@fortawesome/free-solid-sv
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { Event, EventInstance } from '../../../api/api.events';
+import { EntityGroupHeader } from '../EntityGroupHeader';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
 import { fetchEventInstances } from '../../../api/api.events';
 import { fetchEvents } from '../../../api/api.events';
 import { formatDateTime } from '../../../utils/format';
 import {
+  groupByOrganization,
   instanceChangeCount,
   instanceEndedAt,
   instanceStartedAt,
@@ -118,6 +120,18 @@ function EventInstancesView() {
     [entries],
   );
 
+  // A query for this organization also returns its sub-orgs' sessions, so each
+  // list is grouped by the organization the session's event belongs to.
+  const runningGroups = useMemo(
+    () => groupByOrganization(running, (entry) => entry.event, organization.id),
+    [running, organization.id],
+  );
+
+  const historyGroups = useMemo(
+    () => groupByOrganization(history, (entry) => entry.event, organization.id),
+    [history, organization.id],
+  );
+
   if (loading) {
     return (
       <div className="empty-state-large">
@@ -159,11 +173,23 @@ function EventInstancesView() {
         {running.length === 0 ? (
           <p className="org-instance-empty">Nothing running at the moment.</p>
         ) : (
-          <div className="org-instance-list">
-            {running.map((entry) => (
-              <InstanceRow key={entry.instance.id} entry={entry} />
-            ))}
-          </div>
+          runningGroups.map((group) => (
+            <div key={group.organizationId ?? 'unknown'} className="org-entity-group">
+              {/* Only label the groups that belong to another organization. */}
+              {!group.isCurrent && (
+                <EntityGroupHeader
+                  name={group.organizationName}
+                  isCurrent={group.isCurrent}
+                  countLabel={`${group.items.length} ${group.items.length === 1 ? 'session' : 'sessions'}`}
+                />
+              )}
+              <div className="org-instance-list">
+                {group.items.map((entry) => (
+                  <InstanceRow key={entry.instance.id} entry={entry} />
+                ))}
+              </div>
+            </div>
+          ))
         )}
       </section>
 
@@ -185,11 +211,23 @@ function EventInstancesView() {
         {history.length === 0 ? (
           <p className="org-instance-empty">Completed and cancelled sessions will be listed here.</p>
         ) : (
-          <div className="org-instance-list">
-            {history.map((entry) => (
-              <InstanceRow key={entry.instance.id} entry={entry} />
-            ))}
-          </div>
+          historyGroups.map((group) => (
+            <div key={group.organizationId ?? 'unknown'} className="org-entity-group">
+              {/* Only label the groups that belong to another organization. */}
+              {!group.isCurrent && (
+                <EntityGroupHeader
+                  name={group.organizationName}
+                  isCurrent={group.isCurrent}
+                  countLabel={`${group.items.length} ${group.items.length === 1 ? 'session' : 'sessions'}`}
+                />
+              )}
+              <div className="org-instance-list">
+                {group.items.map((entry) => (
+                  <InstanceRow key={entry.instance.id} entry={entry} />
+                ))}
+              </div>
+            </div>
+          ))
         )}
       </section>
     </div>

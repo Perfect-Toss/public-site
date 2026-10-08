@@ -466,6 +466,49 @@
   color: #888;
 }
 
+/* ─── Entity groups (a query returns sub-org rows too) ────────────────────── */
+
+.org-entity-group + .org-entity-group {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.org-entity-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.org-entity-icon {
+  font-size: 12px;
+  color: #bbb;
+}
+
+.org-entity-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1f24;
+}
+
+.org-entity-badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef7c9;
+  color: #5c6b00;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.org-entity-count {
+  margin-left: auto;
+  font-size: 12px;
+  color: #999;
+}
+
 .org-event-list,
 .org-instance-list {
   display: flex;

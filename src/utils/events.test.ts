@@ -7,6 +7,7 @@ import {
   formatWeekLabel,
   getWeekDays,
   getWeekRange,
+  groupByOrganization,
   instanceChangeCount,
   instanceStatus,
   nextOccurrence,
@@ -253,5 +254,51 @@ describe('instance status', () => {
         ]),
       ),
     ).toBe('Cancelled');
+  });
+});
+
+describe('groupByOrganization', () => {
+  it('puts the current organization first, then sub-orgs by name', () => {
+    const groups = groupByOrganization(
+      [
+        event({}, { id: 'e1', organizationId: 'org-3', organization: { id: 'org-3', name: 'Zebras' } }),
+        event({}, { id: 'e2', organizationId: 'org-1', organization: { id: 'org-1', name: 'Club' } }),
+        event({}, { id: 'e3', organizationId: 'org-2', organization: { id: 'org-2', name: 'Alligators' } }),
+      ],
+      (e) => e,
+      'org-1',
+    );
+
+    expect(groups.map((g) => [g.organizationName, g.isCurrent, g.items.length])).toEqual([
+      ['Club', true, 1],
+      ['Alligators', false, 1],
+      ['Zebras', false, 1],
+    ]);
+  });
+
+  it('falls back to the id, then to a placeholder, when no organization object is carried', () => {
+    const byId = groupByOrganization(
+      [event({}, { id: 'e1', organizationId: 'org-9' })],
+      (e) => e,
+      'org-1',
+    );
+    expect(byId[0]).toMatchObject({ organizationId: 'org-9', organizationName: 'org-9', isCurrent: false });
+
+    const none = groupByOrganization([event({}, { id: 'e2' })], (e) => e, 'org-1');
+    expect(none[0]).toMatchObject({ organizationId: null, organizationName: 'Unknown organization' });
+  });
+
+  it('keeps every row of one organization together', () => {
+    const groups = groupByOrganization(
+      [
+        event({}, { id: 'e1', organizationId: 'org-2', organization: { id: 'org-2', name: 'Team' } }),
+        event({}, { id: 'e2', organizationId: 'org-2', organization: { id: 'org-2', name: 'Team' } }),
+      ],
+      (e) => e,
+      'org-1',
+    );
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].items.map((e) => e.id)).toEqual(['e1', 'e2']);
   });
 });
