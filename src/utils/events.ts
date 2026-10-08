@@ -387,3 +387,55 @@ export function instanceEndedAt(instance: EventInstance): Date | null {
 export function instanceChangeCount(instance: EventInstance): number {
   return (instance.stateChanges ?? []).length;
 }
+
+/** The organization a row belongs to, as the events API carries it. */
+export interface IOrganizationRef {
+  organizationId?: string | null;
+  organization?: { id?: string | null; name?: string | null } | null;
+}
+
+/** One organization's slice of an event or instance list. */
+export interface IOrganizationGroup<T> {
+  /** Null when the API carried no organization for the row. */
+  organizationId: string | null;
+  organizationName: string;
+  /** True for the organization the page shows; false for one of its sub-orgs. */
+  isCurrent: boolean;
+  items: T[];
+}
+
+/**
+ * Group rows by the organization they belong to, listing the current
+ * organization first and the rest alphabetically. An organization's query
+ * returns its sub-orgs' rows too, so the group header is what tells them apart.
+ */
+export function groupByOrganization<T>(
+  items: T[],
+  toRef: (item: T) => IOrganizationRef | undefined | null,
+  currentOrganizationId?: string,
+): IOrganizationGroup<T>[] {
+  const groups = new Map<string, IOrganizationGroup<T>>();
+
+  for (const item of items) {
+    const ref = toRef(item);
+    const organizationId = ref?.organizationId ?? ref?.organization?.id ?? null;
+    let group = groups.get(organizationId ?? 'unknown');
+    if (!group) {
+      group = {
+        organizationId,
+        organizationName: ref?.organization?.name ?? organizationId ?? 'Unknown organization',
+        isCurrent: organizationId !== null && organizationId === currentOrganizationId,
+        items: [],
+      };
+      groups.set(organizationId ?? 'unknown', group);
+    }
+    group.items.push(item);
+  }
+
+  return [...groups.values()].sort(
+    (a, b) =>
+      Number(b.isCurrent) - Number(a.isCurrent) ||
+      a.organizationName.localeCompare(b.organizationName),
+  );
+}
+

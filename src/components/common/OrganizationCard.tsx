@@ -1,10 +1,9 @@
 import './OrganizationCard.css';
 
-import { faBuilding } from '@fortawesome/free-solid-svg-icons';
+import type { Entity } from '../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
-
-import type { Entity } from '../../api/api.entities';
+import { faBuilding } from '@fortawesome/free-solid-svg-icons';
 
 export interface OrganizationCardProps {
   organization: Entity;

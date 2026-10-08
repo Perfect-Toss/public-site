@@ -1,14 +1,14 @@
+import { describeSchedule, groupByOrganization, nextOccurrence } from '../../../utils/events';
 import { faCalendarDays, faPlus, faUsers } from '@fortawesome/free-solid-svg-icons';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { EntityGroupHeader } from '../EntityGroupHeader';
 import type { Event } from '../../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
 import type { OrganizationPageContext } from '../OrganizationPage';
-import { describeSchedule } from '../../../utils/events';
 import { fetchEvents } from '../../../api/api.events';
 import { formatDateTime } from '../../../utils/format';
-import { nextOccurrence } from '../../../utils/events';
 import { useCanManageEvents } from '../../../hooks/useCanManageEvents';
 import { useNavigate } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
@@ -19,6 +19,38 @@ const PAGE_SIZE = 200;
 function nextOccurrenceLabel(event: Event): string {
   const next = nextOccurrence(event, new Date());
   return next ? formatDateTime(next.start.toISOString()) : '—';
+}
+
+/** One active event, linked to its detail page. */
+function EventRow({ event }: { event: Event }) {
+  return (
+    <Link className="org-event-row" to={`/events/${event.id}`}>
+      <div className="org-event-main">
+        <span className="org-event-name">{event.name || 'Untitled event'}</span>
+        <span className="org-event-schedule">{describeSchedule(event)}</span>
+        {event.location && <span className="org-event-location">{event.location}</span>}
+      </div>
+
+      <div className="org-event-meta">
+        <span className="org-event-next" title="Next occurrence">
+          Next: {nextOccurrenceLabel(event)}
+        </span>
+        <span className="org-event-count" title="Athletes on the roster">
+          <FontAwesomeIcon icon={faUsers} />
+          {(event.athletes ?? []).length}
+        </span>
+        {(event.tags ?? []).length > 0 && (
+          <span className="org-event-tags">
+            {(event.tags ?? []).map((tag) => (
+              <span key={tag.id} className="org-event-tag" style={tag.colorHex ? { borderColor: tag.colorHex } : undefined}>
+                {tag.name}
+              </span>
+            ))}
+          </span>
+        )}
+      </div>
+    </Link>
+  );
 }
 
 function EventsView() {
@@ -50,6 +82,13 @@ function EventsView() {
   useEffect(() => {
     loadEvents();
   }, [loadEvents]);
+
+  // A query for this organization also returns its sub-orgs' events, so the
+  // rows are grouped by the organization they actually belong to.
+  const groups = useMemo(
+    () => groupByOrganization(events, (event) => event, organization.id),
+    [events, organization.id],
+  );
 
   if (loading) {
     return (
@@ -101,36 +140,23 @@ function EventsView() {
           <p>Events with an upcoming schedule will appear here</p>
         </div>
       ) : (
-        <div className="org-event-list">
-          {events.map((event) => (
-            <Link key={event.id} className="org-event-row" to={`/events/${event.id}`}>
-              <div className="org-event-main">
-                <span className="org-event-name">{event.name || 'Untitled event'}</span>
-                <span className="org-event-schedule">{describeSchedule(event)}</span>
-                {event.location && <span className="org-event-location">{event.location}</span>}
-              </div>
-
-              <div className="org-event-meta">
-                <span className="org-event-next" title="Next occurrence">
-                  Next: {nextOccurrenceLabel(event)}
-                </span>
-                <span className="org-event-count" title="Athletes on the roster">
-                  <FontAwesomeIcon icon={faUsers} />
-                  {(event.athletes ?? []).length}
-                </span>
-                {(event.tags ?? []).length > 0 && (
-                  <span className="org-event-tags">
-                    {(event.tags ?? []).map((tag) => (
-                      <span key={tag.id} className="org-event-tag" style={tag.colorHex ? { borderColor: tag.colorHex } : undefined}>
-                        {tag.name}
-                      </span>
-                    ))}
-                  </span>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
+        groups.map((group) => (
+          <div key={group.organizationId ?? 'unknown'} className="org-entity-group">
+            {/* Only label the groups that belong to another organization. */}
+            {!group.isCurrent && (
+              <EntityGroupHeader
+                name={group.organizationName}
+                isCurrent={group.isCurrent}
+                countLabel={`${group.items.length} ${group.items.length === 1 ? 'event' : 'events'}`}
+              />
+            )}
+            <div className="org-event-list">
+              {group.items.map((event) => (
+                <EventRow key={event.id} event={event} />
+              ))}
+            </div>
+          </div>
+        ))
       )}
     </div>
   );
