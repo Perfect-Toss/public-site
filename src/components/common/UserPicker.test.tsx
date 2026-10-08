@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render } from '@testing-library/react';
 
 import { Role } from '../../api/api.users';
 import type { User } from '../../api/api.users';
-import { UserPicker } from './UserPicker';
+import { UserPicker, type UserPickerMultiProps, type UserPickerSingleProps } from './UserPicker';
 
 // jsdom has no viewport, so the virtualized list would render no rows at all.
 // Render every row instead — virtualizing is not what these tests are about.
@@ -66,7 +66,7 @@ const users: User[] = [
 // Vitest globals are off, so testing-library's automatic cleanup is not registered.
 afterEach(cleanup);
 
-type PickerProps = Partial<Parameters<typeof UserPicker>[0]>;
+type PickerProps = Partial<UserPickerMultiProps>;
 
 function renderPicker(props: PickerProps = {}) {
   const onChange = vi.fn();
@@ -257,5 +257,50 @@ describe('UserPicker', () => {
     view.open();
 
     expect(view.getByText('No coaches found for this organization.')).toBeDefined();
+  });
+});
+
+describe('UserPicker (single-select)', () => {
+  function renderSingle(props: Partial<UserPickerSingleProps> = {}) {
+    const onChange = vi.fn();
+    const view = render(
+      <UserPicker users={users} multiple={false} value={null} onChange={onChange} {...props} />,
+    );
+
+    const trigger = () => view.container.querySelector('.vs-trigger') as HTMLElement;
+    const open = () => fireEvent.click(trigger());
+    return { ...view, onChange, open, trigger };
+  }
+
+  it('reports one id and closes the panel on pick', () => {
+    const view = renderSingle();
+    view.open();
+
+    fireEvent.click(optionWith(view.baseElement, 'Grace Hopper'));
+
+    expect(view.onChange).toHaveBeenCalledWith('grace');
+    expect(view.baseElement.querySelector('.vs-panel')).toBeNull();
+  });
+
+  it('shows the selected user as the trigger label, not a pill', () => {
+    const view = renderSingle({ value: 'ada' });
+
+    expect(view.trigger().textContent).toContain('Ada Lovelace');
+    expect(view.container.querySelector('.up-pill')).toBeNull();
+  });
+
+  it('renders no per-row checkboxes', () => {
+    const view = renderSingle();
+    view.open();
+
+    expect(view.baseElement.querySelectorAll('.vs-option-check').length).toBe(0);
+  });
+
+  it('reports null when the selection is cleared', () => {
+    const view = renderSingle({ value: 'ada' });
+
+    fireEvent.click(view.container.querySelector('.vs-clear') as HTMLElement);
+
+    expect(view.onChange).toHaveBeenCalledWith(null);
   });
 });

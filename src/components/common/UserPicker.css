@@ -6,6 +6,9 @@
   gap: 8px;
   width: 100%;
   min-width: 0;
+  /* Query container so the role chips can drop out on a narrow picker (e.g. the
+     admin cache card) instead of squeezing the name/email out of the row. */
+  container-type: inline-size;
 }
 
 .up-name {
@@ -17,7 +20,9 @@
 }
 
 .up-email {
-  flex: 1 1 0;
+  /* Basis `auto` (not 0) so the email shrinks alongside the name when the row
+     is tight, instead of collapsing to zero width while the name takes it all. */
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -33,6 +38,14 @@
   align-items: center;
   gap: 4px;
   margin-left: auto;
+}
+
+/* Identity beats metadata: the chips drop out before they can crowd the
+   name/email out of a narrow picker. */
+@container (max-width: 360px) {
+  .up-roles {
+    display: none;
+  }
 }
 
 /* Same palette as the AdminUsersPage role badges, but under its own class: that
