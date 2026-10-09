@@ -113,6 +113,10 @@ function AdminMachinesPage() {
     navigate(`/admin/devices/machines/${machine.id}/edit`);
   };
 
+  const openTabletEditForm = (tabletId: string) => {
+    navigate(`/admin/devices/tablets/${tabletId}/edit`);
+  };
+
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
 
@@ -230,8 +234,16 @@ function AdminMachinesPage() {
                   <td style={{ color: '#666', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {machine.purpose || '—'}
                   </td>
-                  <td style={{ fontFamily: 'monospace', fontSize: 12, color: '#666' }}>
-                    {machine.tablet?.name || '—'}
+                  <td>
+                    {machine.tablet ? (
+                      <a
+                        href="#"
+                        className="table-link"
+                        onClick={(e) => { e.preventDefault(); openTabletEditForm(machine.tablet!.id); }}
+                      >
+                        {machine.tablet.name || '—'}
+                      </a>
+                    ) : '—'}
                   </td>
                   <td style={{ color: '#999', fontSize: 12, whiteSpace: 'nowrap' }}>
                     {machine.createdAt ? formatDate(machine.createdAt) : '—'}
