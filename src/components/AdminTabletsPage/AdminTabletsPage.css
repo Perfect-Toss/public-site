@@ -148,4 +148,19 @@
   color: #2e7d32;
 }
 
+.import-result {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.import-result.error {
+  background: #fce4ec;
+  color: #c62828;
+  border: 1px solid #f5c6cb;
+}
+
 

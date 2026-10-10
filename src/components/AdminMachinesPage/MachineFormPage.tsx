@@ -43,31 +43,50 @@ function MachineFormPage() {
     loadTablets();
   }, [loadTablets]);
 
-  // Load machine data for editing
+  // Load machine data for editing. A machine that cannot be loaded (deleted, or the
+  // request failed) sends the user back to the list instead of an empty form.
   useEffect(() => {
-    if (id) {
-      setLoadingEntity(true);
-      loadMachineById(id)
-        .then((machine) => {
-          if (machine) {
-            setFormData({
-              name: machine.name ?? '',
-              machineId: machine.machineId ?? '',
-              isPhysicalDevice: machine.isPhysicalDevice,
-              purpose: machine.purpose ?? '',
-              status: machine.status ?? 'Active',
-              mustHaveDate: machine.mustHaveDate ?? '',
-              tabletId: machine.tabletId ?? '',
-              comments: machine.comments ?? '',
-            });
-          }
-        })
-        .catch(() => {
-          setResult({ type: 'error', message: 'Failed to load machine.' });
-        })
-        .finally(() => setLoadingEntity(false));
-    }
-  }, [id, loadMachineById]);
+    if (!id) return;
+
+    let active = true;
+
+    const backToList = () => {
+      navigate('/admin/devices/machines', {
+        replace: true,
+        state: { error: 'Could not load that machine.' },
+      });
+    };
+
+    setLoadingEntity(true);
+    loadMachineById(id)
+      .then((machine) => {
+        if (!active) return;
+        if (!machine) {
+          backToList();
+          return;
+        }
+        setFormData({
+          name: machine.name ?? '',
+          machineId: machine.machineId ?? '',
+          isPhysicalDevice: machine.isPhysicalDevice,
+          purpose: machine.purpose ?? '',
+          status: machine.status ?? 'Active',
+          mustHaveDate: machine.mustHaveDate ?? '',
+          tabletId: machine.tabletId ?? '',
+          comments: machine.comments ?? '',
+        });
+      })
+      .catch(() => {
+        if (active) backToList();
+      })
+      .finally(() => {
+        if (active) setLoadingEntity(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id, loadMachineById, navigate]);
 
   const handleSubmit = useCallback(async () => {
     if (!formData.name.trim() || !formData.machineId.trim()) return;

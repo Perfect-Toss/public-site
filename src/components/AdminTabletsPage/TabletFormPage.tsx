@@ -44,31 +44,50 @@ function TabletFormPage() {
     loadServiceAccounts();
   }, [loadTabletTypes, loadServiceAccounts]);
 
-  // Load tablet data for editing
+  // Load tablet data for editing. A tablet that cannot be loaded (deleted, or the
+  // request failed) sends the user back to the list instead of an empty form.
   useEffect(() => {
-    if (id) {
-      setLoadingEntity(true);
-      loadTabletById(id)
-        .then((tablet) => {
-          if (tablet) {
-            setFormData({
-              name: tablet.name ?? '',
-              tabletUserId: tablet.tabletUserId ?? '',
-              pin: tablet.pin ?? '',
-              serviceAccountId: tablet.serviceAccountId ?? '',
-              cover: tablet.cover ?? false,
-              holder: tablet.holder ?? false,
-              tripod: tablet.tripod ?? false,
-              tabletTypeId: tablet.tabletTypeId ?? '',
-            });
-          }
-        })
-        .catch(() => {
-          setResult({ type: 'error', message: 'Failed to load tablet.' });
-        })
-        .finally(() => setLoadingEntity(false));
-    }
-  }, [id, loadTabletById]);
+    if (!id) return;
+
+    let active = true;
+
+    const backToList = () => {
+      navigate('/admin/devices/tablets', {
+        replace: true,
+        state: { error: 'Could not load that tablet.' },
+      });
+    };
+
+    setLoadingEntity(true);
+    loadTabletById(id)
+      .then((tablet) => {
+        if (!active) return;
+        if (!tablet) {
+          backToList();
+          return;
+        }
+        setFormData({
+          name: tablet.name ?? '',
+          tabletUserId: tablet.tabletUserId ?? '',
+          pin: tablet.pin ?? '',
+          serviceAccountId: tablet.serviceAccountId ?? '',
+          cover: tablet.cover ?? false,
+          holder: tablet.holder ?? false,
+          tripod: tablet.tripod ?? false,
+          tabletTypeId: tablet.tabletTypeId ?? '',
+        });
+      })
+      .catch(() => {
+        if (active) backToList();
+      })
+      .finally(() => {
+        if (active) setLoadingEntity(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id, loadTabletById, navigate]);
 
   const handleSubmit = useCallback(async () => {
     if (!formData.name.trim()) return;

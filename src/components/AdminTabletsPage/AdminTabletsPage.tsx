@@ -11,11 +11,11 @@ import {
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Tablet } from '../../api/api.tablets';
 import { formatDate } from '../../utils/format';
-import { useNavigate } from 'react-router-dom';
 import { useTabletStore } from '../../stores/tabletStore';
 import { useUserStore } from '../../stores/userStore';
 
@@ -28,6 +28,7 @@ type SortDir = 'asc' | 'desc';
 
 function AdminTabletsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDir>('asc');
@@ -47,11 +48,23 @@ function AdminTabletsPage() {
   // ── Delete confirm state ────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<Tablet | null>(null);
 
+  // ── Message handed over by the edit screen ──────────────────────
+  const [loadError] = useState<string | null>(
+    () => (location.state as { error?: string } | null)?.error ?? null
+  );
+
   useEffect(() => {
     loadTablets();
     loadTabletTypes();
     loadServiceAccounts();
   }, [loadTablets, loadTabletTypes, loadServiceAccounts]);
+
+  // Clear the one-shot message so it doesn't return on refresh.
+  useEffect(() => {
+    if ((location.state as { error?: string } | null)?.error) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   /* ─── Sorting & Filtering ─────────────────────────────────────── */
 
@@ -151,6 +164,11 @@ function AdminTabletsPage() {
   return (
     <div className="admin-tablets-page">
       <section className="section">
+        {loadError && (
+          <div className="import-result error" style={{ marginBottom: 16 }}>
+            {loadError}
+          </div>
+        )}
         <div className="table-toolbar">
               <div className="search-box">
                 <FontAwesomeIcon icon={faSearch} className="search-icon" />
