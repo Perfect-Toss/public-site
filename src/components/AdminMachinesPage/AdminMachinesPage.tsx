@@ -13,12 +13,12 @@ import {
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Machine } from '../../api/api.machines';
 import { formatDate } from '../../utils/format';
 import { useMachineStore } from '../../stores/machineStore';
-import { useNavigate } from 'react-router-dom';
 
 /* ─── Helpers ─────────────────────────────────────────────────────── */
 
@@ -42,6 +42,7 @@ function getStatusClass(status?: string | null): string {
 
 function AdminMachinesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<SortColumn>('name');
   const [sortDirection, setSortDirection] = useState<SortDir>('asc');
@@ -51,9 +52,21 @@ function AdminMachinesPage() {
   // ── Delete confirm state ────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState<import('../../api/api.machines').Machine | null>(null);
 
+  // ── Message handed over by the edit screen ──────────────────────
+  const [loadError] = useState<string | null>(
+    () => (location.state as { error?: string } | null)?.error ?? null
+  );
+
   useEffect(() => {
     loadMachines();
   }, [loadMachines]);
+
+  // Clear the one-shot message so it doesn't return on refresh.
+  useEffect(() => {
+    if ((location.state as { error?: string } | null)?.error) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   /* ─── Sorting & Filtering ─────────────────────────────────────── */
 
@@ -134,6 +147,11 @@ function AdminMachinesPage() {
   return (
     <div className="admin-machines-page">
       <section className="section">
+        {loadError && (
+          <div className="import-result error" style={{ marginBottom: 16 }}>
+            {loadError}
+          </div>
+        )}
         {/* ─── Toolbar ───────────────────────────────────────── */}
         <div className="table-toolbar">
           <div className="search-box">
