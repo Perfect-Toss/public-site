@@ -123,10 +123,23 @@ export function VideoReviewComposer({
   }, [changeAnchor, voice]);
 
   const submitReview = useCallback(async () => {
+    const trimmedText = text.trim();
+    const audioData = voice.result.audioData;
+    if (!trimmedText && !audioData) return;
+
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const body: AddVideoReviewRequest = { text: text.trim() || null };
+      // A review item holds exactly one content: its audio, or its text.
+      const body: AddVideoReviewRequest = {};
+      if (audioData) {
+        body.audioData = audioData;
+        body.audioMimeType = voice.result.audioMimeType;
+        // On-device speech-to-text already ran; send its result so the server skips transcription.
+        if (trimmedText) body.transcript = trimmedText;
+      } else {
+        body.text = trimmedText;
+      }
 
       if (anchor.kind === 'segment') {
         body.timestamp = toTimeSpan(anchor.start);
@@ -137,11 +150,6 @@ export function VideoReviewComposer({
         }
       } else if (anchor.kind === 'snapshot') {
         body.timestamp = toTimeSpan(anchor.time);
-      }
-
-      if (voice.result.audioData) {
-        body.audioData = voice.result.audioData;
-        body.audioMimeType = voice.result.audioMimeType;
       }
 
       await addVideoReview(videoId, body);
@@ -229,7 +237,7 @@ export function VideoReviewComposer({
           type="button"
           className="vro-submit"
           onClick={() => void submitReview()}
-          disabled={submitting}
+          disabled={submitting || (!text.trim() && !voice.result.audioData)}
         >
           {submitting ? (
             <>

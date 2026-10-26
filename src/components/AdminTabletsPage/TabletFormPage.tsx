@@ -98,7 +98,7 @@ function TabletFormPage() {
     try {
       if (isEditing && id) {
         const dto: UpdateTabletRequest = {
-          name: formData.name.trim() || undefined,
+          name: formData.name.trim() || null,
           tabletUserId: formData.tabletUserId.trim() || undefined,
           pin: formData.pin.trim() || undefined,
           serviceAccountId: formData.serviceAccountId || null,
@@ -111,7 +111,7 @@ function TabletFormPage() {
         setResult({ type: 'success', message: 'Tablet updated successfully!' });
       } else {
         const dto: CreateTabletRequest = {
-          name: formData.name.trim() || undefined,
+          name: formData.name.trim() || null,
           tabletUserId: formData.tabletUserId.trim() || undefined,
           pin: formData.pin.trim() || undefined,
           serviceAccountId: formData.serviceAccountId || null,

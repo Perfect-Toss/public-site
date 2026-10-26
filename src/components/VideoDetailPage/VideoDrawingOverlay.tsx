@@ -68,8 +68,7 @@ const STAMPS = [
 /**
  * Full-video drawing overlay for snapshot reviews. A canvas sits on top of the
  * video so the user can draw directly on the current frame, annotate it with
- * pen / eraser / stamps, and submit the drawing (as a PNG) with an optional
- * caption.
+ * pen / eraser / stamps, and submit the drawing (as a PNG).
  */
 export function VideoDrawingOverlay({
   videoId,
@@ -87,7 +86,6 @@ export function VideoDrawingOverlay({
   const [tool, setTool] = useState<DrawingTool | 'stamp'>('pen');
   const [stampType, setStampType] = useState<DrawingStampType>('arrow');
   const [color, setColor] = useState(DRAW_COLORS[0]);
-  const [caption, setCaption] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -266,13 +264,22 @@ export function VideoDrawingOverlay({
   }, [redraw, onAnchorChange, positionTime]);
 
   const submit = useCallback(async () => {
+    const canvas = canvasRef.current;
+    const dataUrl = canvas?.toDataURL('image/png');
+    const comma = dataUrl ? dataUrl.indexOf(',') : -1;
+    if (!dataUrl || comma < 0) {
+      setSubmitError('Could not capture the drawing. Please try again.');
+      return;
+    }
+
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const canvas = canvasRef.current;
-      const dataUrl = canvas?.toDataURL('image/png');
-      const comma = dataUrl ? dataUrl.indexOf(',') : -1;
-      const body: AddVideoReviewRequest = { text: caption.trim() || null };
+      // A review item holds exactly one content, and this one is the drawing.
+      const body: AddVideoReviewRequest = {
+        drawingData: dataUrl.slice(comma + 1),
+        drawingMimeType: 'image/png',
+      };
       const timestamp =
         anchor.kind === 'snapshot'
           ? anchor.time
@@ -280,10 +287,7 @@ export function VideoDrawingOverlay({
             ? anchor.start
             : positionTime;
       body.timestamp = toTimeSpan(timestamp);
-      if (dataUrl && comma >= 0) {
-        body.drawingData = dataUrl.slice(comma + 1);
-        body.drawingMimeType = 'image/png';
-      }
+
       await addVideoReview(videoId, body);
       await onAdded();
       onClose();
@@ -293,7 +297,7 @@ export function VideoDrawingOverlay({
     } finally {
       setSubmitting(false);
     }
-  }, [caption, anchor, positionTime, videoId, onAdded, onClose]);
+  }, [anchor, positionTime, videoId, onAdded, onClose]);
 
   return (
     <div
@@ -393,13 +397,6 @@ export function VideoDrawingOverlay({
       />
 
       <div className="vdo-compose">
-        <textarea
-          className="vdo-caption"
-          rows={1}
-          placeholder="Add a caption (optional)..."
-          value={caption}
-          onChange={(e) => setCaption(e.target.value)}
-        />
         <button
           type="button"
           className="vdo-submit"

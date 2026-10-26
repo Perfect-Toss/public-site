@@ -15,8 +15,8 @@ import { UserInfo } from '../common';
 import {
   positionText,
   REQUEST_STATUS_LABELS,
-  toDataUrl,
 } from './reviewLabels';
+import { useReviewContentUrl } from './reviewContent';
 import { sortReviewsByTime } from './videoTime';
 
 export interface VideoReviewListProps {
@@ -33,6 +33,85 @@ export interface VideoReviewListProps {
   onFocusHandled?: () => void;
   /** Called when a review item is clicked so the player can seek/loop to it. */
   onSelectReview?: (reviewId: string) => void;
+}
+
+interface ReviewListItemProps {
+  videoId: string;
+  review: VideoReview;
+  highlighted: boolean;
+  selectable: boolean;
+  onSelect?: (reviewId: string) => void;
+  onDelete: (reviewId: string) => void;
+  onKeyDown: (e: KeyboardEvent<HTMLLIElement>, reviewId: string) => void;
+}
+
+function ReviewListItem({
+  videoId,
+  review,
+  highlighted,
+  selectable,
+  onSelect,
+  onDelete,
+  onKeyDown,
+}: ReviewListItemProps) {
+  const { url: contentUrl, onError: onContentError } = useReviewContentUrl(videoId, review);
+  const pos = positionText(review);
+  // An audio item carries no text of its own — its transcript stands in for it.
+  const body = review.text ?? review.transcript ?? null;
+
+  return (
+    <li
+      id={`vr-item-${review.id}`}
+      className={`vr-item${highlighted ? ' vr-item-highlight' : ''}${
+        selectable ? ' vr-item-clickable' : ''
+      }`}
+      onClick={selectable && onSelect ? () => onSelect(review.id) : undefined}
+      onKeyDown={selectable && onSelect ? (e) => onKeyDown(e, review.id) : undefined}
+      role={selectable ? 'button' : undefined}
+      tabIndex={selectable ? 0 : undefined}
+      title={selectable ? 'Jump to this review in the video' : undefined}
+    >
+      <div className="vr-item-head">
+        <UserInfo user={review.createdByUser ?? {}} size={24} />
+        {pos && (
+          <span className="vr-item-pos">
+            <FontAwesomeIcon icon={faClock} />
+            {pos}
+          </span>
+        )}
+        <span className="vr-item-time">{formatDateTime(review.createdAt)}</span>
+        <button
+          type="button"
+          className="vr-delete"
+          title="Delete review"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(review.id);
+          }}
+        >
+          <FontAwesomeIcon icon={faTrash} />
+        </button>
+      </div>
+      {body && <p className="vr-item-text">{body}</p>}
+      {contentUrl && review.contentKind === 'Audio' && (
+        <audio
+          controls
+          src={contentUrl}
+          className="vr-item-audio"
+          onClick={(e) => e.stopPropagation()}
+          onError={onContentError}
+        />
+      )}
+      {contentUrl && review.contentKind === 'Drawing' && (
+        <img
+          className="vr-item-drawing"
+          src={contentUrl}
+          alt="Review drawing"
+          onError={onContentError}
+        />
+      )}
+    </li>
+  );
 }
 
 export function VideoReviewList({
@@ -155,59 +234,18 @@ export function VideoReviewList({
             <p className="vr-empty">No reviews yet. Add one using the composer on the video.</p>
           ) : (
             <ul className="vr-list">
-              {sortedReviews.map((review) => {
-                const pos = positionText(review);
-                const audioUrl = toDataUrl(review.audioData, review.audioMimeType, 'audio/webm');
-                const drawingUrl = toDataUrl(review.drawingData, review.drawingMimeType, 'image/png');
-                return (
-                  <li
-                    key={review.id}
-                    id={`vr-item-${review.id}`}
-                    className={`vr-item${highlightId === review.id ? ' vr-item-highlight' : ''}${
-                      onSelectReview ? ' vr-item-clickable' : ''
-                    }`}
-                    onClick={onSelectReview ? () => onSelectReview(review.id) : undefined}
-                    onKeyDown={onSelectReview ? (e) => handleItemKeyDown(e, review.id) : undefined}
-                    role={onSelectReview ? 'button' : undefined}
-                    tabIndex={onSelectReview ? 0 : undefined}
-                    title={onSelectReview ? 'Jump to this review in the video' : undefined}
-                  >
-                    <div className="vr-item-head">
-                      <UserInfo user={review.createdByUser ?? {}} size={24} />
-                      {pos && (
-                        <span className="vr-item-pos">
-                          <FontAwesomeIcon icon={faClock} />
-                          {pos}
-                        </span>
-                      )}
-                      <span className="vr-item-time">{formatDateTime(review.createdAt)}</span>
-                      <button
-                        type="button"
-                        className="vr-delete"
-                        title="Delete review"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          void handleDeleteReview(review.id);
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </div>
-                    {review.text && <p className="vr-item-text">{review.text}</p>}
-                    {audioUrl && (
-                      <audio
-                        controls
-                        src={audioUrl}
-                        className="vr-item-audio"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    )}
-                    {drawingUrl && (
-                      <img className="vr-item-drawing" src={drawingUrl} alt="Review drawing" />
-                    )}
-                  </li>
-                );
-              })}
+              {sortedReviews.map((review) => (
+                <ReviewListItem
+                  key={review.id}
+                  videoId={videoId}
+                  review={review}
+                  highlighted={highlightId === review.id}
+                  selectable={Boolean(onSelectReview)}
+                  onSelect={onSelectReview}
+                  onDelete={handleDeleteReview}
+                  onKeyDown={handleItemKeyDown}
+                />
+              ))}
             </ul>
           )}
         </>

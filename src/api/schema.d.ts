@@ -1677,6 +1677,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/machines/machineid/{machineId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets a specific machine by its admin machine id. Available to admins and to service
+         *     accounts.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The admin machine id (e.g. "M-001"). */
+                    machineId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Machine"];
+                        "application/json": components["schemas"]["Machine"];
+                        "text/json": components["schemas"]["Machine"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/tabletid/{tabletId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets the machine linked to a tablet. Available to admins and to service accounts. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the tablet. */
+                    tabletId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Machine"];
+                        "application/json": components["schemas"]["Machine"];
+                        "text/json": components["schemas"]["Machine"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/machines/{id}": {
         parameters: {
             query?: never;
@@ -2171,6 +2256,50 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tablets/name/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets a specific tablet by its name. Available to admins and to service accounts
+         *     (e.g. the tablet device resolving its own record).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The name of the tablet. */
+                    name: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Tablet"];
+                        "application/json": components["schemas"]["Tablet"];
+                        "text/json": components["schemas"]["Tablet"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3382,9 +3511,9 @@ export interface paths {
          * Adds a review item to a video. The kind of item is derived from its anchors: a
          *     general note (text/audio, not anchored), a snapshot review (freeze-frame
          *     timestamp; text/audio/drawing), or a segment review (timestamp + duration;
-         *     text/audio only). The current user is recorded as the item's creator (and
-         *     therefore its reviewer), and all open review requests for the video are marked
-         *     done.
+         *     text/audio only). The acting user is recorded as the item's creator, and all open
+         *     review requests for the video are marked done. An optional reviewer may be assigned
+         *     to attribute the item to another user; when omitted, the creator is the reviewer.
          */
         post: {
             parameters: {
@@ -3485,6 +3614,54 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/videos/{videoId}/reviews/{itemId}/content/url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generates a time-limited SAS URL for a review item's content blob (its audio
+         *     recording or its drawing overlay). The client calls this when the user asks to
+         *     play or open that content, and may cache the URL for its lifetime. A text item
+         *     has no blob and returns 404.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video the review item belongs to. */
+                    videoId: string;
+                    /** @description The review item whose content is requested. */
+                    itemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SasUrlResponse"];
+                        "application/json": components["schemas"]["SasUrlResponse"];
+                        "text/json": components["schemas"]["SasUrlResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4159,11 +4336,25 @@ export interface components {
             roles: components["schemas"]["Roles"][] | null;
         };
         /**
-         * @description Request model for adding a review item to a video review. The kind of item is
-         *     derived from its anchors: general (no timestamp/duration; text/audio), snapshot
-         *     (timestamp only; text/audio/drawing), or segment (timestamp + duration; text/audio only).
+         * @description Request model for adding a review item to a video review. The anchors decide the item
+         *     type: general (no timestamp/duration), snapshot (timestamp only), or segment
+         *     (timestamp + duration). Exactly one content must be supplied: text, audio, or drawing
+         *     (drawings only on snapshot items).
          */
         AddVideoReviewRequest: {
+            /**
+             * Format: uuid
+             * @description Gets the optional user to record as the item's reviewer. Only service accounts and
+             *     admins may assign a reviewer other than themselves. When omitted, the creator is the
+             *     reviewer.
+             */
+            reviewerId?: string | null;
+            /**
+             * Format: uuid
+             * @description Gets the optional client-generated key that makes the create idempotent: replaying a
+             *     request with the same key returns the existing item instead of creating a duplicate.
+             */
+            clientKey?: string | null;
             /**
              * Format: date-span
              * @description Gets the position within the video: the freeze-frame position for snapshot items,
@@ -4176,13 +4367,19 @@ export interface components {
              *     spans [Timestamp, Timestamp + Duration).
              */
             duration?: string | null;
-            /** @description Gets the optional text commentary. */
+            /** @description Gets the text content (text items only). */
             text?: string | null;
-            /** @description Gets the optional inline audio data (base64). */
+            /** @description Gets the inline audio data (base64) for an audio item. */
             audioData?: string | null;
             /** @description Gets the MIME type of the inline audio data. */
             audioMimeType?: string | null;
-            /** @description Gets the optional inline drawing overlay data (base64), snapshot items only. */
+            /**
+             * @description Gets the transcript the client produced itself (on-device speech recognition). When
+             *     present the server does not run transcription; when absent the server transcribes
+             *     PerfectToss.Api.Models.V1.Request.AddVideoReviewRequest.AudioData if it can.
+             */
+            transcript?: string | null;
+            /** @description Gets the inline drawing overlay data (base64) for a snapshot item. */
             drawingData?: string | null;
             /** @description Gets the MIME type of the inline drawing data. */
             drawingMimeType?: string | null;
@@ -4349,7 +4546,7 @@ export interface components {
         /** @description Request model for creating a new tablet. */
         CreateTabletRequest: {
             /** @description Gets the name of the tablet. */
-            name?: string | null;
+            name: string | null;
             /** @description Gets the tablet user identifier. */
             tabletUserId?: string | null;
             /** @description Gets the PIN code for the tablet. */
@@ -4414,6 +4611,12 @@ export interface components {
              * @description Gets the owner user identifier.
              */
             ownerId: string;
+            /**
+             * Format: uuid
+             * @description Gets the optional client-generated key that makes the create idempotent: replaying a
+             *     request with the same key returns the existing video instead of creating a duplicate.
+             */
+            clientKey?: string | null;
             /** @description Gets the label or title of the video. */
             label?: string | null;
             /**
@@ -4877,9 +5080,8 @@ export interface components {
          */
         SasUrlResponse: {
             /**
-             * @description A time-limited SAS URL the client can use to access
-             *     the video file directly in Azure Blob Storage.
-             *     Expires in 5 minutes.
+             * @description A time-limited SAS URL the client can use to access the file
+             *     directly in Azure Blob Storage.
              */
             sasUrl: string | null;
         };
@@ -4986,7 +5188,7 @@ export interface components {
             createdByUser?: components["schemas"]["UserInfo"];
             lastModifiedByUser?: components["schemas"]["UserInfo"];
             deletedByUser?: components["schemas"]["UserInfo"];
-            name?: string | null;
+            name: string | null;
             tabletUserId?: string | null;
             pin?: string | null;
             /** Format: uuid */
@@ -5204,7 +5406,7 @@ export interface components {
         /** @description Request model for updating an existing tablet. */
         UpdateTabletRequest: {
             /** @description Gets the name of the tablet. */
-            name?: string | null;
+            name: string | null;
             /** @description Gets the tablet user identifier. */
             tabletUserId?: string | null;
             /** @description Gets the PIN code for the tablet. */
@@ -5396,6 +5598,8 @@ export interface components {
             /** Format: uuid */
             ownerId?: string;
             owner?: components["schemas"]["User"];
+            /** Format: uuid */
+            clientKey?: string | null;
             associatedEntities?: components["schemas"]["Entity"][] | null;
             tags?: components["schemas"]["Tag"][] | null;
             coaches?: components["schemas"]["User"][] | null;
@@ -5456,17 +5660,24 @@ export interface components {
             /** Format: uuid */
             videoId?: string;
             video?: components["schemas"]["Video"];
+            /** Format: uuid */
+            reviewerId?: string | null;
+            reviewer?: components["schemas"]["UserInfo"];
+            /** Format: uuid */
+            clientKey?: string | null;
             type?: components["schemas"]["VideoReviewType"];
             /** Format: date-span */
             timestamp?: string | null;
             /** Format: date-span */
             duration?: string | null;
+            contentKind?: components["schemas"]["VideoReviewContentKind"];
             text?: string | null;
-            audioData?: string | null;
-            audioMimeType?: string | null;
-            drawingData?: string | null;
-            drawingMimeType?: string | null;
+            contentMimeType?: string | null;
+            transcript?: string | null;
+            transcriptionStatus?: components["schemas"]["VideoReviewTranscriptionStatus"];
         };
+        /** @enum {string} */
+        VideoReviewContentKind: "Unknown" | "Text" | "Audio" | "Drawing";
         VideoReviewRequest: {
             /** Format: uuid */
             id: string;
@@ -5503,6 +5714,8 @@ export interface components {
         };
         /** @enum {string} */
         VideoReviewRequestStatus: "Unknown" | "Open" | "Done";
+        /** @enum {string} */
+        VideoReviewTranscriptionStatus: "NotRequested" | "Pending" | "Completed" | "Failed" | "Unsupported";
         /** @enum {string} */
         VideoReviewType: "Unknown" | "General" | "Snapshot" | "Segment";
         VideoUserAccessResult: {

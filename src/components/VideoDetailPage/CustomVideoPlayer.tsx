@@ -558,6 +558,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
           <div className="cvp-timeline-stack">
             <VideoTimeline
               reviews={reviews}
+              videoId={videoId}
               duration={safeDuration}
               activeReviewId={activeReviewId}
               onSelectReview={selectAnchor}

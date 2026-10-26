@@ -22,6 +22,8 @@ export type VideoReview = components['schemas']['VideoReview'];
 export type VideoReviewRequest = components['schemas']['VideoReviewRequest'];
 export type VideoReviewType = components['schemas']['VideoReviewType'];
 export type VideoReviewRequestStatus = components['schemas']['VideoReviewRequestStatus'];
+export type VideoReviewTranscriptionStatus = components['schemas']['VideoReviewTranscriptionStatus'];
+export type VideoReviewContentKind = components['schemas']['VideoReviewContentKind'];
 export type RequestVideoReviewRequest = components['schemas']['RequestVideoReviewRequest'];
 export type AddVideoReviewRequest = components['schemas']['AddVideoReviewRequest'];
 
@@ -477,8 +479,9 @@ export async function fetchVideoReviews(videoId: string): Promise<VideoReview[]>
  * Add a review item to a video. The kind of item is derived from its anchors:
  * a general note (text/audio, not anchored), a snapshot review (freeze-frame
  * timestamp; text/audio/drawing), or a segment review (timestamp + duration;
- * text/audio only). The current user is recorded as the item's creator, and all
- * open review requests for the video are marked done.
+ * text/audio only). The acting user is recorded as the item's creator, and all
+ * open review requests for the video are marked done. An optional `reviewerId`
+ * attributes the item to another user (admins and service accounts only).
  */
 export async function addVideoReview(
   videoId: string,
@@ -514,6 +517,27 @@ export async function fetchVideoReview(
   }
 
   return data ?? null;
+}
+
+/**
+ * Get a time-limited SAS URL for a review item's content blob (its audio
+ * recording or drawing overlay). Text items have no blob. The URL can be cached
+ * for its lifetime.
+ */
+export async function fetchVideoReviewContentUrl(
+  videoId: string,
+  itemId: string,
+): Promise<string | null> {
+  const { data, error } = await api.POST('/api/v1/videos/{videoId}/reviews/{itemId}/content/url', {
+    params: { path: { videoId, itemId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch review content URL:', error);
+    throw new Error('Failed to fetch review content URL');
+  }
+
+  return data?.sasUrl ?? null;
 }
 
 /**
