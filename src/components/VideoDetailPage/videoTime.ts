@@ -119,7 +119,7 @@ export function buildVideoAnchors(reviews: VideoReview[]): VideoAnchor[] {
         id: review.id,
         start: 0,
         end: null,
-        hasDrawing: Boolean(review.drawingData),
+        hasDrawing: review.contentKind === 'Drawing',
         general: true,
       });
       continue;
@@ -130,7 +130,7 @@ export function buildVideoAnchors(reviews: VideoReview[]): VideoAnchor[] {
       start,
       // A zero/empty duration means it's a snapshot point, not a segment.
       end: dur != null && dur > 0 ? start + dur : null,
-      hasDrawing: Boolean(review.drawingData),
+      hasDrawing: review.contentKind === 'Drawing',
       general: false,
     });
   }

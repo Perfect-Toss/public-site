@@ -8,6 +8,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 export interface AudioPlayerProps {
   src: string;
   className?: string;
+  /** Called when the audio fails to load (e.g. an expired URL). */
+  onError?: () => void;
 }
 
 /** Format seconds as "m:ss". */
@@ -23,7 +25,7 @@ function formatClock(seconds: number): string {
  * A compact, app-styled audio player (play/pause + scrubbing + time). Uses a
  * hidden <audio> element for playback so the chrome matches the rest of the UI.
  */
-export function AudioPlayer({ src, className }: AudioPlayerProps) {
+export function AudioPlayer({ src, className, onError }: AudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -65,6 +67,7 @@ export function AudioPlayer({ src, className }: AudioPlayerProps) {
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onDurationChange={(e) => setDuration(e.currentTarget.duration || 0)}
+        onError={onError}
       />
       <button
         type="button"

@@ -103,34 +103,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  width: min(560px, calc(100% - 32px));
+  max-width: calc(100% - 32px);
   padding: 8px 10px;
   border-radius: 10px;
   background: rgba(20, 24, 28, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-}
-
-.vdo-caption {
-  flex: 1;
-  min-width: 0;
-  padding: 8px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-family: inherit;
-  font-size: 13px;
-  resize: none;
-}
-
-.vdo-caption:focus {
-  outline: none;
-  border-color: #cfff04;
-}
-
-.vdo-caption::placeholder {
-  color: rgba(255, 255, 255, 0.5);
 }
 
 .vdo-submit {

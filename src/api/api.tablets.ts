@@ -40,6 +40,22 @@ export async function fetchTabletById(id: string): Promise<Tablet | null> {
 }
 
 /**
+ * Fetch a specific tablet by its name
+ */
+export async function fetchTabletByName(name: string): Promise<Tablet | null> {
+  const { data, error } = await api.GET('/api/v1/tablets/name/{name}', {
+    params: { path: { name } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch tablet by name:', error);
+    throw new Error('Failed to fetch tablet by name');
+  }
+
+  return data ?? null;
+}
+
+/**
  * Create a new tablet (requires admin authorization)
  */
 export async function createTablet(tabletData: CreateTabletRequest): Promise<Tablet | null> {

@@ -42,6 +42,38 @@ export async function fetchMachineById(id: string): Promise<Machine | null> {
 }
 
 /**
+ * Fetch a specific machine by its admin machine id, e.g. "M-001"
+ */
+export async function fetchMachineByMachineId(machineId: string): Promise<Machine | null> {
+  const { data, error } = await api.GET('/api/v1/machines/machineid/{machineId}', {
+    params: { path: { machineId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch machine by machine id:', error);
+    throw new Error('Failed to fetch machine by machine id');
+  }
+
+  return data ?? null;
+}
+
+/**
+ * Fetch the machine linked to a tablet
+ */
+export async function fetchMachineByTabletId(tabletId: string): Promise<Machine | null> {
+  const { data, error } = await api.GET('/api/v1/machines/tabletid/{tabletId}', {
+    params: { path: { tabletId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch machine by tablet id:', error);
+    throw new Error('Failed to fetch machine by tablet id');
+  }
+
+  return data ?? null;
+}
+
+/**
  * Create a new machine (requires admin authorization)
  */
 export async function createMachine(machineData: CreateMachineRequest): Promise<Machine | null> {

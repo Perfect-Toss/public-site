@@ -6,17 +6,54 @@ import type { VideoReview } from '../../api/api.videos';
 import { colorFor } from '../../utils/color';
 import { getDisplayName } from '../../utils/user';
 import { AudioPlayer, UserInfo } from '../common';
-import { positionText, toDataUrl } from './reviewLabels';
+import { positionText } from './reviewLabels';
+import { useReviewContentUrl } from './reviewContent';
 import { buildVideoAnchors, formatPosition, type VideoAnchor } from './videoTime';
 
 export interface VideoTimelineProps {
   reviews: VideoReview[];
+  /** Video the reviews belong to; required to resolve audio/drawing content. */
+  videoId?: string | null;
   /** Video duration in seconds (fall back to metadata length). */
   duration: number;
   /** Review id to highlight as the active/selected marker. */
   activeReviewId?: string | null;
   /** Called when a review marker is clicked. */
   onSelectReview: (reviewId: string) => void;
+}
+
+interface ReviewPopupContentProps {
+  videoId?: string | null;
+  review: VideoReview;
+}
+
+/** Popup body for a hovered marker: author, position, text/transcript and content. */
+function ReviewPopupContent({ videoId, review }: ReviewPopupContentProps) {
+  const { url: contentUrl, onError: onContentError } = useReviewContentUrl(videoId, review);
+  const pos = positionText(review);
+  // An audio item carries no text of its own — its transcript stands in for it.
+  const body = review.text ?? review.transcript ?? null;
+
+  return (
+    <>
+      <div className="vtp-user">
+        <UserInfo user={review.createdByUser ?? {}} size={34} />
+        {pos && <span className="vtp-pos">{pos}</span>}
+      </div>
+      {body && <p className="vtp-text">{body}</p>}
+      {contentUrl && review.contentKind === 'Audio' && (
+        <AudioPlayer src={contentUrl} className="vtp-audio" onError={onContentError} />
+      )}
+      {contentUrl && review.contentKind === 'Drawing' && (
+        <img
+          className="vtp-drawing"
+          src={contentUrl}
+          alt="Review drawing"
+          onError={onContentError}
+        />
+      )}
+    </>
+  );
 }
 
 /**
@@ -26,6 +63,7 @@ export interface VideoTimelineProps {
  */
 export function VideoTimeline({
   reviews,
+  videoId,
   duration,
   activeReviewId,
   onSelectReview,
@@ -200,22 +238,7 @@ export function VideoTimeline({
   /** Vertical center (px from the top) of a lane; lane 0 is at the bottom. */
   const laneCenterY = (lane: number) => trackHeight - lane * LANE_PITCH - LANE_PITCH / 2;
 
-  const renderPopup = (review: VideoReview) => {
-    const pos = positionText(review);
-    const audioUrl = toDataUrl(review.audioData, review.audioMimeType, 'audio/webm');
-    const drawingUrl = toDataUrl(review.drawingData, review.drawingMimeType, 'image/png');
-    return (
-      <>
-        <div className="vtp-user">
-          <UserInfo user={review.createdByUser ?? {}} size={34} />
-          {pos && <span className="vtp-pos">{pos}</span>}
-        </div>
-        {review.text && <p className="vtp-text">{review.text}</p>}
-        {audioUrl && <AudioPlayer src={audioUrl} className="vtp-audio" />}
-        {drawingUrl && <img className="vtp-drawing" src={drawingUrl} alt="Review drawing" />}
-      </>
-    );
-  };
+  const renderPopup = (review: VideoReview) => <ReviewPopupContent videoId={videoId} review={review} />;
 
   return (
     <div className="video-timeline" aria-label="Video review timeline">
