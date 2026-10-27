@@ -1,9 +1,9 @@
 import './AudioPlayer.css';
 
 import { faPause, faPlay } from '@fortawesome/free-solid-svg-icons';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface AudioPlayerProps {
   src: string;
