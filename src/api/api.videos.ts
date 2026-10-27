@@ -541,6 +541,26 @@ export async function fetchVideoReviewContentUrl(
 }
 
 /**
+ * Queue a review item's audio for transcription again, clearing any previous
+ * transcript or failure reason. Usable to retry a clip that failed.
+ */
+export async function retranscribeVideoReview(
+  videoId: string,
+  itemId: string,
+): Promise<VideoReview | null> {
+  const { data, error } = await api.POST('/api/v1/videos/{videoId}/reviews/{itemId}/transcription', {
+    params: { path: { videoId, itemId } },
+  });
+
+  if (error) {
+    console.error('Failed to retranscribe video review:', error);
+    throw new Error('Failed to retranscribe video review');
+  }
+
+  return data ?? null;
+}
+
+/**
  * Remove a review item from a video
  */
 export async function deleteVideoReview(videoId: string, itemId: string): Promise<boolean> {

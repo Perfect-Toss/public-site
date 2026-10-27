@@ -1,12 +1,20 @@
 import './VideoReviewsPanel.css';
 
-import { faChevronDown, faChevronUp, faClock, faSpinner, faTrash } from '@fortawesome/free-solid-svg-icons';
+import {
+  faChevronDown,
+  faChevronUp,
+  faClock,
+  faRotateRight,
+  faSpinner,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState, type KeyboardEvent } from 'react';
 import {
   deleteVideoReview,
   deleteVideoReviewRequest,
+  retranscribeVideoReview,
   type VideoReview,
   type VideoReviewRequest,
 } from '../../api/api.videos';
@@ -42,6 +50,7 @@ interface ReviewListItemProps {
   selectable: boolean;
   onSelect?: (reviewId: string) => void;
   onDelete: (reviewId: string) => void;
+  onRetranscribe: (reviewId: string) => void;
   onKeyDown: (e: KeyboardEvent<HTMLLIElement>, reviewId: string) => void;
 }
 
@@ -52,12 +61,14 @@ function ReviewListItem({
   selectable,
   onSelect,
   onDelete,
+  onRetranscribe,
   onKeyDown,
 }: ReviewListItemProps) {
   const { url: contentUrl, onError: onContentError } = useReviewContentUrl(videoId, review);
   const pos = positionText(review);
   // An audio item carries no text of its own — its transcript stands in for it.
   const body = review.text ?? review.transcript ?? null;
+  const isAudio = review.contentKind === 'Audio';
 
   return (
     <li
@@ -93,7 +104,25 @@ function ReviewListItem({
         </button>
       </div>
       {body && <p className="vr-item-text">{body}</p>}
-      {contentUrl && review.contentKind === 'Audio' && (
+      {isAudio && review.transcriptionStatus === 'Pending' && (
+        <p className="vr-transcribing">
+          <FontAwesomeIcon icon={faSpinner} spin /> Transcribing…
+        </p>
+      )}
+      {isAudio && review.transcriptionStatus === 'Failed' && (
+        <button
+          type="button"
+          className="vr-retranscribe"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRetranscribe(review.id);
+          }}
+        >
+          <FontAwesomeIcon icon={faRotateRight} />
+          Retry transcription
+        </button>
+      )}
+      {contentUrl && isAudio && (
         <audio
           controls
           src={contentUrl}
@@ -154,6 +183,18 @@ export function VideoReviewList({
         await reload();
       } catch (err) {
         console.error('Failed to delete review:', err);
+      }
+    },
+    [videoId, reload],
+  );
+
+  const handleRetranscribe = useCallback(
+    async (itemId: string) => {
+      try {
+        await retranscribeVideoReview(videoId, itemId);
+        await reload();
+      } catch (err) {
+        console.error('Failed to retranscribe review:', err);
       }
     },
     [videoId, reload],
@@ -243,6 +284,7 @@ export function VideoReviewList({
                   selectable={Boolean(onSelectReview)}
                   onSelect={onSelectReview}
                   onDelete={handleDeleteReview}
+                  onRetranscribe={handleRetranscribe}
                   onKeyDown={handleItemKeyDown}
                 />
               ))}

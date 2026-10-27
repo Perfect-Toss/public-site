@@ -3667,6 +3667,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/videos/{videoId}/reviews/{itemId}/transcription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queues a review item's audio for transcription again, clearing any previous transcript or
+         *     failure reason. Use this to retry a clip whose transcription failed or was interrupted.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The video the review item belongs to. */
+                    videoId: string;
+                    /** @description The review item to transcribe again. */
+                    itemId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["VideoReview"];
+                        "application/json": components["schemas"]["VideoReview"];
+                        "text/json": components["schemas"]["VideoReview"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/videos": {
         parameters: {
             query?: never;
