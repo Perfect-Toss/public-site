@@ -38,6 +38,18 @@ export const ADMIN_ROLES: Role[] = [Role.Admin, Role.SuperUser];
 export const EVENT_CREATOR_ROLES: Role[] = [Role.Admin, Role.SuperUser, Role.OrganizationAdmin];
 
 /**
+ * Role values that may manage an organization: its settings, its members and
+ * its staff. The global admins can manage any organization; the organization's
+ * own admin roles can manage that one.
+ */
+export const ORGANIZATION_ADMIN_ROLES: Role[] = [
+  Role.Admin,
+  Role.SuperUser,
+  Role.OrganizationAdmin,
+  Role.EntityAdmin,
+];
+
+/**
  * Roles ordered by the authority they carry, strongest first.
  *
  * Assignment is level-based: a user may hand out their own level and anything
@@ -109,6 +121,17 @@ export function isSuperUser(
 export function canCreateEvent(roles?: readonly string[] | null): boolean {
   if (!roles) return false;
   return roles.some((r) => EVENT_CREATOR_ROLES.includes(r as Role));
+}
+
+/**
+ * Check whether a set of roles may manage an organization. Pass the user's
+ * global roles for a system-wide check, or their roles on a specific
+ * organization (`GET /api/v1/entities/{entityId}/users/{userId}`) for an
+ * org-scoped one.
+ */
+export function canManageOrganization(roles?: readonly string[] | null): boolean {
+  if (!roles) return false;
+  return roles.some((r) => ORGANIZATION_ADMIN_ROLES.includes(r as Role));
 }
 
 // ─── Compile-time assertion ──────────────────────────────────────────

@@ -5,6 +5,7 @@ import {
   assignableRoles,
   canAssignRole,
   canCreateEvent,
+  canManageOrganization,
   isAdminUser,
   roleAuthority,
 } from './roles';
@@ -33,6 +34,29 @@ describe('canCreateEvent', () => {
     expect(canCreateEvent([])).toBe(false);
     expect(canCreateEvent(null)).toBe(false);
     expect(canCreateEvent(undefined)).toBe(false);
+  });
+});
+
+describe('canManageOrganization', () => {
+  it('allows the global admins', () => {
+    expect(canManageOrganization([Role.SuperUser])).toBe(true);
+    expect(canManageOrganization([Role.Admin])).toBe(true);
+  });
+
+  it('allows the organization admin roles', () => {
+    expect(canManageOrganization([Role.OrganizationAdmin])).toBe(true);
+    expect(canManageOrganization([Role.EntityAdmin])).toBe(true);
+  });
+
+  it('refuses everyone else', () => {
+    expect(canManageOrganization([Role.Athlete])).toBe(false);
+    expect(canManageOrganization([Role.Coach, Role.ServiceAccount])).toBe(false);
+  });
+
+  it('refuses an empty or missing role set', () => {
+    expect(canManageOrganization([])).toBe(false);
+    expect(canManageOrganization(null)).toBe(false);
+    expect(canManageOrganization(undefined)).toBe(false);
   });
 });
 

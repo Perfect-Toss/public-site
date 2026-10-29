@@ -20,13 +20,14 @@ vi.mock('@tanstack/react-virtual', () => ({
 }));
 
 const navigate = vi.fn();
-let mockIsAdmin = true;
+/** Whether the acting user may manage this organization. */
+let mockCanManage = true;
 vi.mock('react-router-dom', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-router-dom')>()),
   useNavigate: () => navigate,
   useOutletContext: () => ({
     organization: { id: 'org-1', name: 'Club' },
-    isAdmin: mockIsAdmin,
+    canManage: mockCanManage,
   }),
 }));
 
@@ -77,7 +78,7 @@ const addUserToEntity = vi.fn(async () => true);
 afterEach(cleanup);
 
 beforeEach(() => {
-  mockIsAdmin = true;
+  mockCanManage = true;
   navigate.mockClear();
   loadEntityUsers.mockClear();
   addUserToEntity.mockClear();
@@ -172,12 +173,22 @@ describe('MembersView', () => {
     await waitFor(() => expect(trigger.textContent).toContain('Add athletes'));
   });
 
-  it('leaves the add component out for a non-admin', async () => {
-    mockIsAdmin = false;
-    const view = await renderMembers();
+  it('hides the roster from a user who cannot manage the organization', async () => {
+    mockCanManage = false;
+    const view = render(
+      <AuthContext.Provider value={authValue()}>
+        <MembersView />
+      </AuthContext.Provider>,
+    );
 
+    expect(
+      await view.findByText(
+        'You do not have permission to view the members of this organization.',
+      ),
+    ).toBeDefined();
     expect(document.getElementById('add-member-picker')).toBeNull();
-    expect(view.container.querySelector('.members-table-wrap')).not.toBeNull();
+    expect(view.container.querySelector('.members-table-wrap')).toBeNull();
+    expect(loadEntityUsers).not.toHaveBeenCalled();
   });
 
   it('lists athletes only — staff roles belong to the Settings tab', async () => {

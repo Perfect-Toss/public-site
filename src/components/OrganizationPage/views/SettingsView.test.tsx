@@ -22,7 +22,8 @@ vi.mock('@tanstack/react-virtual', () => ({
 
 const navigate = vi.fn();
 const onUpdated = vi.fn();
-let mockIsAdmin = true;
+/** Whether the acting user may manage this organization. */
+let mockCanManage = true;
 /** The organization the view is a tab of; tests mutate it to add a parent etc. */
 let mockOrganization: Entity = { id: 'org-1', name: 'Club' };
 vi.mock('react-router-dom', async (importOriginal) => ({
@@ -30,7 +31,7 @@ vi.mock('react-router-dom', async (importOriginal) => ({
   useNavigate: () => navigate,
   useOutletContext: () => ({
     organization: mockOrganization,
-    isAdmin: mockIsAdmin,
+    canManage: mockCanManage,
     onUpdated,
   }),
 }));
@@ -88,7 +89,7 @@ afterEach(cleanup);
 const updateEntity = vi.fn(async (_id: string, _data: UpdateEntityRequest) => undefined);
 
 beforeEach(() => {
-  mockIsAdmin = true;
+  mockCanManage = true;
   mockIsGlobalAdmin = true;
   mockOrganization = { id: 'org-1', name: 'Club' };
   navigate.mockClear();
@@ -181,7 +182,7 @@ describe('SettingsView staff pickers', () => {
   });
 
   it('is admin-only, pickers included', () => {
-    mockIsAdmin = false;
+    mockCanManage = false;
     const view = renderSettings();
 
     expect(view.getByText('You do not have permission to view this page.')).toBeDefined();

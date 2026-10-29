@@ -8,7 +8,7 @@ import { useOutletContext } from 'react-router-dom';
 import { useState } from 'react';
 
 function OverviewView() {
-  const { organization, isAdmin, onUpdated } = useOutletContext<OrganizationPageContext>();
+  const { organization, canManage, onUpdated } = useOutletContext<OrganizationPageContext>();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -60,7 +60,7 @@ function OverviewView() {
             <FontAwesomeIcon icon={faInfoCircle} />
             Details
           </span>
-          {isAdmin && !editing && (
+          {canManage && !editing && (
             <button className="secondary-btn" onClick={handleEdit} style={{ padding: '5px 12px' }}>
               <FontAwesomeIcon icon={faEdit} style={{ marginRight: 6 }} />
               Edit

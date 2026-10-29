@@ -8,7 +8,7 @@ import type { OrganizationPageContext } from '../OrganizationPage';
 import { useEntityStore } from '../../../stores/entityStore';
 
 function SubOrgsView() {
-  const { organization, isAdmin } = useOutletContext<OrganizationPageContext>();
+  const { organization, canManage } = useOutletContext<OrganizationPageContext>();
   const navigate = useNavigate();
 
   const [subOrgs, setSubOrgs] = useState<Entity[]>([]);
@@ -60,13 +60,13 @@ function SubOrgsView() {
 
   return (
     <div>
-      {isAdmin && !showForm && (
+      {canManage && !showForm && (
         <button className="fab" onClick={() => setShowForm(true)} title="Add Sub-Organization">
           <FontAwesomeIcon icon={faPlus} />
         </button>
       )}
 
-      {isAdmin && showForm && (
+      {canManage && showForm && (
         <div className="info-card" style={{ marginBottom: 20 }}>
           <div className="edit-form">
             <div className="form-field">

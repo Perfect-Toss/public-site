@@ -49,12 +49,21 @@ afterEach(() => {
   createEvent.mockClear();
 });
 
+/** The acting user — a global admin, so every event may be edited. */
+const actor: User = {
+  id: 'actor',
+  email: 'actor@example.com',
+  firstName: 'Ada',
+  lastName: 'Admin',
+  roles: ['Admin'],
+};
+
 /** The page only renders once the organization's members have loaded. */
 async function renderCreateForm() {
   const view = render(
     <AuthContext.Provider
       value={{
-        currentUser: null,
+        currentUser: actor,
         firebaseUser: null,
         initializing: false,
         isAdmin: true,

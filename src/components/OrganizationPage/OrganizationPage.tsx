@@ -16,15 +16,14 @@ import {
 
 import type { Entity } from '../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useCanManageOrganization } from '../../hooks/useCanManageOrganization';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNavigate } from 'react-router-dom';
 
-// TODO: Replace with real role check from AuthContext / current user API
-const MOCK_IS_ADMIN = true;
-
 export interface OrganizationPageContext {
   organization: Entity;
-  isAdmin: boolean;
+  /** Whether the current user may manage this organization. */
+  canManage: boolean;
   onUpdated: (updated: Entity) => void;
 }
 
@@ -36,8 +35,8 @@ function OrganizationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // TODO: Replace with real role check
-  const isAdmin = MOCK_IS_ADMIN;
+  // A global admin is known at once; anyone else needs a role lookup here.
+  const { allowed: canManage, checking: checkingPermission } = useCanManageOrganization(id);
 
   const { entities, loadEntities, loadEntityById } = useEntityStore();
 
@@ -82,7 +81,7 @@ function OrganizationPage() {
     return chain;
   }, [organization, entities]);
 
-  if (loading) {
+  if (loading || checkingPermission) {
     return (
       <div className="org-page">
         <div className="empty-state-large">
@@ -108,7 +107,11 @@ function OrganizationPage() {
     );
   }
 
-  const context: OrganizationPageContext = { organization, isAdmin, onUpdated: handleUpdated };
+  const context: OrganizationPageContext = {
+    organization,
+    canManage,
+    onUpdated: handleUpdated,
+  };
 
   return (
     <div className="org-page">
@@ -155,13 +158,15 @@ function OrganizationPage() {
           <FontAwesomeIcon icon={faBuildingUser} />
           Overview
         </NavLink>
-        <NavLink
-          to="members"
-          className={({ isActive }) => `org-tab${isActive ? ' active' : ''}`}
-        >
-          <FontAwesomeIcon icon={faUsers} />
-          Members
-        </NavLink>
+        {canManage && (
+          <NavLink
+            to="members"
+            className={({ isActive }) => `org-tab${isActive ? ' active' : ''}`}
+          >
+            <FontAwesomeIcon icon={faUsers} />
+            Members
+          </NavLink>
+        )}
         <NavLink
           to="sub-orgs"
           className={({ isActive }) => `org-tab${isActive ? ' active' : ''}`}
@@ -183,7 +188,7 @@ function OrganizationPage() {
           <FontAwesomeIcon icon={faListCheck} />
           Event Instances
         </NavLink>
-        {isAdmin && (
+        {canManage && (
           <NavLink
             to="settings"
             className={({ isActive }) => `org-tab${isActive ? ' active' : ''}`}
