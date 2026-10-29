@@ -10,7 +10,7 @@ import { hasRole } from '../../../utils/user';
 import { useEntityStore } from '../../../stores/entityStore';
 
 function MembersView() {
-  const { organization, isAdmin } = useOutletContext<OrganizationPageContext>();
+  const { organization, canManage } = useOutletContext<OrganizationPageContext>();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -31,9 +31,9 @@ function MembersView() {
   }, [organization.id, loadEntityUsers]);
 
   useEffect(() => {
-    if (!organization.id) return;
+    if (!organization.id || !canManage) return;
     loadMembers();
-  }, [organization.id, loadMembers]);
+  }, [organization.id, canManage, loadMembers]);
 
   // This tab is the athlete roster; staff roles are granted on the Settings tab.
   const members = useMemo(
@@ -67,10 +67,18 @@ function MembersView() {
       return (a.email ?? '').localeCompare(b.email ?? '');
     });
 
+  if (!canManage) {
+    return (
+      <div className="empty-state-large">
+        <p>You do not have permission to view the members of this organization.</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Adding athletes sits above the roster, so it is always in reach. */}
-      {isAdmin && (
+      {canManage && (
         <div className="info-card" style={{ marginBottom: 20 }}>
           <RoleMemberPicker
             id="add-member-picker"
@@ -114,7 +122,7 @@ function MembersView() {
                 <th>Name</th>
                 <th>Email</th>
                 <th>Role</th>
-                {isAdmin && <th style={{ width: 80 }}>Actions</th>}
+                {canManage && <th style={{ width: 80 }}>Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -131,7 +139,7 @@ function MembersView() {
                   <td>
                     <span className="role-badge">{member.roles?.join(', ') || 'Member'}</span>
                   </td>
-                  {isAdmin && (
+                  {canManage && (
                     <td>
                       <button
                         className="danger-btn"

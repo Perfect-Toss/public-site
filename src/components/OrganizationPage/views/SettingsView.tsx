@@ -11,7 +11,7 @@ import { useAuth } from '../../../contexts/useAuth';
 import { useEntityStore } from '../../../stores/entityStore';
 
 function SettingsView() {
-  const { organization, isAdmin, onUpdated } = useOutletContext<OrganizationPageContext>();
+  const { organization, canManage, onUpdated } = useOutletContext<OrganizationPageContext>();
   const navigate = useNavigate();
   const { isAdmin: isGlobalAdmin } = useAuth();
 
@@ -44,7 +44,7 @@ function SettingsView() {
   // can never move it inside itself.
   const excludeIds = useMemo(() => [organization.id], [organization.id]);
 
-  if (!isAdmin) {
+  if (!canManage) {
     return (
       <div className="empty-state-large">
         <p>You do not have permission to view this page.</p>
