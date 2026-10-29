@@ -17,7 +17,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { getDisplayName, renderRoleBadges } from '../../utils/user';
 import { UserInfo } from '../common';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -39,6 +40,66 @@ function AdminUsersPage() {
 
   /** All roles defined in the API schema */
   const allRoles = Object.values(Role);
+
+  /* ─── Roles filter panel ───────────────────────────────────────────
+     The panel is portalled to the body and positioned in viewport
+     coordinates, so the table wrapper's `overflow: auto` can't clip it. */
+
+  const rolesFilterTriggerRef = useRef<HTMLDivElement>(null);
+  const rolesFilterPanelRef = useRef<HTMLDivElement>(null);
+  const [rolesFilterPos, setRolesFilterPos] = useState<{ top: number; left: number } | null>(null);
+
+  const closeRoleFilter = useCallback(() => {
+    setRoleFilterOpen(false);
+    setRolesFilterPos(null);
+  }, []);
+
+  /** Provisional placement directly under the trigger; the layout effect
+   *  below clamps and flips it once the panel's real size is known. */
+  const anchorBelowTrigger = useCallback(() => {
+    const rect = rolesFilterTriggerRef.current?.getBoundingClientRect();
+    if (rect) setRolesFilterPos({ left: rect.left, top: rect.bottom + 6 });
+  }, []);
+
+  const toggleRoleFilter = useCallback(() => {
+    if (roleFilterOpen) {
+      closeRoleFilter();
+      return;
+    }
+    anchorBelowTrigger();
+    setRoleFilterOpen(true);
+  }, [roleFilterOpen, closeRoleFilter, anchorBelowTrigger]);
+
+  useLayoutEffect(() => {
+    const trigger = rolesFilterTriggerRef.current;
+    const panel = rolesFilterPanelRef.current;
+    if (!roleFilterOpen || !rolesFilterPos || !trigger || !panel) return;
+    const rect = trigger.getBoundingClientRect();
+    const left = Math.max(
+      8,
+      Math.min(rolesFilterPos.left, window.innerWidth - panel.offsetWidth - 8),
+    );
+    // Flip above the trigger when the space below can't fit the panel — a short
+    // table (or window) would otherwise cut it off at the bottom of the table.
+    const spaceBelow = window.innerHeight - rect.bottom - 6 - 8;
+    const top =
+      spaceBelow >= panel.offsetHeight
+        ? rect.bottom + 6
+        : Math.max(8, rect.top - panel.offsetHeight - 6);
+    if (left !== rolesFilterPos.left || top !== rolesFilterPos.top) {
+      setRolesFilterPos({ left, top });
+    }
+  }, [roleFilterOpen, rolesFilterPos]);
+
+  useEffect(() => {
+    if (!roleFilterOpen) return;
+    window.addEventListener('scroll', anchorBelowTrigger, true);
+    window.addEventListener('resize', anchorBelowTrigger);
+    return () => {
+      window.removeEventListener('scroll', anchorBelowTrigger, true);
+      window.removeEventListener('resize', anchorBelowTrigger);
+    };
+  }, [roleFilterOpen, anchorBelowTrigger]);
 
   useEffect(() => {
     loadUsers();
@@ -224,8 +285,8 @@ function AdminUsersPage() {
                   <th className="sortable-header" onClick={() => handleSort('email')}>
                     Email {renderSortIcon('email')}
                   </th>
-                  <th className="roles-filter-th">
-                    <div className="roles-filter-trigger" onClick={() => setRoleFilterOpen((o) => !o)}>
+                  <th>
+                    <div ref={rolesFilterTriggerRef} className="roles-filter-trigger" onClick={toggleRoleFilter}>
                       Roles
                       {roleFilter.length > 0 && (
                         <span className="roles-filter-count">{roleFilter.length}</span>
@@ -235,42 +296,49 @@ function AdminUsersPage() {
                         style={{ marginLeft: 6, fontSize: 10, opacity: 0.4 }}
                       />
                     </div>
-                    {roleFilterOpen && (
-                      <>
-                        <div className="roles-filter-backdrop" onClick={() => setRoleFilterOpen(false)} />
-                        <div className="roles-filter-dropdown">
-                          {allRoles.map((role) => (
-                            <label key={role} className="roles-filter-option">
-                              <input
-                                type="checkbox"
-                                checked={roleFilter.includes(role)}
-                                onChange={() => {
-                                  setRoleFilter((prev) =>
-                                    prev.includes(role)
-                                      ? prev.filter((r) => r !== role)
-                                      : [...prev, role],
-                                  );
-                                }}
-                              />
-                              <span className={`role-badge ${role.toLowerCase()}`}>{role}</span>
-                            </label>
-                          ))}
-                          {allRoles.length > 0 && (
-                            <div className="roles-filter-actions">
-                              <button
-                                className="roles-filter-btn clear"
-                                onClick={() => setRoleFilter([])}
-                              >
-                                Clear
-                              </button>
-                            </div>
-                          )}
-                          {allRoles.length < 1 && (
-                            <div className="roles-filter-empty">No roles available</div>
-                          )}
-                        </div>
-                      </>
-                    )}
+                    {roleFilterOpen &&
+                      rolesFilterPos &&
+                      createPortal(
+                        <>
+                          <div className="roles-filter-backdrop" onClick={closeRoleFilter} />
+                          <div
+                            ref={rolesFilterPanelRef}
+                            className="roles-filter-dropdown"
+                            style={{ top: rolesFilterPos.top, left: rolesFilterPos.left }}
+                          >
+                            {allRoles.map((role) => (
+                              <label key={role} className="roles-filter-option">
+                                <input
+                                  type="checkbox"
+                                  checked={roleFilter.includes(role)}
+                                  onChange={() => {
+                                    setRoleFilter((prev) =>
+                                      prev.includes(role)
+                                        ? prev.filter((r) => r !== role)
+                                        : [...prev, role],
+                                    );
+                                  }}
+                                />
+                                <span className={`role-badge ${role.toLowerCase()}`}>{role}</span>
+                              </label>
+                            ))}
+                            {allRoles.length > 0 && (
+                              <div className="roles-filter-actions">
+                                <button
+                                  className="roles-filter-btn clear"
+                                  onClick={() => setRoleFilter([])}
+                                >
+                                  Clear
+                                </button>
+                              </div>
+                            )}
+                            {allRoles.length < 1 && (
+                              <div className="roles-filter-empty">No roles available</div>
+                            )}
+                          </div>
+                        </>,
+                        document.body,
+                      )}
                   </th>
                   <th className="sortable-header" onClick={() => handleSort('status')}>
                     Status {renderSortIcon('status')}

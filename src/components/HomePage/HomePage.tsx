@@ -26,6 +26,7 @@ import { type IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { STORAGE_KEYS } from '../../utils/constants';
+import { ViewAsBanner } from '../common';
 import { logout } from '../../firebase/auth';
 import { useAuth } from '../../contexts/useAuth';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -587,6 +588,7 @@ function HomePage() {
 
       {/* Main Content */}
       <main className="main-content">
+        <ViewAsBanner />
         <Outlet />
       </main>
 
