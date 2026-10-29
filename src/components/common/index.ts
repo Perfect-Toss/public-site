@@ -14,6 +14,7 @@ export { useSnackbar, type SnackbarKind } from './useSnackbar';
 export { UserAvatar, type UserAvatarProps } from './UserAvatar';
 export { UserInfo, type UserInfoProps } from './UserInfo';
 export { UserPicker, type UserPickerProps } from './UserPicker';
+export { ViewAsBanner } from './ViewAsBanner';
 export {
   VirtualizedSelect,
   type VirtualizedSelectProps,

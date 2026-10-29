@@ -1,0 +1,54 @@
+.view-as-banner {
+  position: sticky;
+  top: 8px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--content-pad-y);
+  padding: 10px 16px;
+  background: #fff8e1;
+  border: 1px solid #e6c76a;
+  border-radius: 6px;
+  color: #6b4e00;
+  font-size: 13px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.view-as-banner-icon {
+  flex: 0 0 auto;
+}
+
+.view-as-banner-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.view-as-banner-exit {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #1a1f24;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.view-as-banner-exit:hover {
+  background: #333a41;
+}
+
+/* The mobile topbar is fixed, so the strip has to clear it. */
+@media (max-width: 1024px) {
+  .view-as-banner {
+    top: calc(var(--mobile-topbar-h) + 8px);
+  }
+}

@@ -94,6 +94,13 @@ export function isAdminUser(
   return user.roles.some((r) => ADMIN_ROLES.includes(r as Role));
 }
 
+/** Whether the account holds the super user role. */
+export function isSuperUser(
+  user: { roles?: readonly string[] | null } | null | undefined,
+): boolean {
+  return Boolean(user?.roles?.some((r) => r === Role.SuperUser));
+}
+
 /**
  * Check whether a set of roles may create events. Pass the user's global roles
  * for a system-wide check, or their roles on a specific organization

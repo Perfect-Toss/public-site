@@ -27,8 +27,10 @@ import { fetchEvents } from '../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
 import { CACHE_KEYS, readCache, writeCache } from '../../utils/pageCache';
+import { eventInScope } from '../../utils/viewAs';
 import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { useViewAsScope } from '../../hooks/useViewAsScope';
 
 /** Events are fetched a page at a time; a week view wants them all. */
 const PAGE_SIZE = 200;
@@ -81,6 +83,7 @@ function OccurrenceCard({ occurrence }: { occurrence: IEventOccurrence }) {
 function EventsPage() {
   const navigate = useNavigate();
   const { canCreateEvents } = useAuth();
+  const scope = useViewAsScope();
   // Events already loaded once stay on screen while this route fetches them
   // again, so coming back to the calendar does not show the loading state.
   const cachedEvents = readCache<Event[]>(CACHE_KEYS.EVENTS);
@@ -114,10 +117,16 @@ function EventsPage() {
   const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart]);
   const today = useMemo(() => startOfDay(new Date()), []);
 
+  /** A super user viewing another account sees only its organizations' events. */
+  const visibleEvents = useMemo(
+    () => (scope ? events.filter((event) => eventInScope(scope, event)) : events),
+    [events, scope],
+  );
+
   // Expand the schedules into the occurrences that fall inside the visible week.
   const occurrences = useMemo(
-    () => expandEventsInRange(events, getWeekRange(weekStart)),
-    [events, weekStart],
+    () => expandEventsInRange(visibleEvents, getWeekRange(weekStart)),
+    [visibleEvents, weekStart],
   );
 
   const occurrenceCount = occurrences.length;
@@ -211,7 +220,7 @@ function EventsPage() {
           </div>
         )}
 
-        {!loading && !showError && occurrenceCount === 0 && events.length === 0 && (
+        {!loading && !showError && occurrenceCount === 0 && visibleEvents.length === 0 && (
           <div className="empty-state-large">
             <FontAwesomeIcon icon={faCalendarDays} size="3x" style={{ opacity: 0.3 }} />
             <h3>No events yet</h3>
@@ -219,7 +228,7 @@ function EventsPage() {
           </div>
         )}
 
-        {!loading && !showError && occurrenceCount === 0 && events.length > 0 && (
+        {!loading && !showError && occurrenceCount === 0 && visibleEvents.length > 0 && (
           <div className="empty-state-large">
             <FontAwesomeIcon icon={faCircleNotch} size="3x" style={{ opacity: 0.3 }} />
             <h3>Nothing scheduled this week</h3>

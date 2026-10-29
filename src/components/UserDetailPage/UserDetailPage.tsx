@@ -10,13 +10,14 @@ import {
   uploadUserThumbnail,
 } from '../../api/api.users';
 import type { Role as RoleType } from '../../utils/roles';
-import { assignableRoles, canAssignRole } from '../../utils/roles';
+import { assignableRoles, canAssignRole, isSuperUser } from '../../utils/roles';
 import {
   faArrowLeft,
   faBuilding,
   faCamera,
   faCheckCircle,
   faChevronDown,
+  faEye,
   faSave,
   faSpinner,
   faTimes,
@@ -34,6 +35,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatDate } from '../../utils/format';
 import { useEntityStore } from '../../stores/entityStore';
 import { useUserStore } from '../../stores/userStore';
+import { useAuthStore } from '../../stores/authStore';
+import { startViewAs, useViewAsTarget } from '../../stores/viewAsStore';
 
 /* ─── Shared detail field component ───────────────────────────────── */
 
@@ -82,6 +85,11 @@ function UserDetailPage() {
   const { loadUserById, updateUser } = useUserStore();
   const { loadEntitiesForUser } = useEntityStore();
   const { currentUser } = useAuth();
+  const signedInUser = useAuthStore((state) => state.user);
+  const viewAsTarget = useViewAsTarget();
+  /** Only a super user may emulate, and only while not already emulating. */
+  const canViewAs =
+    isSuperUser(signedInUser) && viewAsTarget === null && signedInUser?.id !== user?.id;
 
   /** Roles the acting user may grant — their own authority level and below. */
   const grantableRoles = assignableRoles(currentUser?.roles);
@@ -253,6 +261,16 @@ function UserDetailPage() {
                 <h2>{getDisplayName(user)}</h2>
                 <p className="email">{user.email || '-'}</p>
               </div>
+              {canViewAs && !isEditing && (
+                <button
+                  className="detail-view-as-btn"
+                  onClick={() => startViewAs(user.id)}
+                  title="See the app as this user sees it"
+                >
+                  <FontAwesomeIcon icon={faEye} style={{ marginRight: 6 }} />
+                  View as
+                </button>
+              )}
               {isAdmin && !isEditing && (
                 <button className="detail-edit-btn" onClick={() => setIsEditing(true)}>
                   <FontAwesomeIcon icon={faSave} style={{ marginRight: 6 }} />

@@ -12,6 +12,8 @@ import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 import { CACHE_KEYS, readCache, writeCache } from '../../utils/pageCache';
 import { formatBytes, formatDateTime, formatDuration, formatEnum } from '../../utils/format';
 import { ownerDisplayName, thumbnailSrc } from '../../utils/videos';
+import { useViewAsScope } from '../../hooks/useViewAsScope';
+import { videoInScope } from '../../utils/viewAs';
 
 const PAGE_SIZE = 12;
 
@@ -36,7 +38,7 @@ interface VideosSnapshot {
   loadedPages: number;
 }
 
-function VideoCard({ video, onDelete }: { video: Video; onDelete: (video: Video) => void }) {
+function VideoCard({ video, onDelete }: { video: Video; onDelete?: (video: Video) => void }) {
   const navigate = useNavigate();
   const thumb = thumbnailSrc(video);
   const duration = formatDuration((video.lengthInMilliseconds ?? 0) / 1000);
@@ -67,19 +69,21 @@ function VideoCard({ video, onDelete }: { video: Video; onDelete: (video: Video)
       <div className="video-card-thumbnail">
         <img src={thumb} alt={video.label ?? 'Video'} loading="lazy" />
         {duration !== '—' && <span className="video-card-duration">{duration}</span>}
-        <button
-          type="button"
-          className="video-card-delete"
-          aria-label={`Delete video ${video.label || 'Untitled video'}`}
-          title="Delete video"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(video);
-          }}
-          onKeyDown={(e) => e.stopPropagation()}
-        >
-          <FontAwesomeIcon icon={faTrash} />
-        </button>
+        {onDelete && (
+          <button
+            type="button"
+            className="video-card-delete"
+            aria-label={`Delete video ${video.label || 'Untitled video'}`}
+            title="Delete video"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(video);
+            }}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+          </button>
+        )}
       </div>
 
       <div className="video-card-body">
@@ -141,6 +145,7 @@ function VideosPage() {
   const [initialLoading, setInitialLoading] = useState(snapshot === undefined);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const scope = useViewAsScope();
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const inFlightRef = useRef(false);
@@ -269,17 +274,20 @@ function VideosPage() {
     return () => observer.disconnect();
   }, [hasMore, pageNumber, initialLoading, loadPage]);
 
-  // Client-side search over the accumulated metadata.
+  // Client-side search over the accumulated metadata, narrowed to the account
+  // being viewed as when the super user is emulating someone else.
   const filteredVideos = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return videos;
-    return videos.filter(
-      (v) =>
+    return videos.filter((v) => {
+      if (scope && !videoInScope(scope, v)) return false;
+      if (!q) return true;
+      return (
         (v.label ?? '').toLowerCase().includes(q) ||
         ownerDisplayName(v).toLowerCase().includes(q) ||
-        (v.tags ?? []).some((t) => (t.name ?? '').toLowerCase().includes(q)),
-    );
-  }, [videos, searchQuery]);
+        (v.tags ?? []).some((t) => (t.name ?? '').toLowerCase().includes(q))
+      );
+    });
+  }, [videos, searchQuery, scope]);
 
   const renderContent = () => {
     if (initialLoading) {
@@ -312,6 +320,16 @@ function VideosPage() {
       );
     }
 
+    if (filteredVideos.length === 0 && scope && !searchQuery.trim()) {
+      return (
+        <div className="empty-state-large">
+          <FontAwesomeIcon icon={faVideo} size="3x" style={{ opacity: 0.3 }} />
+          <h3>No videos</h3>
+          <p>This account does not have access to any videos</p>
+        </div>
+      );
+    }
+
     if (filteredVideos.length === 0) {
       return (
         <div className="empty-state-large">
@@ -326,7 +344,11 @@ function VideosPage() {
       <>
         <div className="videos-grid">
           {filteredVideos.map((video) => (
-            <VideoCard key={video.id} video={video} onDelete={setPendingDelete} />
+            <VideoCard
+              key={video.id}
+              video={video}
+              onDelete={scope ? undefined : setPendingDelete}
+            />
           ))}
         </div>
 
@@ -337,8 +359,8 @@ function VideosPage() {
               <span>Loading more videos...</span>
             </>
           )}
-          {!loadingMore && !hasMore && videos.length > 0 && (
-            <span>You&apos;ve seen all {videos.length} videos</span>
+          {!loadingMore && !hasMore && filteredVideos.length > 0 && (
+            <span>You&apos;ve seen all {filteredVideos.length} videos</span>
           )}
         </div>
       </>

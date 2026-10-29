@@ -44,6 +44,27 @@ async function resolveToken(forceRefresh = false): Promise<string | null> {
   }
 }
 
+/** Shown when a write is attempted from a read-only session. */
+export const READ_ONLY_MESSAGE = 'Actions are disabled while viewing the app as another user.';
+
+// View-as sessions must not write: the request would be attributed to the
+// signed-in account, not to the account on screen.
+let mutationsBlocked = false;
+
+/** Refuse every non-GET request while a read-only session is active. */
+export function setMutationsBlocked(blocked: boolean): void {
+  mutationsBlocked = blocked;
+}
+
+apiClient.use({
+  onRequest({ request }) {
+    if (mutationsBlocked && request.method !== 'GET') {
+      throw new Error(READ_ONLY_MESSAGE);
+    }
+    return request;
+  },
+});
+
 // Auth middleware. The token is resolved per request, so an expired token is
 // refreshed by the provider instead of being sent again.
 apiClient.use({
