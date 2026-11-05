@@ -1,0 +1,51 @@
+name: Build and Validate
+
+# Pull requests are validation only. Deployment happens when the merge lands:
+#   push to main -> Deploy to Production
+#   push to dev  -> Deploy to Development
+
+on:
+    pull_request:
+        types: [opened, synchronize, reopened]
+        branches:
+            - main
+            - dev
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    pull-requests: write
+
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    build:
+        name: Build and Validate
+        runs-on: ubuntu-latest
+        # No secrets here on purpose: the unit tests and the build do not need any VITE_* values
+        # (they are only read at runtime), so PR validation can never depend on — or leak — config
+        # from either environment. The deploy workflows verify that config before uploading.
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  submodules: true
+                  lfs: false
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run tests
+              run: npm test
+
+            # `npm run build` already runs lint + tsc, so no separate lint step is needed.
+            - name: Build application
+              run: npm run build

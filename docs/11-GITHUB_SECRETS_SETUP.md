@@ -1,16 +1,51 @@
 # GitHub Secrets Setup Guide
 
-This guide will help you configure all the necessary secrets in your GitHub repository for automated deployment to Azure.
+This guide walks through the secrets needed for automated deployment to Azure.
 
-## Required GitHub Secrets
+## Where secrets go
 
-You need to add the following secrets to your GitHub repository. Go to your repository → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
+This project deploys to **two** separate Azure Static Web Apps, and *no* config value is shared
+between them. Every secret therefore has to be defined **twice** — once per GitHub environment,
+under the **same name** — and **never at repository level**:
 
-### 1. Azure Deployment Token
+| Secret | `production` environment | `development` environment |
+|--------|--------------------------|---------------------------|
+| `AZURE_STATIC_WEB_APPS_API_TOKEN` | production app token | development app token |
+| `VITE_API_BASE_URL` | production API URL | development API URL |
+| `VITE_FIREBASE_API_KEY` | production Firebase | development Firebase |
+| `VITE_FIREBASE_AUTH_DOMAIN` | production Firebase | development Firebase |
+| `VITE_FIREBASE_PROJECT_ID` | production Firebase | development Firebase |
+| `VITE_FIREBASE_STORAGE_BUCKET` | production Firebase | development Firebase |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | production Firebase | development Firebase |
+| `VITE_FIREBASE_APP_ID` | production Firebase | development Firebase |
+| `VITE_FIREBASE_MEASUREMENT_ID` (optional) | production Firebase | development Firebase |
 
-| Secret Name | Description | How to Get It |
-|------------|-------------|---------------|
-| `AZURE_STATIC_WEB_APPS_API_TOKEN` | Deployment token for Azure Static Web Apps | See [Azure Setup Guide](10-AZURE_DEPLOYMENT.md) |
+Why not repository level: environment secrets override repository secrets, but a repository-level
+secret is used whenever the environment's copy is missing. That fallback is invisible — it would
+build `dev` against production config (or deploy to the wrong app). The deploy workflows therefore
+check that every value above is present on the selected environment and fail with a named list if
+anything is missing.
+
+`ci.yml` (pull-request validation) intentionally uses **no** secrets: the tests and the build do not
+read `VITE_*` values, so PR checks cannot depend on either environment's config.
+
+## Required Secrets
+
+### 1. Azure Deployment Token (one per GitHub environment)
+
+The workflow deploys `main` to **production** and `dev` to **development**. The token secret has the
+same name in both environments, but a different value:
+
+- Go to **Settings** → **Environments** → `production` → **Add environment secret**
+  - `AZURE_STATIC_WEB_APPS_API_TOKEN` = deployment token of the **production** Static Web App
+- Go to **Settings** → **Environments** → `development` → **Add environment secret**
+  - `AZURE_STATIC_WEB_APPS_API_TOKEN` = deployment token of the **development** Static Web App
+
+Get each token from the matching Azure Static Web App: **Overview** → **Manage deployment token**
+(or **Settings** → **Configuration** → **Manage deployment token**). See [Azure Setup Guide](10-AZURE_DEPLOYMENT.md).
+
+> Do **not** keep `AZURE_STATIC_WEB_APPS_API_TOKEN` at repository level. Environment secrets take
+> priority, and a repository-level copy would silently deploy to whichever app it points at.
 
 ### 2. Firebase Configuration
 
@@ -36,19 +71,22 @@ Get these values from your Firebase Console: [https://console.firebase.google.co
 
 | Secret Name | Example Value | Description |
 |------------|---------------|-------------|
-| `VITE_API_BASE_URL` | `https://api.perfect-toss.com` | Your backend API URL (production) |
+| `VITE_API_BASE_URL` | `https://api.perfect-toss.com` | Your backend API URL (different per environment) |
 
 ## Step-by-Step Instructions
 
-### Adding Secrets to GitHub
+### Adding Secrets to a GitHub environment
+
+Repeat for **both** environments (`production` and `development`), using the values that belong to
+that environment:
 
 1. Navigate to your repository on GitHub
 2. Click **Settings** (top navigation)
-3. In the left sidebar, click **Secrets and variables** → **Actions**
-4. Click the **New repository secret** button
+3. In the left sidebar, click **Environments**, then the environment name (`production` or `development`)
+4. Under **Environment secrets**, click **Add secret**
 5. For each secret listed above:
    - Enter the **Name** (exactly as shown, including the `VITE_` prefix)
-   - Enter the **Value** (paste the actual value from Firebase or Azure)
+   - Enter the value for *this* environment
    - Click **Add secret**
 
 ### Example: Adding Firebase API Key
@@ -64,9 +102,8 @@ Click **Add secret**
 
 After adding all secrets:
 
-1. Go to **Settings** → **Secrets and variables** → **Actions**
-2. You should see all the secrets listed (values are hidden for security)
-3. The list should include:
+1. Go to **Settings** → **Environments** → `production` / `development`
+2. Each environment should list:
    - `AZURE_STATIC_WEB_APPS_API_TOKEN`
    - `VITE_FIREBASE_API_KEY`
    - `VITE_FIREBASE_AUTH_DOMAIN`
@@ -76,6 +113,8 @@ After adding all secrets:
    - `VITE_FIREBASE_APP_ID`
    - `VITE_FIREBASE_MEASUREMENT_ID`
    - `VITE_API_BASE_URL`
+3. **Settings** → **Secrets and variables** → **Actions** should have **no** app-config secrets
+   (delete any that were added before the split into two environments)
 
 ## Local Development Setup
 
@@ -187,13 +226,15 @@ If you want separate staging and production deployments:
 
 Before your first deployment, ensure:
 
-- [ ] Azure Static Web App is created
-- [ ] `AZURE_STATIC_WEB_APPS_API_TOKEN` is added to GitHub Secrets
+- [ ] Production Azure Static Web App is created
+- [ ] Development Azure Static Web App is created
+- [ ] `production` environment exists with `AZURE_STATIC_WEB_APPS_API_TOKEN` = production token
+- [ ] `development` environment exists with `AZURE_STATIC_WEB_APPS_API_TOKEN` = development token
 - [ ] All 7 Firebase configuration secrets are added to GitHub Secrets
 - [ ] `VITE_API_BASE_URL` is added to GitHub Secrets
-- [ ] Azure deployment URL is added to Firebase authorized domains
-- [ ] API backend allows CORS requests from Azure deployment URL
-- [ ] Workflow file is committed to `.github/workflows/azure-deploy.yml`
-- [ ] Push to `main` branch triggers the deployment
+- [ ] Both Azure deployment URLs are added to Firebase authorized domains
+- [ ] API backend allows CORS requests from both Azure deployment URLs
+- [ ] Workflow files are committed: `.github/workflows/ci.yml`, `.github/workflows/deploy-development.yml`, `.github/workflows/deploy-production.yml`
+- [ ] Push to `main` deploys to production, push to `dev` deploys to development
 
 Once complete, your application will automatically build and deploy to Azure! 🚀
