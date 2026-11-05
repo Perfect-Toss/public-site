@@ -69,16 +69,45 @@ collapsed. In non-production builds, hovering it shows the build timestamp.
 
 ## 5. Releasing a new version (semantic-release)
 
-Releases are fully automated with [semantic-release](https://semantic-release.org/)
-(`.github/workflows/semantic-release.yml`). On every push to `main` it:
+Releases are fully automated with [semantic-release](https://semantic-release.org/), as the `Release`
+step of the **Deploy to Production** workflow (`.github/workflows/deploy-production.yml`). On every
+push to `main` it:
 
 1. Analyzes the commits since the last release (Conventional Commits)
 2. Determines the next version (patch / minor / major)
 3. Generates release notes and updates `CHANGELOG.md`
 4. Bumps `package.json` (and `package-lock.json`)
 5. Creates a `vX.Y.Z` git tag and a GitHub Release
-6. Commits the version bump back to `main` — which re-triggers the Azure
-   deploy, so the live app carries the released version
+6. Commits the version bump back to `main`
+
+### Why the release runs inside the deploy
+
+Semantic-release pushes its version-bump commit with `GITHUB_TOKEN`, and **pushes made with
+`GITHUB_TOKEN` do not trigger workflows**. A separate deploy workflow would therefore build the
+*previous* version — `__APP_VERSION__` and `version.json` come from `package.json`, which still holds
+the old number until the release commit exists.
+
+So releasing is a step in the production deploy itself, before the build:
+
+```
+push to main ──► Deploy to Production
+                    1. verify environment config (fails before anything is tagged)
+                    2. semantic-release  ──► bumps package.json, tags vX.Y.Z, pushes the commit
+                    3. resolve sha + version from the working tree
+                    4. build  (version = X.Y.Z) ──► 5. upload
+```
+
+Details that follow from this ordering:
+
+- `fetch-depth: 0` on checkout: semantic-release needs the existing tags to work out the next version.
+- The build reads `git rev-parse HEAD` **after** the release step, so the embedded SHA is the release
+  commit — the same commit that ends up on `main`.
+- If the upload fails, the tag already exists. Re-running **Deploy to Production** is safe:
+  semantic-release finds no new commits, releases nothing, and simply rebuilds and uploads `main`.
+- A commit that produces no release (e.g. `chore:`) still deploys — the version just doesn't change.
+- Manual runs started from another branch skip the release step (`if: github.ref_name == 'main'`) and
+  just redeploy `main` as-is.
+- `dev` builds are not affected: they have no releases, so `deploy-development.yml` stays on `push`.
 
 ### Commit conventions
 
@@ -97,9 +126,11 @@ the push (and therefore the release) will fail.
 ## 6. CI wiring
 
 The deploy workflows (`deploy-production.yml` for `main`, `deploy-development.yml` for `dev`) pass
-`VITE_GIT_SHA: ${{ github.sha }}` to the build so every CI build embeds the exact commit it was built
-from. `VITE_ENVIRONMENT` is set per workflow (`production` / `development`), and
-`ci.yml` does the same for pull-request validation builds.
+`VITE_GIT_SHA` to the build so every CI build embeds the exact commit it was built from.
+`deploy-production.yml` resolves it from `git rev-parse HEAD` after the release step (so it is the
+release commit, not the merge commit), and prints the built version in the run summary.
+`VITE_ENVIRONMENT` is set per workflow (`production` / `development`), and `ci.yml` does the same for
+pull-request validation builds.
 
 ## Files involved
 
@@ -110,9 +141,8 @@ from. `VITE_ENVIRONMENT` is set per workflow (`production` / `development`), and
 | `src/version.ts`                              | Version metadata + display helpers         |
 | `scripts/generate-version.mjs`                | Writes `public/version.json`               |
 | `src/components/HomePage/HomePage.tsx`        | Sidebar version readout                    |
-| `.github/workflows/deploy-production.yml`     | Builds + deploys `main` to production      |
+| `.github/workflows/deploy-production.yml`     | Releases `main` (semantic-release), then builds + deploys it to production |
 | `.github/workflows/deploy-development.yml`    | Builds + deploys `dev` to development      |
 | `.github/workflows/ci.yml`                    | Builds + tests pull requests               |
-| `.github/workflows/semantic-release.yml`      | Runs semantic-release on push to `main`    |
 | `.releaserc.json`                             | semantic-release plugin/config             |
 | `package.json`                                | `generate:version` script; source of truth for version |

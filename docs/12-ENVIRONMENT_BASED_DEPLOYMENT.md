@@ -79,7 +79,10 @@ Instead, each deploy workflow checks every required value up front and fails wit
 |----------|---------|--------|
 | `.github/workflows/ci.yml` | PR to `main` / `dev`, manual | none — tests + build only |
 | `.github/workflows/deploy-development.yml` | push to `dev`, manual | development app |
-| `.github/workflows/deploy-production.yml` | push to `main`, manual | production app |
+| `.github/workflows/deploy-production.yml` | push to `main`, manual | production app (releases first) |
+
+The production deploy releases before it builds — semantic-release runs inside that workflow so the
+artifact carries the version being shipped (see [Versioning](14-VERSIONING.md)).
 
 Check which environment a run used in the Actions list: the run is titled **Deploy to Production**
 or **Deploy to Development**, and the job shows the environment's deployment URL.

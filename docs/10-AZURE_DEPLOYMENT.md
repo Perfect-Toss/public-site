@@ -82,7 +82,7 @@ The deployment is split into one workflow per environment, plus a validation wor
 |----------|---------|--------|
 | `.github/workflows/ci.yml` | pull request to `main` / `dev` | none — tests + build only |
 | `.github/workflows/deploy-development.yml` | push to `dev`, manual | development Static Web App |
-| `.github/workflows/deploy-production.yml` | push to `main`, manual | production Static Web App |
+| `.github/workflows/deploy-production.yml` | push to `main`, manual | production Static Web App (runs semantic-release first) |
 
 Each deploy workflow runs the same steps:
 

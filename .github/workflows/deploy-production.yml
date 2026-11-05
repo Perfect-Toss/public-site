@@ -1,6 +1,11 @@
 name: Deploy to Production
 
-# `main` deploys to the production Azure Static Web App.
+# Push to `main` -> verify config -> release -> build -> deploy, in that order, in one job.
+# Order matters: `__APP_VERSION__` and version.json come from package.json, and semantic-release
+# bumps it in a commit it pushes with GITHUB_TOKEN — such pushes do not trigger workflows, so a
+# separate deploy workflow would build the PREVIOUS version. Releasing first, in this same checkout,
+# guarantees the artifact carries the version it shipped.
+#
 # ALL app configuration is environment-scoped and must exist on the `production` GitHub environment:
 #   AZURE_STATIC_WEB_APPS_API_TOKEN  = production Static Web App deployment token
 #   VITE_API_BASE_URL               = production API URL
@@ -16,7 +21,10 @@ on:
     workflow_dispatch:
 
 permissions:
-    contents: read
+    # semantic-release tags the commit, writes CHANGELOG.md and publishes the GitHub release.
+    contents: write
+    issues: write
+    pull-requests: write
 
 concurrency:
     group: deploy-production
@@ -24,7 +32,7 @@ concurrency:
 
 jobs:
     deploy:
-        name: Build and deploy
+        name: Release and deploy
         runs-on: ubuntu-latest
         environment:
             name: production
@@ -32,7 +40,6 @@ jobs:
         env:
             # Environment
             VITE_ENVIRONMENT: production
-            VITE_GIT_SHA: ${{ github.sha }}
             # Firebase Configuration
             VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
             VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
@@ -47,6 +54,12 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
               with:
+                  # Production always ships main, whichever branch a manual run was started from.
+                  ref: main
+                  # semantic-release needs the tags to work out the next version.
+                  fetch-depth: 0
+                  # It authenticates its own push with GITHUB_TOKEN instead of the checkout credentials.
+                  persist-credentials: false
                   submodules: true
                   lfs: false
 
@@ -87,8 +100,26 @@ jobs:
                   fi
                   echo "Environment configuration for 'production' is present."
 
+            # Release first, so the build below embeds the version being shipped. This bumps
+            # package.json/CHANGELOG.md, tags vX.Y.Z and pushes the release commit to main.
+            # Skipped when a manual run is started from another branch — that just redeploys main.
+            - name: Release
+              if: github.ref_name == 'main'
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: npx semantic-release
+
+            # Read AFTER the release: HEAD is the release commit and package.json holds the new version.
+            - name: Resolve build metadata
+              id: buildmeta
+              run: |
+                  printf 'sha=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+                  printf 'version=%s\n' "$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT"
+
             # `npm run build` already runs lint + tsc, so no separate lint step is needed.
             - name: Build application
+              env:
+                  VITE_GIT_SHA: ${{ steps.buildmeta.outputs.sha }}
               run: npm run build
 
             - name: Deploy to Azure Static Web Apps
@@ -107,10 +138,13 @@ jobs:
             - name: Deployment summary
               env:
                   URL: ${{ steps.deploy.outputs.static_web_app_url }}
+                  SHA: ${{ steps.buildmeta.outputs.sha }}
+                  VERSION: ${{ steps.buildmeta.outputs.version }}
               run: |
                   {
                     echo "### Deployed to production"
                     echo ""
                     echo "- URL: $URL"
-                    echo "- Commit: \`${GITHUB_SHA:0:7}\`"
+                    echo "- Commit: \`${SHA:0:7}\`"
+                    echo "- Version: \`$VERSION\`"
                   } >> "$GITHUB_STEP_SUMMARY"

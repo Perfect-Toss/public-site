@@ -4,10 +4,11 @@ This document explains when builds and deployments are triggered in this project
 
 ## Overview
 
-The workflow has two distinct phases:
+Three workflows, each with one job:
 
-1. **Build & Validate** - Runs on all PR events to validate code
-2. **Build & Deploy** - Runs only when code should be deployed
+1. **Build and Validate** (`ci.yml`) — validates pull requests, never deploys
+2. **Deploy to Development** (`deploy-development.yml`) — runs on push to `dev`
+3. **Deploy to Production** (`deploy-production.yml`) — runs on push to `main`: releases, then deploys
 
 ## When Builds Happen (Validation)
 
@@ -44,9 +45,13 @@ Deployments to Azure Static Web Apps occur in the following scenarios:
 
 ### ✅ 1. Push to Protected Branches
 
-Deployments are automatically triggered when code is pushed to:
-- `main` branch → Deploys to **Production** environment
-- `dev` branch → Deploys to **Development** environment
+- `dev` branch → **Deploy to Development** → development environment
+- `main` branch → **Deploy to Production** → release → build → production environment
+
+Releasing happens *inside* the production deploy, before the build: semantic-release bumps
+`package.json` in a commit it pushes with `GITHUB_TOKEN`, and such pushes don't trigger workflows, so
+a separate release workflow would leave the deploy building the previous version — see
+[Versioning §5](14-VERSIONING.md#why-the-release-runs-inside-the-deploy).
 
 ```bash
 # Example: Deploy to production
@@ -92,10 +97,11 @@ git push origin feature/my-feature
 | PR Reopened | ✅ Yes | ❌ No |
 | PR Merged | ✅ Yes | ✅ Yes (from the push to the target branch) |
 | PR Closed (not merged) | ❌ No | ❌ No |
-| Push to `main` | ❌ No (deploy build validates) | ✅ Yes → production |
+| Push to `main` | ❌ No (deploy build validates) | ✅ Yes → release, then production |
 | Push to `dev` | ❌ No (deploy build validates) | ✅ Yes → development |
 | Push to feature branch | ❌ No | ❌ No |
-| Manual workflow | Deployment build validates | ✅ Yes → selected environment |
+| Manual **Deploy to Development** | Deployment build validates | ✅ Yes → development (selected branch) |
+| Manual **Deploy to Production** | Deployment build validates | ✅ Yes → production (`main` only) |
 
 ### ✅ 3. Manual Workflow Dispatch
 
@@ -107,8 +113,9 @@ You can manually trigger a deployment from GitHub Actions:
 4. Choose the branch to build from
 5. Click **Run workflow**
 
-The workflow you pick decides which app is deployed and which `AZURE_STATIC_WEB_APPS_API_TOKEN` is used;
-the branch decides which commit is built.
+The workflow you pick decides which app is deployed and which `AZURE_STATIC_WEB_APPS_API_TOKEN` is used.
+**Deploy to Development** builds the branch you pick; **Deploy to Production** always builds `main`, so
+it can't accidentally ship a feature branch.
 
 ## When Actions DON'T Run
 
@@ -226,13 +233,14 @@ Runs on: PR opened, updated, or reopened (and manual dispatch)
 Runs on: push to `main` (production) / `dev` (development), or manual dispatch
 
 **Steps:**
-1. **Checkout code** from the branch
+1. **Checkout code** (`main` for production, whichever branch for development)
 2. **Setup Node.js 20** with npm caching
 3. **Install dependencies** (`npm ci`)
 4. **Verify environment configuration** - fails fast, naming any secret missing on that environment
-5. **Build application** with that environment's secrets
-6. **Deploy to Azure Static Web Apps** for that environment
-7. **Result:** Live deployment to Azure
+5. **Release** (production only) - `npx semantic-release` bumps the version, tags, and pushes
+6. **Build application** with that environment's secrets (production picks up the released version)
+7. **Deploy to Azure Static Web Apps** for that environment
+8. **Result:** Live deployment to Azure
 
 **Purpose:** Build and deploy tested code to the appropriate environment.
 
