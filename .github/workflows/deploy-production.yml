@@ -101,6 +101,9 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
+            - name: Run tests
+              run: npm test
+
             # Every config value is environment-scoped, so a missing secret fails loudly here instead of
             # silently deploying the other environment's Firebase project or API URL.
             - name: Verify environment configuration
