@@ -120,8 +120,8 @@ Details that follow from this:
 
 ### Commit conventions
 
-`.releaserc.json` overrides the analyzer's default rules. After the specific types comes a catch-all
-`{ "release": "patch" }` rule, which matches any commit the earlier rules didn't — so **every merge to
+`.releaserc.cjs` overrides the analyzer's default rules. After the specific types comes a catch-all
+`{ release: 'patch' }` rule, which matches any commit the earlier rules didn't — so **every merge to
 `main` produces a tag**, even when the message has no conventional prefix.
 
 | Commit message                                                    | Version change |
@@ -135,10 +135,13 @@ Worth knowing:
 
 - Prefixes still decide *how far* the version moves. An unprefixed message is no longer swallowed, but
   it books a feature as a patch.
-- `type!:` only reaches major because of the explicit header rule (`{ "header": "*!: *" }`) in
-  `.releaserc.json`. With the default angular parser a `!` header is otherwise unparsed — it used to
-  produce no release at all. The `BREAKING CHANGE:` footer is the canonical form and needs no rule.
-- The analyzer picks the highest matching release for a commit, so the catch-all can never downgrade a
+- `type!:` works because `.releaserc.cjs` overrides the parser's `headerPattern` /
+  `breakingHeaderPattern`; the angular default rejects `!` before the colon, so such a commit used to
+  be ignored completely. The `BREAKING CHANGE:` footer also works and needs no configuration.
+- Do **not** pattern-match free-form commit text to detect breaking changes. An earlier rule of
+  `{ header: '*!: *' }` matched any subject containing `!: ` in prose and bumped `2.0.0` by accident.
+  Parse structure (`parserOpts`), never prose.
+- The analyzer keeps the highest matching release per commit, so the catch-all can never downgrade a
   `feat:` to a patch.
 - **Squash-merge uses the PR title as the commit message**, so the PR title is what gets analyzed.
 
@@ -168,5 +171,5 @@ print the built version in the run summary. `VITE_ENVIRONMENT` is set per workfl
 | `.github/workflows/deploy-development.yml`    | Releases `main` (semantic-release), then builds + deploys it to development |
 | `.github/workflows/deploy-production.yml`     | Deploys a chosen release tag to production |
 | `.github/workflows/ci.yml`                    | Builds + tests pull requests               |
-| `.releaserc.json`                             | semantic-release plugin/config             |
+| `.releaserc.cjs`                              | semantic-release plugin/config             |
 | `package.json`                                | `generate:version` script; source of truth for version |
