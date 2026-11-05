@@ -96,9 +96,10 @@ the push (and therefore the release) will fail.
 
 ## 6. CI wiring
 
-`.github/workflows/azure-deploy.yml` passes `VITE_GIT_SHA: ${{ github.sha }}` to
-both build steps so every CI build embeds the exact commit it was built from.
-`VITE_ENVIRONMENT` is already set per-environment (production on `main`, development on `dev`).
+The deploy workflows (`deploy-production.yml` for `main`, `deploy-development.yml` for `dev`) pass
+`VITE_GIT_SHA: ${{ github.sha }}` to the build so every CI build embeds the exact commit it was built
+from. `VITE_ENVIRONMENT` is set per workflow (`production` / `development`), and
+`ci.yml` does the same for pull-request validation builds.
 
 ## Files involved
 
@@ -109,7 +110,9 @@ both build steps so every CI build embeds the exact commit it was built from.
 | `src/version.ts`                              | Version metadata + display helpers         |
 | `scripts/generate-version.mjs`                | Writes `public/version.json`               |
 | `src/components/HomePage/HomePage.tsx`        | Sidebar version readout                    |
-| `.github/workflows/azure-deploy.yml`          | Passes `VITE_GIT_SHA` to builds            |
+| `.github/workflows/deploy-production.yml`     | Builds + deploys `main` to production      |
+| `.github/workflows/deploy-development.yml`    | Builds + deploys `dev` to development      |
+| `.github/workflows/ci.yml`                    | Builds + tests pull requests               |
 | `.github/workflows/semantic-release.yml`      | Runs semantic-release on push to `main`    |
 | `.releaserc.json`                             | semantic-release plugin/config             |
 | `package.json`                                | `generate:version` script; source of truth for version |

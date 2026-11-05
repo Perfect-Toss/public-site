@@ -37,36 +37,52 @@ The deployment workflow now supports two environments:
 
 ### Step 2: Add Environment-Specific Secrets
 
-For each environment, you can configure different secrets (e.g., different Firebase projects, API URLs).
+No config value is shared between the two apps, so **every** secret is defined twice — same name,
+different value per environment. Full list and instructions: [GitHub Secrets Setup Guide](11-GITHUB_SECRETS_SETUP.md).
 
 #### Production Secrets
 
 1. Go to **Settings** → **Environments** → **production**
 2. Add environment secrets:
-   - `AZURE_STATIC_WEB_APPS_API_TOKEN` - Production Azure deployment token
-   - `VITE_API_BASE_URL` - Production API URL (e.g., `https://api.perfect-toss.com`)
-   - (Optional) Firebase production project credentials
+   - `AZURE_STATIC_WEB_APPS_API_TOKEN` - **production** Static Web App token
+   - `VITE_API_BASE_URL` - production API URL
+   - `VITE_FIREBASE_*` - production Firebase project config (7 values)
 
 #### Development Secrets
 
 1. Go to **Settings** → **Environments** → **development**
 2. Add environment secrets:
-   - `AZURE_STATIC_WEB_APPS_API_TOKEN` - Development Azure deployment token
-   - `VITE_API_BASE_URL` - Development API URL (e.g., `https://dev-api.perfect-toss.com`)
-   - (Optional) Firebase development project credentials
+   - `AZURE_STATIC_WEB_APPS_API_TOKEN` - **development** Static Web App token
+   - `VITE_API_BASE_URL` - development API URL
+   - `VITE_FIREBASE_*` - development Firebase project config (7 values)
 
-### Step 3: Configure Repository Secrets (Fallback)
+### Step 3: Remove Repository-Level Config
 
-If you don't set environment-specific secrets, the workflow will use repository-level secrets:
+**Settings** → **Secrets and variables** → **Actions** should hold **no** `VITE_*` secrets and no
+`AZURE_STATIC_WEB_APPS_API_TOKEN`.
 
-1. Go to **Settings** → **Secrets and variables** → **Actions**
-2. Add the standard secrets as documented in [GitHub Secrets Setup Guide](11-GITHUB_SECRETS_SETUP.md)
+Environment secrets override repository secrets, but a repository-level value is used whenever the
+environment's copy is missing — and that fallback is invisible. With prod values at repository level,
+a half-configured `development` environment would happily build `dev` against the production backend.
 
-**Priority Order:**
-1. Environment-specific secrets (highest priority)
-2. Repository-level secrets (fallback)
+Instead, each deploy workflow checks every required value up front and fails with a named list:
+
+```
+::error::Missing environment secret(s) on 'development': VITE_API_BASE_URL, VITE_FIREBASE_APP_ID
+```
+
+`ci.yml` uses no secrets at all — the unit tests and the build don't read `VITE_*` values.
 
 ## Deployment Workflows
+
+| Workflow | Trigger | Target |
+|----------|---------|--------|
+| `.github/workflows/ci.yml` | PR to `main` / `dev`, manual | none — tests + build only |
+| `.github/workflows/deploy-development.yml` | push to `dev`, manual | development app |
+| `.github/workflows/deploy-production.yml` | push to `main`, manual | production app |
+
+Check which environment a run used in the Actions list: the run is titled **Deploy to Production**
+or **Deploy to Development**, and the job shows the environment's deployment URL.
 
 ### Automatic Deployments
 
@@ -79,11 +95,10 @@ git push origin main
 
 **What happens:**
 1. Workflow uses `production` environment
-2. Sets `NODE_ENV=production`
-3. Sets `VITE_ENVIRONMENT=production`
-4. Uses production secrets
-5. Deploys to production Azure Static Web App
-6. If reviewers are required, waits for approval
+2. Sets `VITE_ENVIRONMENT=production`
+3. Uses production secrets (including the production deployment token)
+4. Deploys to the production Azure Static Web App
+5. If reviewers are required, waits for approval
 
 #### Development (dev branch)
 ```bash
@@ -93,23 +108,20 @@ git push origin dev
 ```
 
 **What happens:**
-1. Workflow uses `development` environment
-2. Sets `NODE_ENV=development`
-3. Sets `VITE_ENVIRONMENT=development`
-4. Uses development secrets
-5. Deploys to development Azure Static Web App
-6. No approval required (typically)
+1. `Deploy to Development` workflow uses the `development` environment
+2. Sets `VITE_ENVIRONMENT=development`
+3. Uses development secrets (including the development deployment token)
+4. Deploys to the development Azure Static Web App
+5. No approval required (typically)
 
 ### Manual Deployments
 
-You can manually trigger deployments to specific environments:
+Each environment has its own workflow, so you pick the workflow rather than an input:
 
 1. Go to **Actions** tab in GitHub
-2. Select **Build and Deploy to Azure** workflow
+2. Select **Deploy to Development** or **Deploy to Production**
 3. Click **Run workflow**
-4. Choose:
-   - **Branch**: Select `main` or `dev`
-   - **Environment**: Select `production` or `development`
+4. Choose the **branch** to build from (any branch; the workflow decides the target app)
 5. Click **Run workflow**
 
 This allows you to deploy:
@@ -133,7 +145,8 @@ git push origin feature/new-feature
 **Important Notes:**
 - ❌ Opening or updating a PR does NOT create preview environments
 - ❌ Closing a PR without merging does NOT trigger deployment
-- ✅ Only merged PRs trigger deployments
+- ✅ Merging a PR pushes to the target branch, and that **push** is what deploys
+  (the workflow does not deploy from `pull_request` events, so nothing is deployed twice)
 - The merged code is deployed to the environment of the target branch (main → production, dev → development)
 
 For testing before merge:
@@ -291,17 +304,19 @@ If you configured required reviewers for production:
 
 **Solution:**
 - Check which branch you pushed to
-- Verify environment configuration in GitHub Settings
+- Verify you ran the workflow for that environment (`Deploy to Development` vs `Deploy to Production`)
 - Check workflow run logs to see which environment was used
 
 ### Environment Secrets Not Found
 
-**Problem:** Build fails with "secret not found"
+**Problem:** The `Verify environment configuration` step fails
 
 **Solution:**
-- Ensure environment-specific secrets are configured
-- Fall back to repository-level secrets if environment secrets aren't set
-- Check secret names match exactly (case-sensitive)
+- The error names every missing secret, e.g. `Missing environment secret(s) on 'development': VITE_API_BASE_URL`
+- Add each one under **Settings** → **Environments** → that environment
+- Check secret names match exactly (case-sensitive, including the `VITE_` prefix)
+- Do not add repository-level fallbacks — the guard exists so a wrong environment fails loudly instead
+  of deploying another environment's config
 
 ### Production Deployment Stuck
 
@@ -338,10 +353,9 @@ If you configured required reviewers for production:
 
 | Action | Branch | Environment | Approval | URL |
 |--------|--------|-------------|----------|-----|
-| Push to main | `main` | production | Yes* | prod URL |
-| Push to dev | `dev` | development | No | dev URL |
-| PR to main | any | production preview | No | unique URL |
-| PR to dev | any | development preview | No | unique URL |
+| Push to main (incl. merged PR) | `main` | production | Yes* | prod URL |
+| Push to dev (incl. merged PR) | `dev` | development | No | dev URL |
+| PR to main / dev | any | none — build validation only | n/a | n/a |
 | Manual deploy | any | selectable | Depends | selected env |
 
 *If configured in environment settings

@@ -1,0 +1,116 @@
+name: Deploy to Production
+
+# `main` deploys to the production Azure Static Web App.
+# ALL app configuration is environment-scoped and must exist on the `production` GitHub environment:
+#   AZURE_STATIC_WEB_APPS_API_TOKEN  = production Static Web App deployment token
+#   VITE_API_BASE_URL               = production API URL
+#   VITE_FIREBASE_*                 = production Firebase project config
+# Keep nothing app-specific at repository level: a repository-level fallback would silently
+# fill in another environment's values when an environment secret is missing.
+# Add required reviewers / deployment branches (main only) to gate releases.
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: deploy-production
+    cancel-in-progress: false
+
+jobs:
+    deploy:
+        name: Build and deploy
+        runs-on: ubuntu-latest
+        environment:
+            name: production
+            url: ${{ steps.deploy.outputs.static_web_app_url }}
+        env:
+            # Environment
+            VITE_ENVIRONMENT: production
+            VITE_GIT_SHA: ${{ github.sha }}
+            # Firebase Configuration
+            VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+            VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+            VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+            VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+            VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+            VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+            VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+            # API Configuration
+            VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  submodules: true
+                  lfs: false
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            # Every config value is environment-scoped, so a missing secret fails loudly here instead of
+            # silently deploying the other environment's Firebase project or API URL.
+            - name: Verify environment configuration
+              env:
+                  AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+              run: |
+                  missing=""
+                  for name in \
+                    AZURE_STATIC_WEB_APPS_API_TOKEN \
+                    VITE_API_BASE_URL \
+                    VITE_FIREBASE_API_KEY \
+                    VITE_FIREBASE_APP_ID \
+                    VITE_FIREBASE_AUTH_DOMAIN \
+                    VITE_FIREBASE_MESSAGING_SENDER_ID \
+                    VITE_FIREBASE_PROJECT_ID \
+                    VITE_FIREBASE_STORAGE_BUCKET; do
+                    value=$(printenv "$name" || true)
+                    if [ -z "$value" ]; then
+                      missing="${missing:+$missing, }$name"
+                    fi
+                  done
+                  if [ -n "$missing" ]; then
+                    echo "::error::Missing environment secret(s) on 'production': $missing"
+                    echo "Add them under Settings -> Environments -> production, using the production values."
+                    exit 1
+                  fi
+                  echo "Environment configuration for 'production' is present."
+
+            # `npm run build` already runs lint + tsc, so no separate lint step is needed.
+            - name: Build application
+              run: npm run build
+
+            - name: Deploy to Azure Static Web Apps
+              id: deploy
+              uses: Azure/static-web-apps-deploy@v1
+              with:
+                  azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+                  repo_token: ${{ secrets.GITHUB_TOKEN }}
+                  action: "upload"
+                  app_location: "dist" # Upload only the built dist folder
+                  api_location: "" # Leave empty if no API
+                  output_location: "" # Empty because we're already pointing to dist
+                  skip_app_build: true # We already built it
+                  skip_api_build: true
+
+            - name: Deployment summary
+              env:
+                  URL: ${{ steps.deploy.outputs.static_web_app_url }}
+              run: |
+                  {
+                    echo "### Deployed to production"
+                    echo ""
+                    echo "- URL: $URL"
+                    echo "- Commit: \`${GITHUB_SHA:0:7}\`"
+                  } >> "$GITHUB_STEP_SUMMARY"

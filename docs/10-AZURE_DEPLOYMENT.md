@@ -4,7 +4,8 @@ This document describes how to deploy the public-site application to Azure Stati
 
 ## Overview
 
-The application uses GitHub Actions to automatically build and deploy to Azure Static Web Apps whenever code is pushed to the `main` branch or when pull requests are created.
+The application uses GitHub Actions to automatically build and deploy to Azure Static Web Apps: `main` deploys to
+the production app, `dev` deploys to the development app, and pull requests are validated without deploying.
 
 ## Prerequisites
 
@@ -42,7 +43,8 @@ The application uses GitHub Actions to automatically build and deploy to Azure S
 See the complete guide: **[GitHub Secrets Setup Guide](11-GITHUB_SECRETS_SETUP.md)**
 
 Quick summary of required secrets:
-- `AZURE_STATIC_WEB_APPS_API_TOKEN` - Deployment token from Azure
+- `AZURE_STATIC_WEB_APPS_API_TOKEN` - Deployment token from Azure, set **per environment**
+  (`production` and `development`), not at repository level
 - Firebase configuration (7 secrets: API key, auth domain, project ID, etc.)
 - `VITE_API_BASE_URL` - Your backend API URL
 
@@ -54,7 +56,7 @@ If your application requires environment variables for the build process (e.g., 
 
 1. In your Azure Static Web App, go to "Settings" → "Environment variables"
 2. Add any necessary environment variables
-3. For build-time variables, you can also add them to the GitHub Actions workflow in the `.github/workflows/azure-deploy.yml` file under the "Build application" step
+3. For build-time variables, you can also add them to the deploy workflows in `.github/workflows/deploy-production.yml` and `.github/workflows/deploy-development.yml` under the "Build application" step
 
 #### Adding Environment Variables to GitHub Actions
 
@@ -64,41 +66,41 @@ Edit the workflow file and add your environment variables:
 - name: Build application
   run: npm run build
   env:
-    NODE_ENV: production
     VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
     VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
     # Add other variables as needed
 ```
 
-Then add these secrets in GitHub repository settings.
+Then add these secrets in GitHub repository settings. Don't set `NODE_ENV` here — `vite build` already
+builds in production mode, and `NODE_ENV=development` would ship React's development bundle.
 
 ## Workflow Details
 
-The GitHub Actions workflow (`.github/workflows/azure-deploy.yml`) performs the following steps:
+The deployment is split into one workflow per environment, plus a validation workflow:
 
-### On Push or Pull Request:
-1. **Checkout code**: Retrieves the latest code from the repository
-2. **Setup Node.js**: Installs Node.js version 20 with npm caching
-3. **Install dependencies**: Runs `npm ci` for clean dependency installation
-4. **Lint code**: Runs ESLint (continues on error to not block deployment)
-5. **Build application**: Runs `npm run build` to create production build
-6. **Deploy to Azure**: Uploads the built application to Azure Static Web Apps
+| Workflow | Trigger | Target |
+|----------|---------|--------|
+| `.github/workflows/ci.yml` | pull request to `main` / `dev` | none — tests + build only |
+| `.github/workflows/deploy-development.yml` | push to `dev`, manual | development Static Web App |
+| `.github/workflows/deploy-production.yml` | push to `main`, manual | production Static Web App |
 
-### On Pull Request Close:
-- Automatically closes the staging environment for the pull request
+Each deploy workflow runs the same steps:
 
 ## Build Output
 
-- **Build command**: `npm run build` (runs TypeScript compilation and Vite build)
+- **Build command**: `npm run build` (runs version generation, ESLint, TypeScript compilation and Vite build)
 - **Output directory**: `dist` (Vite's default output directory)
 - **Base URL**: Configured in `vite.config.ts`
 
 ## Deployment Environments
 
-- **Production**: Deployed when code is pushed to `main` branch
-- **Preview**: Automatically created for each pull request
-  - Each PR gets a unique URL for testing
-  - Preview environment is automatically deleted when PR is closed
+- **Production**: Deployed when code is pushed to `main` (or manually)
+- **Development**: Deployed when code is pushed to `dev` (or manually)
+
+Each environment is a separate Azure Static Web App with its own deployment token stored as a GitHub
+environment secret. Pull requests do **not** create Azure preview environments.
+
+See [Environment-Based Deployment Guide](12-ENVIRONMENT_BASED_DEPLOYMENT.md) for setup details.
 
 ## Monitoring Deployments
 
@@ -147,9 +149,11 @@ To add a custom domain:
 To trigger a deployment manually:
 
 1. Go to the GitHub Actions tab in your repository
-2. Select the "Build and Deploy to Azure" workflow
+2. Select **Deploy to Production** or **Deploy to Development**
 3. Click "Run workflow"
-4. Select the branch and click "Run workflow"
+4. Select the branch to build from and click "Run workflow"
+
+Only **Build and Validate** (`ci.yml`) is offered for pull-request validation; it never deploys.
 
 ## Security Considerations
 

@@ -64,7 +64,8 @@ git push origin dev
 
 ### ✅ 2. Merged Pull Requests
 
-Deployments are triggered when a pull request is **merged** (not just closed):
+Merging a PR pushes a commit to the target branch, and **that push** is what deploys. The workflow
+intentionally does not deploy from `pull_request` events, so a merge results in exactly one deployment.
 
 ```bash
 # Create and merge a PR to main
@@ -74,11 +75,11 @@ git push origin feature/my-feature
 # Create PR on GitHub targeting 'main'
 # ✅ Build job runs to validate
 # Once PR is approved and merged
-# ✅ Build and deploy job runs
+# ✅ Push to main triggers the deploy job
 ```
 
 **Important:** 
-- ✅ Merged PR = Build validation + Deployment triggered
+- ✅ Merged PR = Build validation + (via the resulting push) Deployment
 - ✅ PR opened/updated = Build validation only
 - ❌ Closed PR (without merge) = No deployment (build may have run earlier)
 
@@ -89,24 +90,25 @@ git push origin feature/my-feature
 | PR Opened | ✅ Yes | ❌ No |
 | PR Updated | ✅ Yes | ❌ No |
 | PR Reopened | ✅ Yes | ❌ No |
-| PR Merged | ✅ Yes | ✅ Yes |
+| PR Merged | ✅ Yes | ✅ Yes (from the push to the target branch) |
 | PR Closed (not merged) | ❌ No | ❌ No |
-| Push to `main` | ✅ Yes | ✅ Yes |
-| Push to `dev` | ✅ Yes | ✅ Yes |
+| Push to `main` | ❌ No (deploy build validates) | ✅ Yes → production |
+| Push to `dev` | ❌ No (deploy build validates) | ✅ Yes → development |
 | Push to feature branch | ❌ No | ❌ No |
-| Manual workflow | ✅ Yes | ✅ Yes |
+| Manual workflow | Deployment build validates | ✅ Yes → selected environment |
 
 ### ✅ 3. Manual Workflow Dispatch
 
 You can manually trigger a deployment from GitHub Actions:
 
 1. Go to **Actions** tab
-2. Select **Build and Deploy to Azure**
+2. Select **Deploy to Development** (or **Deploy to Production**)
 3. Click **Run workflow**
-4. Choose:
-   - Branch to deploy from
-   - Environment (production or development)
+4. Choose the branch to build from
 5. Click **Run workflow**
+
+The workflow you pick decides which app is deployed and which `AZURE_STATIC_WEB_APPS_API_TOKEN` is used;
+the branch decides which commit is built.
 
 ## When Actions DON'T Run
 
@@ -205,33 +207,32 @@ git push origin feature/my-feature
 
 ## What Happens During Each Job
 
-### Build Job (PR Validation)
+### `ci.yml` — Build and Validate
 
-Runs on: PR opened, updated, or reopened
+Runs on: PR opened, updated, or reopened (and manual dispatch)
 
 **Steps:**
 1. **Checkout code** from the PR branch
 2. **Setup Node.js 20** with npm caching
 3. **Install dependencies** (`npm ci`)
-4. **Run linting** (`npm run lint`) - fails if linting errors
-5. **Build application** (`npm run build`) - fails if build errors
+4. **Run tests** (`npm test`)
+5. **Build application** (`npm run build`) - runs ESLint + `tsc -b` + Vite build, fails on any error
 6. **Result:** ✅ or ❌ status on PR
 
 **Purpose:** Validate that the PR code builds successfully before allowing merge.
 
-### Build and Deploy Job
+### `deploy-production.yml` / `deploy-development.yml`
 
-Runs on: Push to main/dev, merged PRs, manual dispatch
+Runs on: push to `main` (production) / `dev` (development), or manual dispatch
 
 **Steps:**
-1. **Set environment variables** (production or development)
-2. **Checkout code** from the branch
-3. **Setup Node.js 20** with npm caching
-4. **Install dependencies** (`npm ci`)
-5. **Run linting** (non-blocking, continues on error)
-6. **Build application** with environment-specific secrets
-7. **Deploy to Azure Static Web Apps**
-8. **Result:** Live deployment to Azure
+1. **Checkout code** from the branch
+2. **Setup Node.js 20** with npm caching
+3. **Install dependencies** (`npm ci`)
+4. **Verify environment configuration** - fails fast, naming any secret missing on that environment
+5. **Build application** with that environment's secrets
+6. **Deploy to Azure Static Web Apps** for that environment
+7. **Result:** Live deployment to Azure
 
 **Purpose:** Build and deploy tested code to the appropriate environment.
 
@@ -241,19 +242,21 @@ Different variables are injected based on the target environment:
 
 **Production (main branch):**
 ```
-NODE_ENV=production
 VITE_ENVIRONMENT=production
-VITE_API_BASE_URL=[production API URL from secrets]
-VITE_FIREBASE_*=[production Firebase config from secrets]
+VITE_API_BASE_URL=[from the `production` environment secrets]
+VITE_FIREBASE_*=[from the `production` environment secrets]
 ```
 
 **Development (dev branch):**
 ```
-NODE_ENV=development
 VITE_ENVIRONMENT=development
-VITE_API_BASE_URL=[development API URL from secrets]
-VITE_FIREBASE_*=[development Firebase config from secrets]
+VITE_API_BASE_URL=[from the `development` environment secrets]
+VITE_FIREBASE_*=[from the `development` environment secrets]
 ```
+
+No config value is shared between the two apps, so the deploy job fails fast if any required secret is
+missing on the selected environment. `NODE_ENV` is never set — `vite build` already builds in
+production mode.
 
 ## Monitoring Deployments
 
