@@ -1,3 +1,12 @@
+## [1.0.1](https://github.com/Perfect-Toss/public-site/compare/v1.0.0...v1.0.1) (2026-11-05)
+
+
+### Bug Fixes
+
+* **ci:** run the test suite before releasing and deploying ([c20163f](https://github.com/Perfect-Toss/public-site/commit/c20163f0647aec12e2fba8589a7c4fffac520e15))
+* **release:** always cut a version, and honour type!: breaking markers ([696afb0](https://github.com/Perfect-Toss/public-site/commit/696afb0187022e44f82cdd4ab747ffe1680b2ca1))
+* **release:** drop the duplicate .releaserc.json ([4be23c3](https://github.com/Perfect-Toss/public-site/commit/4be23c3c45baa1afba580cb09dac3381054857e5))
+
 # 1.0.0 (2026-11-05)
 
 
