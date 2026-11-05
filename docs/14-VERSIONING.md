@@ -111,20 +111,36 @@ Details that follow from this:
 - The production deploy releases nothing. It checks out the requested tag, verifies that commit is on
   `main`, builds it, and uploads it — so production always reports exactly the version you asked for.
   Blank version = the latest tag; `.github/workflows/deploy-production.yml` also rejects unknown tags.
-- **Commits that produce no release** (`chore:`, `docs:`, …) change nothing on production: they are
-  not tagged, so there is no version for the production deploy to pick up. Merge as `fix:` if the
-  change has to reach production.
+- **Every merge releases something.** There is no longer a "this commit produced no tag" case — the
+  catch-all rule turns an unrecognised message into a patch — so whatever is on `main` always has a
+  version the production deploy can ship.
 - The development app shows the last released version plus a modifier — `v1.2.3 · 437a6f5 ·
   development` — because `formatVersion()` appends the short SHA and environment for any build whose
   `VITE_ENVIRONMENT` is not `production`.
 
 ### Commit conventions
 
-| Commit message                      | Version change          |
-| ----------------------------------- | ----------------------- |
-| `fix(...)`                          | Patch (`1.0.0 -> 1.0.1`) |
-| `feat(...)`                         | Minor (`1.0.0 -> 1.1.0`) |
-| `feat!` / `BREAKING CHANGE:` footer | Major (`1.0.0 -> 2.0.0`) |
+`.releaserc.json` overrides the analyzer's default rules. After the specific types comes a catch-all
+`{ "release": "patch" }` rule, which matches any commit the earlier rules didn't — so **every merge to
+`main` produces a tag**, even when the message has no conventional prefix.
+
+| Commit message                                                    | Version change |
+| ----------------------------------------------------------------- | -------------- |
+| `feat(scope): …`                                                    | Minor (`1.0.0 -> 1.1.0`) |
+| `fix(scope): …`, `perf(scope): …`, `revert: …`                      | Patch (`1.0.0 -> 1.0.1`) |
+| anything else — `chore:`, `docs:`, `ci:`, or no prefix at all       | Patch |
+| `feat!: …`, `type(scope)!: …`, `BREAKING CHANGE:` footer            | Major (`1.0.0 -> 2.0.0`) |
+
+Worth knowing:
+
+- Prefixes still decide *how far* the version moves. An unprefixed message is no longer swallowed, but
+  it books a feature as a patch.
+- `type!:` only reaches major because of the explicit header rule (`{ "header": "*!: *" }`) in
+  `.releaserc.json`. With the default angular parser a `!` header is otherwise unparsed — it used to
+  produce no release at all. The `BREAKING CHANGE:` footer is the canonical form and needs no rule.
+- The analyzer picks the highest matching release for a commit, so the catch-all can never downgrade a
+  `feat:` to a patch.
+- **Squash-merge uses the PR title as the commit message**, so the PR title is what gets analyzed.
 
 ### Branch protection
 
