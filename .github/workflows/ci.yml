@@ -1,16 +1,14 @@
 name: Build and Validate
 
-# Pull requests are validation only. Deployment happens when the merge lands:
-#   push to main -> Deploy to Production
-#   push to dev  -> Deploy to Development
+# Pull requests are validation only. Merging to `main` publishes to the development app;
+# production is a deliberate release via the "Deploy to Production" workflow.
 
 on:
-    pull_request:
-        types: [opened, synchronize, reopened]
-        branches:
-            - main
-            - dev
-    workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
     contents: read

@@ -4,8 +4,9 @@ This document describes how to deploy the public-site application to Azure Stati
 
 ## Overview
 
-The application uses GitHub Actions to automatically build and deploy to Azure Static Web Apps: `main` deploys to
-the production app, `dev` deploys to the development app, and pull requests are validated without deploying.
+The application uses GitHub Actions to deploy to Azure Static Web Apps from a single branch: merging to
+`main` publishes to the development app, and production is a manual **Deploy to Production** run. Pull
+requests are validated without deploying.
 
 ## Prerequisites
 
@@ -80,9 +81,9 @@ The deployment is split into one workflow per environment, plus a validation wor
 
 | Workflow | Trigger | Target |
 |----------|---------|--------|
-| `.github/workflows/ci.yml` | pull request to `main` / `dev` | none — tests + build only |
-| `.github/workflows/deploy-development.yml` | push to `dev`, manual | development Static Web App |
-| `.github/workflows/deploy-production.yml` | push to `main`, manual | production Static Web App (runs semantic-release first) |
+| `.github/workflows/ci.yml` | pull request to `main` | none — tests + build only |
+| `.github/workflows/deploy-development.yml` | push to `main`, manual | development Static Web App (releases first) |
+| `.github/workflows/deploy-production.yml` | manual run only | production Static Web App (a chosen release tag) |
 
 Each deploy workflow runs the same steps:
 
@@ -94,8 +95,8 @@ Each deploy workflow runs the same steps:
 
 ## Deployment Environments
 
-- **Production**: Deployed when code is pushed to `main` (or manually)
-- **Development**: Deployed when code is pushed to `dev` (or manually)
+- **Development**: Deployed on every push to `main` (or manually)
+- **Production**: Deployed by a manual **Deploy to Production** run
 
 Each environment is a separate Azure Static Web App with its own deployment token stored as a GitHub
 environment secret. Pull requests do **not** create Azure preview environments.

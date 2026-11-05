@@ -4,10 +4,14 @@ This guide explains how to set up and use environment-based deployments for prod
 
 ## Overview
 
-The deployment workflow now supports two environments:
+There is one long-lived branch (`main`) and two environments:
 
-- **Production** - Deploys from `main` branch to production Azure Static Web App
-- **Development** - Deploys from `dev` branch to development Azure Static Web App
+- **Development** - every push to `main` deploys to the development Azure Static Web App
+- **Production** - a manual run of **Deploy to Production** releases and deploys to the production
+  Azure Static Web App
+
+Merging to `main` only ever publishes to development. Production is a deliberate act, so no branch
+juggling, rebasing or syncing is involved.
 
 ## GitHub Environments Setup
 
@@ -32,7 +36,7 @@ The deployment workflow now supports two environments:
 1. Click **New environment**
 2. Name: `development`
 3. Configure protection rules (optional):
-   - ☑️ **Deployment branches** - Select "Selected branches" and add `dev`
+   - ☑️ **Deployment branches** - Select "Selected branches" and add `main`
 4. Click **Save protection rules**
 
 ### Step 2: Add Environment-Specific Secrets
@@ -77,45 +81,45 @@ Instead, each deploy workflow checks every required value up front and fails wit
 
 | Workflow | Trigger | Target |
 |----------|---------|--------|
-| `.github/workflows/ci.yml` | PR to `main` / `dev`, manual | none — tests + build only |
-| `.github/workflows/deploy-development.yml` | push to `dev`, manual | development app |
-| `.github/workflows/deploy-production.yml` | push to `main`, manual | production app (releases first) |
+| `.github/workflows/ci.yml` | PR to `main`, manual | none — tests + build only |
+| `.github/workflows/deploy-development.yml` | push to `main`, manual | development app (releases first) |
+| `.github/workflows/deploy-production.yml` | manual only | production app (a chosen release tag) |
 
-The production deploy releases before it builds — semantic-release runs inside that workflow so the
-artifact carries the version being shipped (see [Versioning](14-VERSIONING.md)).
+The development deploy cuts the release on every push to `main` — semantic-release bumps the version
+and tags it — and the production deploy ships one of those tags (see [Versioning](14-VERSIONING.md)).
 
 Check which environment a run used in the Actions list: the run is titled **Deploy to Production**
 or **Deploy to Development**, and the job shows the environment's deployment URL.
 
-### Automatic Deployments
+### Automatic deployment (development)
 
-#### Production (main branch)
 ```bash
-# Triggers production deployment
-git checkout main
-git push origin main
+# Any push to main releases and publishes to development
+ git checkout main
+ git pull
+ git push origin main
 ```
 
 **What happens:**
-1. Workflow uses `production` environment
-2. Sets `VITE_ENVIRONMENT=production`
-3. Uses production secrets (including the production deployment token)
-4. Deploys to the production Azure Static Web App
-5. If reviewers are required, waits for approval
-
-#### Development (dev branch)
-```bash
-# Triggers development deployment
-git checkout dev
-git push origin dev
-```
-
-**What happens:**
-1. `Deploy to Development` workflow uses the `development` environment
-2. Sets `VITE_ENVIRONMENT=development`
-3. Uses development secrets (including the development deployment token)
+1. `Deploy to Development` uses the `development` environment
+2. Runs `semantic-release`: version bump, `CHANGELOG.md`, `vX.Y.Z` tag, GitHub Release
+3. Builds that release commit with `VITE_ENVIRONMENT=development` and the development secrets
 4. Deploys to the development Azure Static Web App
-5. No approval required (typically)
+
+### Production release (manual)
+
+The production app is **not** deployed by a push, and nothing is released here — the release already
+happened when the change merged to `main`:
+
+1. Go to **Actions** → **Deploy to Production** → **Run workflow**
+2. **version**: leave blank for the latest release tag, or enter one (`1.2.3` or `v1.2.3`) to ship an
+   older release. Shipping an older version is also how you roll back
+3. The job verifies the `production` secrets, checks out that tag, builds it, and uploads it
+4. If reviewers are required on the `production` environment, the run waits for approval before
+   deploying
+
+Re-running with the same version is a plain redeploy; an unknown tag or a tag that is not on `main`
+fails before anything is uploaded.
 
 ### Manual Deployments
 
@@ -123,38 +127,35 @@ Each environment has its own workflow, so you pick the workflow rather than an i
 
 1. Go to **Actions** tab in GitHub
 2. Select **Deploy to Development** or **Deploy to Production**
-3. Click **Run workflow**
-4. Choose the **branch** to build from (any branch; the workflow decides the target app)
-5. Click **Run workflow**
+3. Click **Run workflow** and pick a branch
+4. Click **Run workflow**
 
-This allows you to deploy:
-- Production code to development environment (for testing)
-- Development code to production environment (emergency fixes)
+**Deploy to Development** builds the branch you pick. **Deploy to Production** always builds `main`
+and cuts a release when the run was started from `main`.
 
 ### Pull Request Deployments
 
-When pull requests are **merged** to `main` or `dev` branches, they trigger deployments:
+Pull requests do **not** deploy. `ci.yml` validates them (tests + build), and the merge into `main`
+is what publishes to the development app:
 
 ```bash
-# Create a PR to main
-git checkout -b feature/new-feature
-git push origin feature/new-feature
+ git checkout -b feature/new-feature
+ git push origin feature/new-feature
 # Create PR targeting main on GitHub
-
-# When PR is merged:
-# ✅ Triggers deployment to production environment
+# ✅ ci.yml validates the PR
+# When merged:
+# ✅ push to main deploys to development
+# Production: Actions → Deploy to Production → Run workflow
 ```
 
 **Important Notes:**
-- ❌ Opening or updating a PR does NOT create preview environments
-- ❌ Closing a PR without merging does NOT trigger deployment
-- ✅ Merging a PR pushes to the target branch, and that **push** is what deploys
-  (the workflow does not deploy from `pull_request` events, so nothing is deployed twice)
-- The merged code is deployed to the environment of the target branch (main → production, dev → development)
+- ❌ Opening, updating or closing a PR does NOT deploy anything
+- ✅ Merging a PR pushes to `main`, and that push publishes to development
+- ❌ No push ever deploys to production
 
 For testing before merge:
 - Test locally with `npm run dev` and `npm run build && npm run preview`
-- Or merge to `dev` branch first to test in development environment
+- Or merge to `main` and check the development app
 
 ## Environment Variables in Your App
 
@@ -200,37 +201,31 @@ if (config.isDevelopment) {
 
 ## Branch Strategy
 
-### Recommended Git Workflow
+### Single branch
 
 ```
 ┌─────────────┐
-│   feature   │  Feature branches
-│   branches  │  (feature/*, bugfix/*)
+│   topic     │  feature/*, bugfix/* — short lived
 └──────┬──────┘
-       │ PR
+       │ PR (ci.yml validates)
        ▼
 ┌─────────────┐
-│     dev     │  Development branch
-│             │  Auto-deploys to dev Azure
-└──────┬──────┘
-       │ PR (after testing)
-       ▼
-┌─────────────┐
-│    main     │  Production branch
-│             │  Auto-deploys to prod Azure
-│             │  (may require approvals)
+│    main     │  The only long-lived branch
+│             │  Auto-deploys to development
+│             │  Production: manual release
 └─────────────┘
 ```
 
 **Workflow:**
-1. Create feature branch from `dev`
+1. Create a topic branch from `main`
 2. Develop and test locally
-3. Create PR to `dev` → Get preview environment
-4. Merge to `dev` → Auto-deploy to development
-5. Test in development environment
-6. Create PR from `dev` to `main`
-7. Review and approve
-8. Merge to `main` → Deploy to production (with approval if configured)
+3. Open a PR to `main` → `ci.yml` runs tests + build
+4. Merge (squash is fine — the topic branch is discarded) → auto-deploy to development
+5. Test in the development environment
+6. **Actions** → **Deploy to Production** → **Run workflow** on `main` → release + production deploy
+
+No long-lived `dev` branch means no rebasing, no fast-forward rules and no branch sync: there is only
+one line of history to keep coherent.
 
 ## Environment-Specific Configuration Examples
 
@@ -303,12 +298,11 @@ If you configured required reviewers for production:
 
 ### Wrong Environment Deployed
 
-**Problem:** Changes pushed to `dev` but deployed to production (or vice versa)
+**Problem:** A development deploy used production config (or vice versa)
 
 **Solution:**
-- Check which branch you pushed to
-- Verify you ran the workflow for that environment (`Deploy to Development` vs `Deploy to Production`)
-- Check workflow run logs to see which environment was used
+- The error name from `Verify environment configuration` lists exactly what is missing
+- Check the workflow that ran: `Deploy to Development` must use the `development` environment secrets
 
 ### Environment Secrets Not Found
 
@@ -356,10 +350,10 @@ If you configured required reviewers for production:
 
 | Action | Branch | Environment | Approval | URL |
 |--------|--------|-------------|----------|-----|
-| Push to main (incl. merged PR) | `main` | production | Yes* | prod URL |
-| Push to dev (incl. merged PR) | `dev` | development | No | dev URL |
-| PR to main / dev | any | none — build validation only | n/a | n/a |
-| Manual deploy | any | selectable | Depends | selected env |
+| Push to main (incl. merged PR) | `main` | development | No | dev URL |
+| Manual **Deploy to Production** | any release tag | production | Yes* | prod URL |
+| Manual **Deploy to Development** | any | development | No | dev URL |
+| PR to main | any | none — build validation only | n/a | n/a |
 
 *If configured in environment settings
 
@@ -373,9 +367,8 @@ If you configured required reviewers for production:
 
 **Next Steps:**
 1. Create `production` and `development` environments in GitHub
-2. Add environment-specific secrets
-3. Create Azure Static Web Apps for both environments
-4. Create `dev` branch if it doesn't exist
-5. Test deployment to development first
-6. Configure production approvers
-7. Deploy to production
+2. Add environment-specific secrets (same names, different values)
+3. Remove any app config from repository-level secrets
+4. Create Azure Static Web Apps for both environments
+5. Merge something to `main` and confirm the development app updates
+6. Configure production approvers, then run **Deploy to Production**

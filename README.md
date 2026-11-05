@@ -62,25 +62,30 @@ npm run generate:api
 
 ## Deployment
 
-This project uses GitHub Actions for automated deployment to Azure Static Web Apps.
+This project uses GitHub Actions to deploy to two Azure Static Web Apps from a single branch (`main`).
 
-### Initial Setup
+### Setup
 
-Follow the deployment checklist: **[docs/DEPLOYMENT_CHECKLIST.md](./docs/DEPLOYMENT_CHECKLIST.md)**
-
-Quick links:
 - [Azure Deployment Guide](./docs/10-AZURE_DEPLOYMENT.md)
-- [GitHub Secrets Setup](./docs/11-GITHUB_SECRETS_SETUP.md)
+- [GitHub Secrets Setup](./docs/11-GITHUB_SECRETS_SETUP.md) — one secret set per GitHub environment
 
-### Automatic Deployments
+### Pipeline
 
-- **Production**: Automatically deploys on push to `main` branch
-- **Preview**: Creates preview environment for each pull request
-- **Manual**: Trigger deployment from GitHub Actions tab
+- **Development**: every push to `main` cuts the release (semantic-release) and deploys to the
+  development app
+- **Production**: manual — **Actions → Deploy to Production → Run workflow**. The `version` input picks
+  which release to ship (blank = latest tag), so rolling back is just shipping an older version
+- **Pull requests**: validated by `ci.yml` (tests + build); they never deploy
+
+See [Deployment Triggers](./docs/13-DEPLOYMENT_TRIGGERS.md) for the full flow.
 
 ### Releases & Versioning
 
-Releases are automated with **semantic-release**. On every push to `main`, it analyzes commit messages (Conventional Commits), bumps the version, updates `CHANGELOG.md`, creates a `vX.Y.Z` git tag + GitHub Release, and commits the version bump back to `main` (which re-deploys the app with the released version).
+Releases are automated with **semantic-release**, run as part of **Deploy to Development**. It analyzes
+commit messages (Conventional Commits), bumps the version, updates `CHANGELOG.md`, creates a `vX.Y.Z`
+tag + GitHub Release, and the release commit is what gets built and deployed to development. Production
+ships whichever tag you select, and shows `vX.Y.Z`; the development app shows
+`vX.Y.Z · <sha> · development`.
 
 **Commit conventions that trigger releases:**
 

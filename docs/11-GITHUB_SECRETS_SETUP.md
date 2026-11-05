@@ -33,8 +33,9 @@ read `VITE_*` values, so PR checks cannot depend on either environment's config.
 
 ### 1. Azure Deployment Token (one per GitHub environment)
 
-The workflow deploys `main` to **production** and `dev` to **development**. The token secret has the
-same name in both environments, but a different value:
+The workflow deploys `main` to **development** on every push, and to **production** on a manual
+**Deploy to Production** run. The token secret has the same name in both environments, but a
+different value:
 
 - Go to **Settings** → **Environments** → `production` → **Add environment secret**
   - `AZURE_STATIC_WEB_APPS_API_TOKEN` = deployment token of the **production** Static Web App
@@ -235,6 +236,6 @@ Before your first deployment, ensure:
 - [ ] Both Azure deployment URLs are added to Firebase authorized domains
 - [ ] API backend allows CORS requests from both Azure deployment URLs
 - [ ] Workflow files are committed: `.github/workflows/ci.yml`, `.github/workflows/deploy-development.yml`, `.github/workflows/deploy-production.yml`
-- [ ] Push to `main` deploys to production, push to `dev` deploys to development
+- [ ] Push to `main` deploys to development; **Deploy to Production** releases and deploys production
 
 Once complete, your application will automatically build and deploy to Azure! 🚀

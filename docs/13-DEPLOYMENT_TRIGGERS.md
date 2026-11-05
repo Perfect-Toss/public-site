@@ -1,432 +1,117 @@
 # Deployment Triggers Guide
 
-This document explains when builds and deployments are triggered in this project.
+There is **one long-lived branch** (`main`) and two deployment targets:
 
-## Overview
+| Target | Triggered by | App |
+|--------|--------------|-----|
+| **development** | every push to `main` — releases, then deploys | development Static Web App |
+| **production** | manual run of **Deploy to Production**, given a version | production Static Web App |
 
-Three workflows, each with one job:
+Merging to `main` is therefore always safe: it releases and publishes to development, never to
+production. Shipping is a deliberate action, and it can ship any released version — not just the
+latest.
 
-1. **Build and Validate** (`ci.yml`) — validates pull requests, never deploys
-2. **Deploy to Development** (`deploy-development.yml`) — runs on push to `dev`
-3. **Deploy to Production** (`deploy-production.yml`) — runs on push to `main`: releases, then deploys
+## Workflows
 
-## When Builds Happen (Validation)
+| Workflow | File | Trigger | What it does |
+|----------|------|---------|--------------|
+| **Build and Validate** | `ci.yml` | PR to `main`, manual | `npm ci` → `npm test` → `npm run build` (ESLint + `tsc -b` + Vite). No secrets, no deploy |
+| **Deploy to Development** | `deploy-development.yml` | push to `main`, manual | verifies the `development` config → **releases** (`semantic-release`) → builds → uploads |
+| **Deploy to Production** | `deploy-production.yml` | manual only | verifies the `production` config → checks out the requested version → builds → uploads |
 
-The **build job** runs to validate your code on:
+## The pipeline
 
-### ✅ Pull Request Events
-
-- **PR Opened** - When a new pull request is created
-- **PR Updated** - When commits are pushed to an existing PR (synchronize)
-- **PR Reopened** - When a closed PR is reopened
-
-```bash
-# Create and push a PR
-git checkout -b feature/my-feature
-# ... make changes ...
-git push origin feature/my-feature
-# Create PR on GitHub
-# ✅ Triggers build job to validate code
+```mermaid
+flowchart TD
+    T[topic branch] -->|PR| C[ci.yml<br/>tests + build]
+    C -->|reviews pass| M[main]
+    M -->|push| D[Deploy to Development]
+    D -->|semantic-release| R[version bump + tag + CHANGELOG]
+    R --> DV[development app<br/>v1.2.3 · sha · development]
+    R -.->|tag available to pick| P[Deploy to Production<br/>manual run, version input]
+    P --> PV[production app<br/>v1.2.3]
 ```
 
-**What happens during build validation:**
-1. Checkout code
-2. Setup Node.js
-3. Install dependencies
-4. Run linting (fails if linting errors)
-5. Build application (fails if build errors)
-6. ❌ Does NOT deploy to Azure
-
-This ensures your PR builds successfully before it can be merged.
-
-## When Deployments Happen
-
-Deployments to Azure Static Web Apps occur in the following scenarios:
-
-### ✅ 1. Push to Protected Branches
-
-- `dev` branch → **Deploy to Development** → development environment
-- `main` branch → **Deploy to Production** → release → build → production environment
-
-Releasing happens *inside* the production deploy, before the build: semantic-release bumps
-`package.json` in a commit it pushes with `GITHUB_TOKEN`, and such pushes don't trigger workflows, so
-a separate release workflow would leave the deploy building the previous version — see
-[Versioning §5](14-VERSIONING.md#why-the-release-runs-inside-the-deploy).
-
-```bash
-# Example: Deploy to production
-git checkout main
-git merge feature/my-feature
-git push origin main
-# ✅ Triggers production deployment
-
-# Example: Deploy to development
-git checkout dev
-git merge feature/my-feature
-git push origin dev
-# ✅ Triggers development deployment
-```
-
-### ✅ 2. Merged Pull Requests
-
-Merging a PR pushes a commit to the target branch, and **that push** is what deploys. The workflow
-intentionally does not deploy from `pull_request` events, so a merge results in exactly one deployment.
-
-```bash
-# Create and merge a PR to main
-git checkout -b feature/my-feature
-# ... make changes ...
-git push origin feature/my-feature
-# Create PR on GitHub targeting 'main'
-# ✅ Build job runs to validate
-# Once PR is approved and merged
-# ✅ Push to main triggers the deploy job
-```
-
-**Important:** 
-- ✅ Merged PR = Build validation + (via the resulting push) Deployment
-- ✅ PR opened/updated = Build validation only
-- ❌ Closed PR (without merge) = No deployment (build may have run earlier)
-
-## Build vs Deploy Summary
-
-| Event | Build Validation | Deployment |
-|-------|------------------|------------|
-| PR Opened | ✅ Yes | ❌ No |
-| PR Updated | ✅ Yes | ❌ No |
-| PR Reopened | ✅ Yes | ❌ No |
-| PR Merged | ✅ Yes | ✅ Yes (from the push to the target branch) |
-| PR Closed (not merged) | ❌ No | ❌ No |
-| Push to `main` | ❌ No (deploy build validates) | ✅ Yes → release, then production |
-| Push to `dev` | ❌ No (deploy build validates) | ✅ Yes → development |
-| Push to feature branch | ❌ No | ❌ No |
-| Manual **Deploy to Development** | Deployment build validates | ✅ Yes → development (selected branch) |
-| Manual **Deploy to Production** | Deployment build validates | ✅ Yes → production (`main` only) |
-
-### ✅ 3. Manual Workflow Dispatch
-
-You can manually trigger a deployment from GitHub Actions:
-
-1. Go to **Actions** tab
-2. Select **Deploy to Development** (or **Deploy to Production**)
-3. Click **Run workflow**
-4. Choose the branch to build from
-5. Click **Run workflow**
-
-The workflow you pick decides which app is deployed and which `AZURE_STATIC_WEB_APPS_API_TOKEN` is used.
-**Deploy to Development** builds the branch you pick; **Deploy to Production** always builds `main`, so
-it can't accidentally ship a feature branch.
-
-## When Actions DON'T Run
-
-### ❌ No Build or Deployment
-
-The following events do **NOT** trigger any workflow:
-- Pushes to branches other than `main` or `dev`
-- Closing a PR without merging (workflow already ran when PR was opened)
-
-```bash
-git checkout feature/my-feature
-git push origin feature/my-feature
-# ❌ No build, no deployment (only runs when PR is created)
-```
-
-## Deployment Workflow
-
-### Typical Development Flow with PR Validation
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  1. Developer creates feature branch                        │
-│     git checkout -b feature/new-feature                     │
-│     ❌ No workflow triggered                                 │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  2. Developer pushes changes to feature branch              │
-│     git push origin feature/new-feature                     │
-│     ❌ No workflow triggered yet                             │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  3. Developer creates PR to 'dev' branch                    │
-│     ✅ BUILD JOB RUNS (validation only)                     │
-│     • Linting                                                │
-│     • TypeScript compilation                                 │
-│     • Build succeeds/fails                                   │
-│     ❌ No deployment                                         │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  4. Developer pushes updates to PR                          │
-│     ✅ BUILD JOB RUNS AGAIN (re-validates)                  │
-│     ❌ No deployment                                         │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  5. PR is reviewed and merged to 'dev'                      │
-│     ✅ BUILD & DEPLOY JOB RUNS                              │
-│     ✅ DEPLOYS TO DEVELOPMENT ENVIRONMENT                    │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  6. Test in development environment                         │
-│     Manual testing and verification                          │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  7. Create PR from 'dev' to 'main'                          │
-│     ✅ BUILD JOB RUNS (validation)                          │
-│     ❌ No deployment yet                                     │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  8. PR is approved and merged to 'main'                     │
-│     ✅ BUILD & DEPLOY JOB RUNS                              │
-│     ✅ DEPLOYS TO PRODUCTION ENVIRONMENT                     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Alternative: Direct Push Flow
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  1. Developer works on local branch                         │
-│     git checkout -b feature/new-feature                     │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  2. Merge to dev locally and push                           │
-│     git checkout dev                                         │
-│     git merge feature/new-feature                            │
-│     git push origin dev                                      │
-│     ✅ DEPLOYMENT TO DEVELOPMENT ENVIRONMENT                │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│  3. After testing, merge to main and push                   │
-│     git checkout main                                        │
-│     git merge dev                                            │
-│     git push origin main                                     │
-│     ✅ DEPLOYMENT TO PRODUCTION ENVIRONMENT                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## What Happens During Each Job
-
-### `ci.yml` — Build and Validate
-
-Runs on: PR opened, updated, or reopened (and manual dispatch)
-
-**Steps:**
-1. **Checkout code** from the PR branch
-2. **Setup Node.js 20** with npm caching
-3. **Install dependencies** (`npm ci`)
-4. **Run tests** (`npm test`)
-5. **Build application** (`npm run build`) - runs ESLint + `tsc -b` + Vite build, fails on any error
-6. **Result:** ✅ or ❌ status on PR
-
-**Purpose:** Validate that the PR code builds successfully before allowing merge.
-
-### `deploy-production.yml` / `deploy-development.yml`
-
-Runs on: push to `main` (production) / `dev` (development), or manual dispatch
-
-**Steps:**
-1. **Checkout code** (`main` for production, whichever branch for development)
-2. **Setup Node.js 20** with npm caching
-3. **Install dependencies** (`npm ci`)
-4. **Verify environment configuration** - fails fast, naming any secret missing on that environment
-5. **Release** (production only) - `npx semantic-release` bumps the version, tags, and pushes
-6. **Build application** with that environment's secrets (production picks up the released version)
-7. **Deploy to Azure Static Web Apps** for that environment
-8. **Result:** Live deployment to Azure
-
-**Purpose:** Build and deploy tested code to the appropriate environment.
-
-### Environment Variables
-
-Different variables are injected based on the target environment:
-
-**Production (main branch):**
-```
-VITE_ENVIRONMENT=production
-VITE_API_BASE_URL=[from the `production` environment secrets]
-VITE_FIREBASE_*=[from the `production` environment secrets]
-```
-
-**Development (dev branch):**
-```
-VITE_ENVIRONMENT=development
-VITE_API_BASE_URL=[from the `development` environment secrets]
-VITE_FIREBASE_*=[from the `development` environment secrets]
-```
-
-No config value is shared between the two apps, so the deploy job fails fast if any required secret is
-missing on the selected environment. `NODE_ENV` is never set — `vite build` already builds in
-production mode.
-
-## Monitoring Deployments
-
-### Check if Deployment Will Trigger
-
-Before pushing, verify:
-
-1. **Check current branch:**
-   ```bash
-   git branch --show-current
-   # Must be 'main' or 'dev' for automatic deployment
-   ```
-
-2. **Check if you're pushing to protected branch:**
-   ```bash
-   git push origin main    # ✅ Will deploy to production
-   git push origin dev     # ✅ Will deploy to development
-   git push origin feature # ❌ Will not deploy
-   ```
-
-3. **For PRs:** Deployment only happens when merged, not when opened or updated
-
-### View Deployment Status
-
-**GitHub Actions Tab:**
-1. Go to repository → **Actions** tab
-2. See all workflow runs
-3. Green checkmark = Successful deployment
-4. Red X = Failed deployment
-
-**Workflow Run Details:**
-- Click on any workflow run to see:
-  - Which branch triggered it
-  - Which environment was deployed to
-  - Build logs
-  - Deployment URL
-
-**Azure Portal:**
-1. Navigate to your Static Web App
-2. Go to **Deployments** section
-3. View deployment history and status
-
-## Testing Before Deployment
-
-### PR Validation Ensures Quality
-
-Every PR automatically gets validated:
-
-```bash
-# Your workflow
-git checkout -b feature/new-feature
-# ... make changes ...
-git push origin feature/new-feature
-# Create PR
-# ✅ Automatic build validation runs
-# ✅ See results in PR checks
-```
-
-**Benefits:**
-- ✅ Catch build errors before merge
-- ✅ Catch linting issues before merge
-- ✅ Ensure TypeScript compiles successfully
-- ✅ No broken code reaches main or dev branches
-
-### Additional Local Testing
-
-```bash
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-
-# Run linting locally
-npm run lint
-
-# Build and preview production build
-npm run build
-npm run preview
-```
-
-### Testing in Development Environment
-
-1. Merge your feature to `dev` branch
-2. Deployment to development environment happens automatically
-3. Test at the development URL
-4. Once verified, create PR to `main` for production
-
-## Rollback Process
-
-If a deployment introduces issues:
-
-### Option 1: Git Revert
-
-```bash
-# Revert the problematic commit
-git revert <commit-hash>
-git push origin main  # or dev
-# ✅ Triggers new deployment with reverted code
-```
-
-### Option 2: Revert the Merge
-
-```bash
-# If the issue was introduced by a merged PR
-git revert -m 1 <merge-commit-hash>
-git push origin main  # or dev
-# ✅ Triggers new deployment
-```
-
-### Option 3: Azure Portal
-
-1. Go to Azure Portal
-2. Navigate to your Static Web App
-3. Go to **Deployments**
-4. Find a previous working deployment
-5. Click **Activate** to rollback
-
-## Best Practices
-
-1. ✅ **Always test in development first** before promoting to production
-2. ✅ **Use pull requests** for code review and approval
-3. ✅ **Test builds locally** before pushing to `dev` or `main`
-4. ✅ **Monitor deployments** after pushing to ensure success
-5. ✅ **Keep dev and main in sync** to avoid conflicts
-6. ✅ **Use feature branches** for all development work
-7. ❌ **Don't push directly to main** without testing in dev first
-8. ❌ **Don't bypass code review** for production deployments
-
-## Quick Reference
-
-| Event | Branch | Build Validation | Deployment | Environment | Notes |
-|-------|--------|------------------|------------|-------------|-------|
-| Push | `main` | ✅ Yes | ✅ Yes | Production | Requires environment approval if configured |
-| Push | `dev` | ✅ Yes | ✅ Yes | Development | Automatic deployment |
-| Push | `feature/*` | ❌ No | ❌ No | N/A | No workflow runs |
-| PR opened | any → `main` | ✅ Yes | ❌ No | N/A | Build validates code |
-| PR updated | any → `main` | ✅ Yes | ❌ No | N/A | Build re-validates |
-| PR reopened | any → `main` | ✅ Yes | ❌ No | N/A | Build validates |
-| PR merged | any → `main` | ✅ Yes | ✅ Yes | Production | Deploys merged code |
-| PR closed (not merged) | any → `main` | ❌ No | ❌ No | N/A | No action |
-| PR merged | any → `dev` | ✅ Yes | ✅ Yes | Development | Deploys merged code |
-| Manual dispatch | any | ✅ Yes | ✅ Yes | Selected | Choose branch and environment |
-
-## Getting Help
-
-- **Build validation fails:** Check PR for linting or build errors
-- **Build fails:** Check Actions tab for error logs
-- **Deployment not triggered:** Verify branch name and event type
-- **PR checks not running:** Ensure PR targets `main` or `dev` branch
-- **Need to deploy urgently:** Use manual workflow dispatch
-- **Environment issues:** Check secrets configuration in GitHub settings
-
----
-
-**Summary:**
-1. ✅ **Build validation runs** on all PRs to `main` or `dev` (opened, updated, reopened)
-2. ✅ **Deployment happens** on:
-   - Push to `main` or `dev` branches
-   - Merged pull requests to `main` or `dev`
-   - Manual workflow dispatch
-2. ✅ Merged pull requests to `main` or `dev`
-3. ✅ Manual workflow dispatch
-
-All other events (PR opened, PR updated, pushes to feature branches) do NOT trigger deployments.
+### Day-to-day
+
+1. Branch from `main`, open a PR → `ci.yml` validates it.
+2. Merge (squash is fine — topic branches are discarded) → `Deploy to Development` cuts the release
+   and publishes to the development app.
+3. Verify on the development URL. The dev app shows the version that merge just produced, e.g.
+   `v1.2.3 · 437a6f5 · development`.
+
+### Shipping
+
+1. **Actions** → **Deploy to Production** → **Run workflow**.
+2. Leave **version** blank to ship the latest release tag, or type one (`1.2.3` or `v1.2.3`) to ship an
+   older release — that is also how you roll back.
+3. The job then:
+   1. checks out `main` with full history and verifies the `production` environment secrets;
+   2. resolves the requested tag, checks that commit out, and rejects tags that are not on `main`;
+   3. runs `npm ci`, builds that exact version, and uploads it to the production app.
+
+Notes:
+
+- Nothing is released or tagged here — the release already happened when the change merged to `main`.
+- The version the app reports comes from `package.json` at that tag, so production always shows the
+  tag you asked for.
+- Re-running with the same version is a plain redeploy, and the run summary records the tag + commit.
+
+## Version shown in the app
+
+Both apps share one version number. `formatVersion()` (`src/version.ts`) adds a modifier for
+non-production builds:
+
+| Build | Sidebar / `version.json` |
+|-------|--------------------------|
+| production | `v1.2.3` |
+| development | `v1.2.3 · 437a6f5 · development` |
+
+`version.json` is written at build time by `scripts/generate-version.mjs` and served from the app root,
+so `GET /version.json` tells you exactly which build is live.
+
+## What does NOT trigger anything
+
+- **Pushes to topic branches** — no workflows run; only opening/updating a PR to `main` validates.
+- **The release commit** semantic-release pushes to `main` — it is authored by `GITHUB_TOKEN`, and
+  GitHub does not start workflow runs for `GITHUB_TOKEN` pushes. This is intentional: it prevents a
+  second deployment of the same commit.
+- **Closing a PR without merging** — nothing happens.
+
+## Rollback
+
+**Production, by version:** run **Deploy to Production** with the previous version (e.g. `1.2.2`).
+Because a deploy only checks out and builds a tag, rolling back is just shipping the older release.
+
+**Production, from Azure:** Azure Portal → the production Static Web App → **Deployments** → pick the
+previous deployment → **Activate**. Swaps the live content without touching git.
+
+**Development:** rebuilt from `main` on every push, so recover by reverting and pushing. That revert
+is itself a release (a `fix:`-style commit produces a patch version).
+
+**Code fix on top:** revert or fix on `main` (development redeploys and cuts a new version), then
+ship that new version to production.
+
+## Troubleshooting
+
+| Symptom | Cause |
+|---------|-------|
+| PR has no checks | The PR does not target `main` (that is the only base `ci.yml` watches) |
+| `Deploy to Development` did not run | The merge landed somewhere other than `main`; consecutive pushes queue on the `deploy-development` concurrency group rather than cancelling |
+| `::error::Missing environment secret(s) on 'development'` | Add the named secrets under **Settings → Environments → development** |
+| Production did not deploy | It only runs when dispatched — Actions → **Deploy to Production** → **Run workflow** |
+| `::error::'vX.Y.Z' is not a known tag` | Typo, or that version was never released — the job lists the most recent tags |
+| `::error::'vX.Y.Z' is not on main` | The tag points at a commit that is not on `main` — pick a real release |
+| Production stuck on "Waiting" | The `production` environment has required reviewers — approve the run |
+| Development shows a version newer than production | Expected: releases happen on merge, production follows when you ship one |
+
+## Quick reference
+
+| Event | Validation | Development app | Production app |
+|-------|------------|-----------------|----------------|
+| Push to topic branch | ❌ | ❌ | ❌ |
+| PR opened/updated to `main` | ✅ `ci.yml` | ❌ | ❌ |
+| PR merged to `main` | — | ✅ (releases + deploys) | ❌ |
+| Release commit on `main` | ❌ | ❌ | ❌ |
+| Manual **Deploy to Development** | — | ✅ (selected branch) | ❌ |
+| Manual **Deploy to Production** | — | ❌ | ✅ (chosen version) |
