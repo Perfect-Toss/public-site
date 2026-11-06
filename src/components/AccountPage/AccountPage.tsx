@@ -37,6 +37,11 @@ import { getDisplayName } from '../../utils/user';
 import { useAuth } from '../../contexts/useAuth';
 import { useAuthStore } from '../../stores/authStore';
 import { useViewAsScope } from '../../hooks/useViewAsScope';
+import {
+  HANDEDNESS_VALUES,
+  ustaRatingOptions,
+  type HandednessValue,
+} from '../../utils/profile';
 import { APP_VERSION, IS_PRODUCTION, formatVersion } from '../../version';
 
 /** Avatar colors offered on the account page. */
@@ -75,6 +80,8 @@ interface IAccountForm {
   lastName: string;
   birthdate: string;
   heightInInches: string;
+  ustaRating: string;
+  handedness: HandednessValue;
   colorHex: string | null;
 }
 
@@ -84,6 +91,8 @@ function toForm(user: User): IAccountForm {
     lastName: user.lastName ?? '',
     birthdate: user.birthdate ?? '',
     heightInInches: user.heightInInches != null ? String(user.heightInInches) : '',
+    ustaRating: user.ustaRating != null ? String(user.ustaRating) : '',
+    handedness: user.handedness ?? '',
     colorHex: user.colorHex ?? null,
   };
 }
@@ -94,6 +103,8 @@ function formsMatch(a: IAccountForm, b: IAccountForm): boolean {
     a.lastName === b.lastName &&
     a.birthdate === b.birthdate &&
     a.heightInInches === b.heightInInches &&
+    a.ustaRating === b.ustaRating &&
+    a.handedness === b.handedness &&
     (a.colorHex ?? '').toLowerCase() === (b.colorHex ?? '').toLowerCase()
   );
 }
@@ -104,14 +115,19 @@ function formsMatch(a: IAccountForm, b: IAccountForm): boolean {
  * account's roles untouched.
  */
 function toUpdateDto(id: string, form: IAccountForm): UpdateUserDto {
-  return {
+  const dto: UpdateUserDto = {
     id,
     firstName: form.firstName.trim() || null,
     lastName: form.lastName.trim() || null,
     birthdate: form.birthdate.trim() || null,
     heightInInches: form.heightInInches.trim() ? Number(form.heightInInches) : null,
+    ustaRating: form.ustaRating.trim() ? Number(form.ustaRating) : null,
     colorHex: form.colorHex,
   };
+  // The API takes no null for the handedness enum, so "Not set" is sent by
+  // leaving the field out.
+  if (form.handedness) dto.handedness = form.handedness;
+  return dto;
 }
 
 /** One organization the user belongs to, with the roles they hold on it. */
@@ -265,6 +281,10 @@ function AccountPage() {
     heightIsSet && !HEIGHT_CHOICES.includes(heightInches)
       ? [...HEIGHT_CHOICES, heightInches].sort((a, b) => a - b)
       : HEIGHT_CHOICES;
+
+  const rating = Number(form.ustaRating);
+  // A rating stored off the half-step grid stays selectable.
+  const ratingChoices = ustaRatingOptions(form.ustaRating.trim() ? rating : null);
 
   const updateField = <K extends keyof IAccountForm>(key: K, value: IAccountForm[K]) => {
     setDraft({ ...form, [key]: value });
@@ -535,6 +555,45 @@ function AccountPage() {
                 ))}
               </StyledSelect>
             </div>
+
+            <div className="account-field">
+              <div className="account-field-head">
+                <label htmlFor="account-usta-rating">USTA rating</label>
+                <small>NTRP 1.0&ndash;7.0</small>
+              </div>
+              <StyledSelect
+                id="account-usta-rating"
+                value={form.ustaRating}
+                onChange={(value) => updateField('ustaRating', value)}
+                disabled={readOnly}
+                placeholder="Not set"
+              >
+                <option value="">Not set</option>
+                {ratingChoices.map((option) => (
+                  <option key={option} value={String(option)}>
+                    {option.toFixed(1)}
+                  </option>
+                ))}
+              </StyledSelect>
+            </div>
+
+            <div className="account-field">
+              <label htmlFor="account-handedness">Handedness</label>
+              <StyledSelect
+                id="account-handedness"
+                value={form.handedness}
+                onChange={(value) => updateField('handedness', value as HandednessValue)}
+                disabled={readOnly}
+                placeholder="Not set"
+              >
+                <option value="">Not set</option>
+                {HANDEDNESS_VALUES.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </StyledSelect>
+            </div>
           </div>
 
           <div className="account-section">
@@ -636,6 +695,10 @@ function AccountPage() {
               <div className="account-fact">
                 <dt>Email verified</dt>
                 <dd>{formatBoolean(currentUser.isEmailVerified)}</dd>
+              </div>
+              <div className="account-fact">
+                <dt>Terms accepted</dt>
+                <dd>{formatBoolean(currentUser.acceptedTerms)}</dd>
               </div>
               <div className="account-fact">
                 <dt>Member since</dt>

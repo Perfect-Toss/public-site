@@ -1,11 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
 import { AuthContext, type AuthContextType } from '../../contexts/useAuth';
 import UserDetailPage from './UserDetailPage';
 import type { User } from '../../api/api.users';
-import { useEntityStore } from '../../stores/entityStore';
 import { useUserStore } from '../../stores/userStore';
+
+const mocks = vi.hoisted(() => ({
+  fetchEntitiesForUser: vi.fn(),
+}));
+
+vi.mock('../../api/api.entities', () => ({
+  fetchEntitiesForUser: mocks.fetchEntitiesForUser,
+}));
 
 vi.mock('react-router-dom', async (importOriginal) => ({
   ...(await importOriginal<typeof import('react-router-dom')>()),
@@ -43,20 +51,28 @@ afterEach(cleanup);
 
 beforeEach(() => {
   actorRoles = ['Admin'];
+  vi.clearAllMocks();
+  mocks.fetchEntitiesForUser.mockResolvedValue([]);
   useUserStore.setState({
     loadUserById: vi.fn(async () => target),
     updateUser: vi.fn(async () => undefined),
   });
-  useEntityStore.setState({ loadEntitiesForUser: vi.fn(async () => []) });
 });
+
+/** Renders the page; the organization rows are links, so a router is required. */
+function renderPage() {
+  return render(
+    <MemoryRouter>
+      <AuthContext.Provider value={authValue()}>
+        <UserDetailPage />
+      </AuthContext.Provider>
+    </MemoryRouter>,
+  );
+}
 
 /** Opens the roles dropdown the page shows while editing. */
 async function openRolePicker() {
-  const view = render(
-    <AuthContext.Provider value={authValue()}>
-      <UserDetailPage />
-    </AuthContext.Provider>,
-  );
+  const view = renderPage();
 
   await view.findByText('Sam Super');
   fireEvent.click(view.getByText('Edit'));
@@ -116,5 +132,63 @@ describe('UserDetailPage role picker', () => {
     await vi.waitFor(() =>
       expect(updateUser).toHaveBeenCalledWith(expect.objectContaining({ roles: ['Admin', 'SuperUser'] })),
     );
+  });
+});
+
+describe('UserDetailPage profile', () => {
+  it('shows the rating and handedness', async () => {
+    const rated: User = { ...target, ustaRating: 4.5, handedness: 'Left' };
+    useUserStore.setState({ loadUserById: vi.fn(async () => rated) });
+
+    const view = renderPage();
+    await view.findByText('Sam Super');
+
+    expect(view.getByText('4.5')).toBeTruthy();
+    expect(view.getByText('Left')).toBeTruthy();
+  });
+
+  it('sends the whole profile back, so a save cannot clear it', async () => {
+    const updateUser = vi.fn(async () => undefined);
+    const rated: User = {
+      ...target,
+      ustaRating: 4.5,
+      handedness: 'Left',
+      colorHex: '#E05353',
+    };
+    useUserStore.setState({ loadUserById: vi.fn(async () => rated), updateUser });
+
+    const view = renderPage();
+    await view.findByText('Sam Super');
+    fireEvent.click(view.getByText('Edit'));
+    fireEvent.click(view.getByText('Save'));
+
+    await vi.waitFor(() =>
+      expect(updateUser).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ustaRating: 4.5,
+          handedness: 'Left',
+          colorHex: '#E05353',
+        }),
+      ),
+    );
+  });
+});
+
+describe('UserDetailPage organizations', () => {
+  it('lists the organizations of the user it is showing', async () => {
+    mocks.fetchEntitiesForUser.mockResolvedValue([
+      { id: 'org-a', name: 'Atlas Club', entityType: 'Club' },
+    ]);
+
+    const view = renderPage();
+    await view.findByText('Sam Super');
+
+    expect(await view.findByText('Atlas Club')).toBeTruthy();
+    // The targeted membership list, not every entity in the tree.
+    expect(mocks.fetchEntitiesForUser).toHaveBeenCalledWith('user-1');
+    // The shared org tile links to the organization.
+    expect(
+      view.container.querySelector('.organization-card')?.getAttribute('href'),
+    ).toBe('/organizations/org-a');
   });
 });

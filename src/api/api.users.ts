@@ -12,6 +12,7 @@ import type { components } from './schema';
 export { Role, ROLES, isAdminUser } from '../utils/roles';
 
 export type User = components['schemas']['User'];
+export type Handedness = components['schemas']['Handedness'];
 export type CreateUserDto = components['schemas']['CreateUserDto'];
 export type UpdateUserDto = components['schemas']['UpdateUserDto'];
 export type CreateAthletesDto = components['schemas']['CreateAthletesDto'];

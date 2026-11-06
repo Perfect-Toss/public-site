@@ -102,6 +102,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/config/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Re-reads every configuration provider, including Azure App Configuration.
+         * @description Reaches settings read after startup. A setting captured while the host was built - the database
+         *     connection, the Firebase app, telemetry, the bearer authority - still needs a restart.
+         */
+        post: {
+            parameters: {
+                query?: {
+                    "api-version"?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/cache/entity-info": {
         parameters: {
             query?: never;
@@ -1148,7 +1188,7 @@ export interface paths {
                 path?: never;
                 cookie?: never;
             };
-            /** @description The event log creation request. */
+            /** @description The event log creation request. An event type is required. */
             requestBody?: {
                 content: {
                     "application/json": components["schemas"]["CreateEventLogDto"];
@@ -1185,7 +1225,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Creates multiple event log entries in a single batch operation. */
+        /** Creates multiple event log entries in a single batch operation. Entries without an event type are skipped. */
         post: {
             parameters: {
                 query?: never;
@@ -2632,7 +2672,10 @@ export interface paths {
                 };
             };
         };
-        /** Updates an existing user's profile information. */
+        /**
+         * Updates an existing user's profile information. The request replaces the whole profile:
+         *     an omitted optional field is cleared.
+         */
         put: {
             parameters: {
                 query?: never;
@@ -4472,33 +4515,36 @@ export interface components {
         };
         /** @description Data transfer object for creating a new event log entry. */
         CreateEventLogDto: {
-            /** @description Gets the type of the event (maximum 100 characters). */
-            eventType: string | null;
+            /** @description Gets the type of the event (maximum 100 characters, longer values are trimmed). */
+            eventType?: string | null;
             /**
              * Format: date-time
-             * @description Gets the timestamp when the event occurred.
+             * @description Gets the timestamp when the event occurred (defaults to the server time when omitted).
              */
-            timestamp: string;
+            timestamp?: string | null;
             /**
              * Format: uuid
-             * @description Gets the unique identifier of the user associated with this event.
+             * @description Gets the unique identifier of the user associated with this event. Empty when unknown.
              */
-            userId: string;
-            /** @description Gets optional event data as a JSON string (maximum 4000 characters). */
+            userId?: string | null;
+            /** @description Gets optional event data as a JSON string (maximum 4000 characters, longer values are trimmed). */
             eventData?: string | null;
-            /** @description Gets the optional source of the event (maximum 100 characters). */
+            /** @description Gets the optional source of the event (maximum 100 characters, longer values are trimmed). */
             source?: string | null;
             /**
              * Format: uuid
              * @description Gets the optional entity identifier associated with this event.
              */
             entityId?: string | null;
-            /** @description Gets the optional session identifier (maximum 100 characters). */
+            /** @description Gets the optional session identifier (maximum 100 characters, longer values are trimmed). */
             sessionId?: string | null;
         };
         /** @description Request model for creating multiple event log entries in a batch. */
         CreateEventLogsDto: {
-            /** @description Gets the list of event logs to create. */
+            /**
+             * @description Gets the list of event logs to create. Unusable entries are skipped so the rest of the
+             *     batch is still stored.
+             */
             eventLogs?: components["schemas"]["CreateEventLogDto"][] | null;
         };
         /** @description Request model for creating a new event. */
@@ -5002,6 +5048,8 @@ export interface components {
         };
         /** @enum {string} */
         EventScheduleType: "None" | "Single" | "Daily" | "Weekly" | "Monthly" | "Yearly";
+        /** @enum {string} */
+        Handedness: "Right" | "Left" | "Ambidextrous";
         /** @description Represents user login credentials. */
         LoginInfo: {
             /** @description Gets or sets the username (email) for authentication. */
@@ -5515,6 +5563,12 @@ export interface components {
              * @description Gets or sets the height of the user in inches.
              */
             heightInInches?: number | null;
+            /**
+             * Format: double
+             * @description Gets or sets the user's NTRP skill rating on the USTA scale (1.0 to 7.0). Omit or send null to clear it.
+             */
+            ustaRating?: number | null;
+            handedness?: components["schemas"]["Handedness"];
             /** @description Gets or sets the color preference in hexadecimal format. */
             colorHex?: string | null;
             /**
@@ -5588,6 +5642,9 @@ export interface components {
             lastName?: string | null;
             /** Format: int32 */
             heightInInches?: number | null;
+            /** Format: double */
+            ustaRating?: number | null;
+            handedness?: components["schemas"]["Handedness"];
             colorHex?: string | null;
             email: string | null;
             /** Format: date */

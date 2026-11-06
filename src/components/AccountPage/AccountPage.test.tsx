@@ -56,9 +56,12 @@ const athlete: User = {
   lastName: 'Sprinter',
   birthdate: '1998-04-02',
   heightInInches: 72,
+  ustaRating: 4.5,
+  handedness: 'Left',
   colorHex: null,
   thumbnailUrl: null,
   roles: ['Athlete'],
+  acceptedTerms: true,
   createdAt: '2025-01-04T10:00:00Z',
 };
 
@@ -113,6 +116,26 @@ describe('AccountPage', () => {
     // The height picker shows feet/inches, with the metric conversion beside it.
     expect(view.getByLabelText('Height').textContent).toBe('6′ 0″');
     expect(view.container.querySelector('.account-field small')?.textContent).toBe('183 cm');
+    expect(view.getByLabelText('USTA rating').textContent).toBe('4.5');
+    expect(view.getByLabelText('Handedness').textContent).toBe('Left');
+  });
+
+  it('leaves the rating unset when the profile has none', () => {
+    const view = renderPage({ ...athlete, ustaRating: null, handedness: undefined });
+
+    expect(view.getByLabelText('USTA rating').textContent).toBe('Not set');
+    expect(view.getByLabelText('Handedness').textContent).toBe('Not set');
+  });
+
+  it('leaves handedness out of the payload when it is not set', async () => {
+    const view = renderPage({ ...athlete, handedness: undefined });
+
+    fireEvent.change(view.getByLabelText('First name'), { target: { value: 'Samantha' } });
+    fireEvent.click(view.getByRole('button', { name: 'Save changes' }));
+
+    await waitFor(() => expect(mocks.updateUser).toHaveBeenCalledTimes(1));
+    // The API takes no null for the enum, so the field is omitted instead.
+    expect(mocks.updateUser.mock.calls[0][0]).not.toHaveProperty('handedness');
   });
 
   it('saves only the editable fields and never sends roles', async () => {
@@ -136,6 +159,8 @@ describe('AccountPage', () => {
       lastName: 'Sprinter',
       birthdate: '1998-04-02',
       heightInInches: 72,
+      ustaRating: 4.5,
+      handedness: 'Left',
       colorHex: null,
     });
     expect(await view.findByText('Profile updated.')).toBeTruthy();
@@ -207,6 +232,8 @@ describe('AccountPage', () => {
           lastName: 'Sprinter',
           birthdate: '1998-04-02',
           heightInInches: 72,
+          ustaRating: 4.5,
+          handedness: 'Left',
           colorHex: null,
         },
       ),
@@ -259,6 +286,24 @@ describe('AccountPage', () => {
     // Site version comes from the build; the API reports its own.
     expect(view.getByText('v1.2.3 · abcdef1 · test')).toBeTruthy();
     expect(await view.findByText('2.4.1')).toBeTruthy();
+  });
+
+  it('shows whether the terms have been accepted', () => {
+    const view = renderPage();
+
+    const fact = (label: string) =>
+      Array.from(view.container.querySelectorAll('.account-fact')).find(
+        (row) => row.querySelector('dt')?.textContent === label,
+      )?.querySelector('dd')?.textContent;
+
+    expect(fact('Terms accepted')).toBe('Yes');
+
+    cleanup();
+    const declined = renderPage({ ...athlete, acceptedTerms: false });
+    expect(declined.getByText('Terms accepted')).toBeTruthy();
+    expect(
+      Array.from(declined.container.querySelectorAll('.account-fact dd')).map((dd) => dd.textContent),
+    ).toContain('No');
   });
 
   it('rejects a photo over the size limit', async () => {

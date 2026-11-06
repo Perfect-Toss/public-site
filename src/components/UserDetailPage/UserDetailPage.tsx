@@ -13,7 +13,6 @@ import type { Role as RoleType } from '../../utils/roles';
 import { assignableRoles, canAssignRole, isSuperUser } from '../../utils/roles';
 import {
   faArrowLeft,
-  faBuilding,
   faCamera,
   faCheckCircle,
   faChevronDown,
@@ -26,15 +25,16 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { getDisplayName, renderRoleBadges } from '../../utils/user';
 import { IMAGE_ACCEPT, normalizeAvatarImage } from '../../utils/image';
-import { UserAvatar } from '../common';
+import { HANDEDNESS_VALUES, formatUstaRating, ustaRatingOptions, type HandednessValue } from '../../utils/profile';
+import { OrganizationCard, StyledSelect, UserAvatar } from '../common';
 import { useAuth } from '../../contexts/useAuth';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import type { Entity } from '../../api/api.entities';
+import { fetchEntitiesForUser } from '../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatDate } from '../../utils/format';
-import { useEntityStore } from '../../stores/entityStore';
 import { useUserStore } from '../../stores/userStore';
 import { useAuthStore } from '../../stores/authStore';
 import { startViewAs, useViewAsTarget } from '../../stores/viewAsStore';
@@ -78,13 +78,23 @@ function UserDetailPage() {
     lastName: string;
     heightInInches: string;
     birthdate: string;
+    ustaRating: string;
+    handedness: HandednessValue;
     roles: Role[];
-  }>({ firstName: '', lastName: '', heightInInches: '', birthdate: '', roles: [] });
+  }>({
+    firstName: '',
+    lastName: '',
+    heightInInches: '',
+    birthdate: '',
+    ustaRating: '',
+    handedness: '',
+    roles: [],
+  });
 
   const [entities, setEntities] = useState<Entity[]>([]);
   const [entitiesLoading, setEntitiesLoading] = useState(false);
+  const [entitiesError, setEntitiesError] = useState<string | null>(null);
   const { loadUserById, updateUser } = useUserStore();
-  const { loadEntitiesForUser } = useEntityStore();
   const { currentUser } = useAuth();
   const signedInUser = useAuthStore((state) => state.user);
   const viewAsTarget = useViewAsTarget();
@@ -115,15 +125,34 @@ function UserDetailPage() {
       .finally(() => setLoading(false));
   }, [id, loadUserById]);
 
-  // Load associated entities when user is available
+  // The organizations this user belongs to — one targeted call, never the
+  // whole entity tree.
   useEffect(() => {
     if (!user?.id) return;
+
+    let active = true;
     setEntitiesLoading(true);
-    loadEntitiesForUser(user.id)
-      .then(setEntities)
-      .catch((err) => console.error('Failed to load user entities:', err))
-      .finally(() => setEntitiesLoading(false));
-  }, [user?.id, loadEntitiesForUser]);
+    setEntitiesError(null);
+    fetchEntitiesForUser(user.id)
+      .then((rows) => {
+        if (active) {
+          setEntities(
+            [...rows].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '')),
+          );
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load user entities:', err);
+        if (active) setEntitiesError('Could not load associated entities.');
+      })
+      .finally(() => {
+        if (active) setEntitiesLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
 
   // Populate edit form when user loads or editing starts
   useEffect(() => {
@@ -133,6 +162,8 @@ function UserDetailPage() {
         lastName: user.lastName ?? '',
         heightInInches: user.heightInInches != null ? String(user.heightInInches) : '',
         birthdate: user.birthdate ?? '',
+        ustaRating: user.ustaRating != null ? String(user.ustaRating) : '',
+        handedness: user.handedness ?? '',
         roles: [...(user.roles as RoleType[] | null) ?? []],
       });
     }
@@ -159,7 +190,14 @@ function UserDetailPage() {
         heightInInches: editForm.heightInInches ? Number(editForm.heightInInches) : null,
         birthdate: editForm.birthdate.trim() || null,
         roles: editForm.roles.length > 0 ? editForm.roles : null,
+        ustaRating: editForm.ustaRating.trim() ? Number(editForm.ustaRating) : null,
+        // The API replaces the whole profile, so the color this screen cannot
+        // edit is sent back unchanged instead of being cleared.
+        colorHex: user.colorHex ?? null,
       };
+      // Handedness has no null form on the API, so "not set" is sent by leaving
+      // the field out.
+      if (editForm.handedness) dto.handedness = editForm.handedness;
       await updateUser(dto);
       await refreshUser();
       setIsEditing(false);
@@ -438,6 +476,48 @@ function UserDetailPage() {
                       onChange={(e) => setEditForm((f) => ({ ...f, birthdate: e.target.value }))}
                     />
                   </DetailField>
+                  <DetailField
+                    label="USTA Rating"
+                    editing={isEditing}
+                    displayValue={formatUstaRating(user.ustaRating)}
+                  >
+                    <StyledSelect
+                      id="detail-usta-rating"
+                      value={editForm.ustaRating}
+                      onChange={(value) => setEditForm((f) => ({ ...f, ustaRating: value }))}
+                      placeholder="Not set"
+                    >
+                      <option value="">Not set</option>
+                      {ustaRatingOptions(
+                        editForm.ustaRating.trim() ? Number(editForm.ustaRating) : null,
+                      ).map((option) => (
+                        <option key={option} value={String(option)}>
+                          {option.toFixed(1)}
+                        </option>
+                      ))}
+                    </StyledSelect>
+                  </DetailField>
+                  <DetailField
+                    label="Handedness"
+                    editing={isEditing}
+                    displayValue={user.handedness ?? '-'}
+                  >
+                    <StyledSelect
+                      id="detail-handedness"
+                      value={editForm.handedness}
+                      onChange={(value) =>
+                        setEditForm((f) => ({ ...f, handedness: value as HandednessValue }))
+                      }
+                      placeholder="Not set"
+                    >
+                      <option value="">Not set</option>
+                      {HANDEDNESS_VALUES.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </StyledSelect>
+                  </DetailField>
                 </div>
               </div>
 
@@ -445,32 +525,15 @@ function UserDetailPage() {
               <div className="user-detail-section">
                 <h3>Associated Entities</h3>
                 {entitiesLoading ? (
-                  <div style={{ padding: '16px 0', color: '#999', fontSize: 13 }}>
-                    <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: 8 }} />
-                    Loading entities...
-                  </div>
+                  <p className="user-detail-orgs-status">Loading entities...</p>
+                ) : entitiesError ? (
+                  <p className="user-detail-orgs-status error">{entitiesError}</p>
                 ) : entities.length === 0 ? (
-                  <div style={{ padding: '16px 0', color: '#999', fontSize: 13 }}>
-                    No associated entities found.
-                  </div>
+                  <p className="user-detail-orgs-status">No associated entities found.</p>
                 ) : (
-                  <div className="entities-list">
+                  <div className="user-detail-orgs">
                     {entities.map((entity) => (
-                      <div
-                        key={entity.id}
-                        className="entity-card"
-                        onClick={() => navigate(`/organizations/${entity.id}`)}
-                      >
-                        <div className="entity-card-icon">
-                          <FontAwesomeIcon icon={faBuilding} />
-                        </div>
-                        <div className="entity-card-info">
-                          <span className="entity-card-name">{entity.name || 'Untitled'}</span>
-                          {entity.entityType && (
-                            <span className="entity-card-type">{entity.entityType}</span>
-                          )}
-                        </div>
-                      </div>
+                      <OrganizationCard key={entity.id} organization={entity} />
                     ))}
                   </div>
                 )}
