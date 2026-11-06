@@ -23,8 +23,14 @@ function resolveThumbnailSrc(user: UserAvatarProps['user']): string | null {
   return user.thumbnailUrl ?? null;
 }
 
-/** Ring drawn around a photo that carries the user's color. One width, every size. */
-const AVATAR_RING_WIDTH = 3;
+/**
+ * Ring drawn around a photo that carries the user's color. It scales with the
+ * avatar — a 3px ring read as a heavy border on a 24–32px avatar — but stays
+ * a hairline at the small end: 1px up to 40px, 2px up to 72px, 3px beyond.
+ */
+function ringWidth(size: number): number {
+  return Math.max(1, Math.round(size / 32));
+}
 
 export function UserAvatar({ user, size = 32, className, alt }: UserAvatarProps) {
   const dimensionStyle = {
@@ -38,7 +44,7 @@ export function UserAvatar({ user, size = 32, className, alt }: UserAvatarProps)
     // A photo plus a color draws the color as a ring around the photo. The ring
     // lives inside the avatar's footprint, so picking a color never changes the
     // avatar's size.
-    const ring = user.colorHex ? AVATAR_RING_WIDTH : 0;
+    const ring = user.colorHex ? ringWidth(size) : 0;
 
     return (
       <span

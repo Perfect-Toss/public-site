@@ -22,18 +22,22 @@ describe('UserAvatar', () => {
 
     // The ring never changes the avatar's size — it only insets the photo.
     expect(root.style.width).toBe('40px');
-    expect(root.style.padding).toBe('3px');
+    expect(root.style.padding).toBe('1px');
     expect(root.style.backgroundColor).toContain('rgb(224, 83, 83)');
-    expect(photo.style.width).toBe('34px');
+    expect(photo.style.width).toBe('38px');
   });
 
-  it('uses the same ring width at every size', () => {
+  it('scales the ring with the avatar, hairline at the small end', () => {
     const padding = (size: number) =>
       (render(<UserAvatar user={{ ...withPhoto, colorHex: '#E05353' }} size={size} />).container.querySelector(
         '.user-avatar',
       ) as HTMLElement).style.padding;
 
-    expect(padding(24)).toBe('3px');
+    // A 3px ring looked like a heavy border on a small avatar.
+    expect(padding(24)).toBe('1px');
+    expect(padding(32)).toBe('1px');
+    expect(padding(72)).toBe('2px');
+    // The large avatar keeps the full ring.
     expect(padding(88)).toBe('3px');
   });
 

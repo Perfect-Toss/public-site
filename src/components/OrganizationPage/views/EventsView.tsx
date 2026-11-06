@@ -122,16 +122,18 @@ function EventsView() {
           <FontAwesomeIcon icon={faPlus} />
         </button>
       )}
-      <div className="org-view-header">
-        <div>
-          <h3 className="org-view-title">Active Events</h3>
-          <p className="org-view-subtitle">
-            {events.length === 0
-              ? 'No active events for this organization'
-              : `${events.length} ${events.length === 1 ? 'event' : 'events'}`}
-          </p>
+      {/* The empty state carries the message on its own, so the title bar only
+          appears once there is something to count. */}
+      {events.length > 0 && (
+        <div className="org-view-header">
+          <div>
+            <h3 className="org-view-title">Active Events</h3>
+            <p className="org-view-subtitle">
+              {events.length} {events.length === 1 ? 'event' : 'events'}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {events.length === 0 ? (
         <div className="empty-state-large">
