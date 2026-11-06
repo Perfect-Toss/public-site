@@ -11,6 +11,8 @@ import {
   addUserToEntity,
   updateEntityUserRoles,
   removeUserFromEntity,
+  uploadEntityLogo,
+  deleteEntityLogo,
   type AddUserToEntityRequest,
   type UpdateUserRolesForEntityRequest,
   type Entity,
@@ -45,6 +47,10 @@ interface EntityState {
   createEntity: (data: CreateEntityRequest) => Promise<Entity | null>;
   updateEntity: (id: string, data: UpdateEntityRequest) => Promise<void>;
   deleteEntity: (id: string) => Promise<void>;
+  /** Upload (or replace) an entity's logo; resolves with the refreshed entity. */
+  uploadEntityLogo: (id: string, file: File | Blob) => Promise<Entity | null>;
+  /** Clear an entity's logo; resolves with the refreshed entity. */
+  deleteEntityLogo: (id: string) => Promise<Entity | null>;
   loadChildEntities: (parentId: string) => Promise<Entity[]>;
   loadEntitiesForUser: (userId: string) => Promise<Entity[]>;
   loadEntityUsers: (entityId: string) => Promise<void>;
@@ -115,6 +121,18 @@ export const useEntityStore = create<EntityState>((set, get) => ({
   deleteEntity: async (id) => {
     await deleteEntity(id);
     await get().loadEntities();
+  },
+
+  uploadEntityLogo: async (id, file) => {
+    await uploadEntityLogo(id, file);
+    await get().loadEntities();
+    return get().loadEntityById(id);
+  },
+
+  deleteEntityLogo: async (id) => {
+    await deleteEntityLogo(id);
+    await get().loadEntities();
+    return get().loadEntityById(id);
   },
 
   loadEntityUsers: async (entityId) => {

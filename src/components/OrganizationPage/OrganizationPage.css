@@ -93,6 +93,19 @@
   border: 1px solid #e0e0e0;
 }
 
+/* A real logo replaces the building glyph and fills the tile. */
+.org-avatar-logo {
+  background: #fff;
+  overflow: hidden;
+}
+
+.org-avatar-img {
+  width: 100%;
+  height: 100%;
+  /* contain, not cover: a logo must never be cropped. */
+  object-fit: contain;
+}
+
 .org-title {
   margin: 0 0 4px;
   font-size: 18px;
@@ -206,6 +219,18 @@
 .info-value.empty {
   color: #bbb;
   font-style: italic;
+}
+
+/* ─── Logo (General card) ────────────────────────────────────────────────── */
+
+.org-logo-field {
+  margin-bottom: 20px;
+}
+
+.org-logo-error {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #e53935;
 }
 
 /* ─── Edit Form ───────────────────────────────────────────────────────────── */

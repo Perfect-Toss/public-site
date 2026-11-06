@@ -136,8 +136,16 @@ function OrganizationPage() {
       {/* Page Header */}
       <div className="org-header">
         <div className="org-header-info">
-          <div className="org-avatar">
-            <FontAwesomeIcon icon={faBuildingUser} />
+          <div className={`org-avatar${organization.logoUrl ? ' org-avatar-logo' : ''}`}>
+            {organization.logoUrl ? (
+              <img
+                className="org-avatar-img"
+                src={organization.logoUrl}
+                alt={`${organization.name ?? 'Organization'} logo`}
+              />
+            ) : (
+              <FontAwesomeIcon icon={faBuildingUser} />
+            )}
           </div>
           <div>
             <h1 className="org-title">{organization.name}</h1>

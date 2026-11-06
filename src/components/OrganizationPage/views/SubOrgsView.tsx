@@ -1,15 +1,15 @@
-import { faBuilding, faPlus, faSitemap, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faSitemap, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import type { Entity } from '../../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { OrganizationCard } from '../../common';
 import type { OrganizationPageContext } from '../OrganizationPage';
 import { useEntityStore } from '../../../stores/entityStore';
+import { useOutletContext } from 'react-router-dom';
 
 function SubOrgsView() {
   const { organization, canManage } = useOutletContext<OrganizationPageContext>();
-  const navigate = useNavigate();
 
   const [subOrgs, setSubOrgs] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,19 +132,7 @@ function SubOrgsView() {
       {!loading && !error && subOrgs.length > 0 && (
         <div className="sub-orgs-grid">
           {subOrgs.map((org) => (
-            <div
-              key={org.id}
-              className="organization-card"
-              onClick={() => navigate(`/organizations/${org.id}`)}
-              style={{ cursor: 'pointer' }}
-            >
-              <FontAwesomeIcon icon={faBuilding} className="org-icon" />
-              <div className="org-details">
-                <h3 className="org-name">{org.name}</h3>
-                {org.description && <p className="org-description">{org.description}</p>}
-                {org.entityType && <span className="org-type">{org.entityType}</span>}
-              </div>
-            </div>
+            <OrganizationCard key={org.id} organization={org} />
           ))}
         </div>
       )}

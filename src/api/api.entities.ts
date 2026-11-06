@@ -255,6 +255,39 @@ export async function fetchEntitiesForUser(userId: string): Promise<Entity[]> {
 }
 
 /**
+ * Upload (or replace) an entity's logo. The server writes the image to public
+ * storage and bumps the cache-busting version.
+ */
+export async function uploadEntityLogo(entityId: string, file: File | Blob): Promise<void> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const { error } = await api.POST('/api/v1/entities/{id}/logo', {
+    params: { path: { id: entityId } },
+    body: formData,
+  });
+
+  if (error) {
+    console.error('Failed to upload entity logo:', error);
+    throw new Error('Failed to upload entity logo');
+  }
+}
+
+/**
+ * Remove an entity's logo (deletes the blob and clears the stored path).
+ */
+export async function deleteEntityLogo(entityId: string): Promise<void> {
+  const { error } = await api.DELETE('/api/v1/entities/{id}/logo', {
+    params: { path: { id: entityId } },
+  });
+
+  if (error) {
+    console.error('Failed to delete entity logo:', error);
+    throw new Error('Failed to delete entity logo');
+  }
+}
+
+/**
  * Alias for fetchEntities - fetch organizations
  */
 export const fetchOrganizations = fetchEntities;

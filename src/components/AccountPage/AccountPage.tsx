@@ -32,6 +32,7 @@ import { fetchAllEntities } from '../../api/api.entities';
 import { fetchMetaInfo, type MetaResponse } from '../../api/api.meta';
 import { isLightColor } from '../../utils/color';
 import { formatBoolean, formatDate } from '../../utils/format';
+import { IMAGE_ACCEPT, isImageFile, normalizeAvatarImage } from '../../utils/image';
 import { getDisplayName } from '../../utils/user';
 import { useAuth } from '../../contexts/useAuth';
 import { useAuthStore } from '../../stores/authStore';
@@ -54,7 +55,7 @@ const AVATAR_COLORS: ReadonlyArray<{ hex: string; name: string }> = [
   { hex: '#A8815B', name: 'Bronze' },
 ];
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const MAX_PHOTO_BYTES = 20 * 1024 * 1024;
 
 /** Avatar diameter — keep in sync with `.account-avatar` in AccountPage.css. */
 const AVATAR_SIZE = 88;
@@ -280,19 +281,29 @@ function AccountPage() {
     event.target.value = '';
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
+    if (!isImageFile(file)) {
       setStatus({ kind: 'error', message: 'Please choose an image file.' });
       return;
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      setStatus({ kind: 'error', message: 'That image is larger than 5 MB.' });
+      setStatus({ kind: 'error', message: 'That image is larger than 20 MB.' });
       return;
     }
 
     setPhotoBusy(true);
     setStatus(null);
     try {
-      await uploadUserThumbnail(currentUser.id, file);
+      // Squared and shrunk here, so a phone photo of any format becomes a JPEG
+      // every browser can show.
+      let photo: File;
+      try {
+        photo = await normalizeAvatarImage(file);
+      } catch {
+        setStatus({ kind: 'error', message: 'Could not read that image. Try JPG, PNG or WebP.' });
+        return;
+      }
+
+      await uploadUserThumbnail(currentUser.id, photo);
       // A photo replaces the color, which then has to be picked again for the
       // ring. The rest of the profile is sent back unchanged.
       if (initialForm?.colorHex) {
@@ -442,14 +453,14 @@ function AccountPage() {
                   </button>
                 )}
               </div>
-              <span className="account-hint">JPG, PNG or GIF &middot; up to 5 MB</span>
+              <span className="account-hint">Any image &middot; squared and resized &middot; up to 20 MB</span>
             </div>
           )}
 
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept={IMAGE_ACCEPT}
             className="account-file-input"
             onChange={handleFileChange}
           />

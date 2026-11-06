@@ -42,6 +42,13 @@ vi.mock('../../version', () => ({
   formatVersion: () => 'v1.2.3 · abcdef1 · test',
 }));
 
+// Canvas is not implemented in jsdom, so the photo is uploaded as picked; the
+// normaliser has its own tests.
+vi.mock('../../utils/image', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../utils/image')>()),
+  normalizeAvatarImage: vi.fn(async (file: File) => file),
+}));
+
 const athlete: User = {
   id: 'user-1',
   email: 'sam@example.com',
@@ -258,11 +265,11 @@ describe('AccountPage', () => {
     const view = renderPage();
     const input = view.container.querySelector('.account-file-input') as HTMLInputElement;
     const file = new File(['frame'], 'huge.png', { type: 'image/png' });
-    Object.defineProperty(file, 'size', { value: 6 * 1024 * 1024 });
+    Object.defineProperty(file, 'size', { value: 21 * 1024 * 1024 });
 
     fireEvent.change(input, { target: { files: [file] } });
 
-    expect(await view.findByText('That image is larger than 5 MB.')).toBeTruthy();
+    expect(await view.findByText('That image is larger than 20 MB.')).toBeTruthy();
     expect(mocks.uploadUserThumbnail).not.toHaveBeenCalled();
   });
 

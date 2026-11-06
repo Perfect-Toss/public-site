@@ -8,6 +8,16 @@ import type { User } from '../../../api/api.users';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useUserStore } from '../../../stores/userStore';
 
+// Canvas is not implemented in jsdom; the normaliser has its own tests.
+const normalizeLogoImage = vi.hoisted(() =>
+  vi.fn(async (file: File) => new File([file], 'logo.png', { type: 'image/png' })),
+);
+// Only the canvas work is stubbed: the accept list and the type check are real.
+vi.mock('../../../utils/image', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../../utils/image')>()),
+  normalizeLogoImage,
+}));
+
 // jsdom has no viewport, so the virtualized list would render no rows at all.
 // Render every row instead — virtualizing is not what these tests are about.
 vi.mock('@tanstack/react-virtual', () => ({
@@ -87,6 +97,8 @@ afterEach(cleanup);
 
 /** Records the payloads the view PUTs to the entity endpoint. */
 const updateEntity = vi.fn(async (_id: string, _data: UpdateEntityRequest) => undefined);
+/** Records the logo uploads; tests decide what the refreshed entity is. */
+const uploadEntityLogo = vi.fn(async (_id: string, _file: File | Blob) => null as Entity | null);
 
 beforeEach(() => {
   mockCanManage = true;
@@ -95,6 +107,8 @@ beforeEach(() => {
   navigate.mockClear();
   onUpdated.mockClear();
   updateEntity.mockClear();
+  uploadEntityLogo.mockClear();
+  normalizeLogoImage.mockClear();
 
   useUserStore.setState({
     users: [coach, admin, tablet, athlete],
@@ -108,6 +122,8 @@ beforeEach(() => {
     addUserToEntity: vi.fn(async () => true),
     updateEntity,
     deleteEntity: vi.fn(async () => undefined),
+    uploadEntityLogo,
+    deleteEntityLogo: vi.fn(async () => null),
   });
 });
 
@@ -252,5 +268,61 @@ describe('SettingsView parent organization', () => {
 
     await waitFor(() => expect(updateEntity).toHaveBeenCalledTimes(1));
     expect(updateEntity.mock.calls[0]).toEqual(['org-1', expect.objectContaining({ parentEntityId: league.id })]);
+  });
+});
+
+describe('SettingsView logo', () => {
+  const pickLogo = (view: ReturnType<typeof renderSettings>) => {
+    const input = view.container.querySelector('.logo-picker-input') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: { files: [new File(['binary'], 'logo.png', { type: 'image/png' })] },
+    });
+  };
+
+  it('uploads a picked logo and hands the refreshed entity to the page', async () => {
+    const refreshed: Entity = { id: 'org-1', name: 'Club', logoUrl: '/logos/club.png' };
+    uploadEntityLogo.mockResolvedValueOnce(refreshed);
+    const view = renderSettings();
+
+    pickLogo(view);
+
+    await waitFor(() => expect(uploadEntityLogo).toHaveBeenCalledTimes(1));
+    expect(normalizeLogoImage).toHaveBeenCalledTimes(1);
+    expect(uploadEntityLogo.mock.calls[0][0]).toBe('org-1');
+    // The squared copy is what gets uploaded, not the original file.
+    expect((uploadEntityLogo.mock.calls[0][1] as File).name).toBe('logo.png');
+    await waitFor(() => expect(onUpdated).toHaveBeenCalledWith(refreshed));
+  });
+
+  it('reports an image it cannot read', async () => {
+    normalizeLogoImage.mockRejectedValueOnce(new Error('bad image'));
+    const view = renderSettings();
+
+    pickLogo(view);
+
+    await waitFor(() =>
+      expect(view.getByText('Could not read that image. Please try another.')).toBeDefined(),
+    );
+    expect(uploadEntityLogo).not.toHaveBeenCalled();
+  });
+
+  it('refuses a file that is not an image', async () => {
+    const view = renderSettings();
+    const input = view.container.querySelector('.logo-picker-input') as HTMLInputElement;
+
+    fireEvent.change(input, {
+      target: { files: [new File(['text'], 'notes.txt', { type: 'text/plain' })] },
+    });
+
+    expect(uploadEntityLogo).not.toHaveBeenCalled();
+    expect(view.getByText('Please choose an image file.')).toBeDefined();
+  });
+
+  it('offers a replacement once the entity has a logo', () => {
+    mockOrganization = { id: 'org-1', name: 'Club', logoUrl: '/logos/club.png' };
+    const view = renderSettings();
+
+    expect(view.getByText('Replace logo')).toBeDefined();
+    expect(view.getByText('Remove logo')).toBeDefined();
   });
 });

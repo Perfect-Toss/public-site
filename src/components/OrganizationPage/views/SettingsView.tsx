@@ -1,10 +1,11 @@
+import { EntityLogoPicker, OrganizationPicker, RoleMemberPicker } from '../../common';
 import { faEdit, faSave, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { isImageFile, normalizeLogoImage } from '../../../utils/image';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
-import { OrganizationPicker, RoleMemberPicker } from '../../common';
 import { Role } from '../../../api/api.users';
 import type { UpdateEntityRequest } from '../../../api/api.entities';
 import { useAuth } from '../../../contexts/useAuth';
@@ -18,8 +19,11 @@ function SettingsView() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
 
-  const { entities, loadEntities, updateEntity, deleteEntity } = useEntityStore();
+  const { entities, loadEntities, updateEntity, deleteEntity, uploadEntityLogo, deleteEntityLogo } =
+    useEntityStore();
 
   // Moving an organization to another parent is reserved for the global admins.
   const canEditParent = isGlobalAdmin;
@@ -88,6 +92,51 @@ function SettingsView() {
     }
   };
 
+  // The logo is written on pick, not on Save: it is its own endpoint and the
+  // server bumps a cache-busting version on every upload.
+  const handleLogoSelected = async (file: File) => {
+    if (!organization.id) return;
+    if (!isImageFile(file)) {
+      setLogoError('Please choose an image file.');
+      return;
+    }
+
+    setLogoBusy(true);
+    setLogoError(null);
+    try {
+      // Every logo is squared and trimmed here, so no tile depends on what the
+      // uploader's file happened to look like.
+      let logo: File;
+      try {
+        logo = await normalizeLogoImage(file);
+      } catch {
+        setLogoError('Could not read that image. Please try another.');
+        return;
+      }
+
+      const updated = await uploadEntityLogo(organization.id, logo);
+      if (updated) onUpdated(updated);
+    } catch {
+      setLogoError('Failed to upload the logo. Please try again.');
+    } finally {
+      setLogoBusy(false);
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    if (!organization.id) return;
+    setLogoBusy(true);
+    setLogoError(null);
+    try {
+      const updated = await deleteEntityLogo(organization.id);
+      if (updated) onUpdated(updated);
+    } catch {
+      setLogoError('Failed to remove the logo. Please try again.');
+    } finally {
+      setLogoBusy(false);
+    }
+  };
+
   return (
     <div>
       {/* General Settings */}
@@ -100,6 +149,17 @@ function SettingsView() {
               Edit
             </button>
           )}
+        </div>
+
+        <div className="org-logo-field">
+          <EntityLogoPicker
+            logoUrl={organization.logoUrl}
+            name={organization.name}
+            busy={logoBusy}
+            onFileSelected={handleLogoSelected}
+            onRemove={handleLogoRemove}
+          />
+          {logoError && <p className="org-logo-error">{logoError}</p>}
         </div>
 
         {editing ? (

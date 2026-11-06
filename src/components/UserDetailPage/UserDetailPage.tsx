@@ -25,6 +25,7 @@ import {
   faUser,
 } from '@fortawesome/free-solid-svg-icons';
 import { getDisplayName, renderRoleBadges } from '../../utils/user';
+import { IMAGE_ACCEPT, normalizeAvatarImage } from '../../utils/image';
 import { UserAvatar } from '../common';
 import { useAuth } from '../../contexts/useAuth';
 import { useCallback, useEffect, useState } from 'react';
@@ -173,7 +174,9 @@ function UserDetailPage() {
     if (!user?.id) return;
     setThumbnailSaving(true);
     try {
-      await uploadUserThumbnail(user.id, file);
+      // Same square JPEG the account page stores, so admin uploads match.
+      const photo = await normalizeAvatarImage(file);
+      await uploadUserThumbnail(user.id, photo);
       await refreshUser();
     } catch (err) {
       console.error('Failed to upload thumbnail:', err);
@@ -233,7 +236,7 @@ function UserDetailPage() {
                       <FontAwesomeIcon icon={faCamera} />
                       <input
                         type="file"
-                        accept="image/*"
+                        accept={IMAGE_ACCEPT}
                         disabled={thumbnailSaving}
                         onChange={(e) => {
                           const file = e.target.files?.[0];

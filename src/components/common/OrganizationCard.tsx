@@ -13,7 +13,16 @@ export interface OrganizationCardProps {
 export function OrganizationCard({ organization }: OrganizationCardProps) {
   return (
     <Link to={`/organizations/${organization.id}`} className="organization-card">
-      <FontAwesomeIcon icon={faBuilding} className="org-icon" />
+      {/* One fixed box for both branches, so a tile is the same height with or
+          without a logo. */}
+      <span className="org-card-mark">
+        {organization.logoUrl ? (
+          // The name sits right below, so the logo is decorative.
+          <img className="org-card-logo" src={organization.logoUrl} alt="" />
+        ) : (
+          <FontAwesomeIcon icon={faBuilding} className="org-icon" />
+        )}
+      </span>
       <div className="org-details">
         <h3 className="org-name">{organization.name}</h3>
         {organization.description && (

@@ -1,4 +1,5 @@
 export { AudioPlayer, type AudioPlayerProps } from './AudioPlayer';
+export { EntityLogoPicker, type EntityLogoPickerProps } from './EntityLogoPicker';
 export { MetadataItem, type MetadataItemProps } from './MetadataItem';
 export { OrganizationCard, type OrganizationCardProps } from './OrganizationCard';
 export {
