@@ -1,6 +1,5 @@
 import './HomePage.css';
 
-import { APP_VERSION, IS_PRODUCTION, formatVersion } from '../../version';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   faBookBookmark,
@@ -17,7 +16,6 @@ import {
   faRightFromBracket,
   faScrewdriverWrench,
   faSitemap,
-  faTag,
   faUser,
   faUsers,
   faVideo
@@ -31,6 +29,7 @@ import { logout } from '../../firebase/auth';
 import { useAuth } from '../../contexts/useAuth';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { restoreScroll } from '../../utils/scroll';
 
 /** Sub-navigation link lists for the admin accordion groups. */
 const DEVICE_SUB_LINKS = [
@@ -59,15 +58,6 @@ function isMoreActive(pathname: string) {
   return !MOBILE_TABS.some((tab) =>
     tab.end ? pathname === tab.to : pathname.startsWith(tab.to),
   );
-}
-
-/**
- * Tapping a destination in the mobile chrome opens it at the top, the way a
- * fresh page load would — the previous page's scroll offset is not a sensible
- * place for a different page to start.
- */
-function resetPageScroll() {
-  window.scrollTo(0, 0);
 }
 
 function NavLinks({ links }: { links: readonly { to: string; label: string }[] }) {
@@ -170,26 +160,20 @@ const navItemClass = ({ isActive }: { isActive: boolean }) =>
 interface MobileSheetProps {
   open: boolean;
   isAdmin: boolean;
-  versionLabel: string;
-  versionTitle?: string;
   onClose: () => void;
   onLogout: () => void;
-  onNavigate: (event: React.MouseEvent<HTMLElement>) => void;
 }
 
 /**
  * Bottom sheet behind the tab bar's "More" button. It carries everything the
- * tab bar can't hold (account, logout, the admin section, the version) and is
- * only visible under the mobile breakpoint — see HomePage.css.
+ * tab bar can't hold (account, logout, the admin section) and is only visible
+ * under the mobile breakpoint — see HomePage.css.
  */
 function MobileSheet({
   open,
   isAdmin,
-  versionLabel,
-  versionTitle,
   onClose,
   onLogout,
-  onNavigate,
 }: MobileSheetProps) {
   return (
     <>
@@ -209,7 +193,7 @@ function MobileSheet({
       >
         <div className="mobile-sheet-grip" aria-hidden="true" />
 
-        <nav className="mobile-sheet-body" onClick={onNavigate}>
+        <nav className="mobile-sheet-body">
           <NavLink to="/account" className={navItemClass}>
             <span className="nav-icon"><FontAwesomeIcon icon={faUser} /></span>
             <span>ACCOUNT</span>
@@ -252,10 +236,6 @@ function MobileSheet({
             <span className="nav-icon"><FontAwesomeIcon icon={faRightFromBracket} /></span>
             <span>LOGOUT</span>
           </button>
-
-          <div className="sidebar-version" title={versionTitle}>
-            {versionLabel}
-          </div>
         </nav>
       </div>
     </>
@@ -271,31 +251,27 @@ function HomePage() {
   const [referenceExpanded, setReferenceExpanded] = useLocalStorage(STORAGE_KEYS.REFERENCE_NAV_EXPANDED, true);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  // A tap in the mobile chrome opens its destination at the top of the page.
-  // The reset waits for the new route to commit: scrolling at click time snaps
-  // the outgoing page to its own top first, which reads as a reload.
-  const pendingScrollReset = useRef(false);
+  // Scroll offsets by page, so each page comes back where it was left and a
+  // first visit starts at the top. The offset is recorded on every scroll
+  // rather than read when leaving — by then the browser may already have
+  // clamped it to the next (shorter) page.
+  const scrollOffsets = useRef(new Map<string, number>());
 
-  const handleMobileNavigate = (event: React.MouseEvent<HTMLElement>) => {
-    // The sheet's nav also holds the logout button; only links navigate.
-    if (!(event.target as Element).closest('a')) return;
-    // A modified or middle click opens another tab/window, not this document.
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-      return;
-    }
-    pendingScrollReset.current = true;
-  };
+  useEffect(() => {
+    const path = location.pathname;
+    const record = () => scrollOffsets.current.set(path, window.scrollY);
+    record();
+    window.addEventListener('scroll', record, { passive: true });
+    return () => window.removeEventListener('scroll', record);
+  }, [location.pathname]);
 
-  const handleMobileHome = () => {
-    pendingScrollReset.current = true;
-    navigate('/');
-  };
+  // Restore once the new route has committed but before it is painted.
+  useLayoutEffect(
+    () => restoreScroll(scrollOffsets.current.get(location.pathname) ?? 0),
+    [location.pathname],
+  );
 
-  useLayoutEffect(() => {
-    if (!pendingScrollReset.current) return;
-    pendingScrollReset.current = false;
-    resetPageScroll();
-  }, [location.key]);
+  const handleMobileHome = () => navigate('/');
 
   const isDevicesRoute = location.pathname.startsWith('/admin/devices');
   const isReferenceRoute = location.pathname.startsWith('/admin/reference');
@@ -546,30 +522,6 @@ function HomePage() {
           {!collapsed && <span>LOGOUT</span>}
         </button>
 
-        {collapsed ? (
-          <div
-            className="sidebar-version collapsed"
-            data-tooltip={
-              IS_PRODUCTION
-                ? formatVersion()
-                : `${formatVersion()} · built ${new Date(APP_VERSION.buildTime).toLocaleString()}`
-            }
-          >
-            <FontAwesomeIcon icon={faTag} />
-          </div>
-        ) : (
-          <div
-            className="sidebar-version"
-            title={
-              IS_PRODUCTION
-                ? undefined
-                : `Built ${new Date(APP_VERSION.buildTime).toLocaleString()}`
-            }
-          >
-            {formatVersion()}
-          </div>
-        )}
-
         <button
           className="sidebar-toggle"
           onClick={() => setCollapsed(!collapsed)}
@@ -612,7 +564,6 @@ function HomePage() {
             to={tab.to}
             end={tab.end}
             className={({ isActive }) => `mobile-tab ${isActive ? 'active' : ''}`}
-            onClick={handleMobileNavigate}
           >
             <FontAwesomeIcon icon={tab.icon} className="mobile-tab-icon" />
             <span className="mobile-tab-label">{tab.label}</span>
@@ -634,15 +585,8 @@ function HomePage() {
       <MobileSheet
         open={sheetOpen}
         isAdmin={isAdmin}
-        versionLabel={formatVersion()}
-        versionTitle={
-          IS_PRODUCTION
-            ? undefined
-            : `Built ${new Date(APP_VERSION.buildTime).toLocaleString()}`
-        }
         onClose={() => setSheetOpen(false)}
         onLogout={handleLogout}
-        onNavigate={handleMobileNavigate}
       />
     </div>
   );

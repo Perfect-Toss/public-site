@@ -1,3 +1,743 @@
+/* Account page ──────────────────────────────────────────────────────────────
+   Only the fields a user may change about themselves live here: photo, name,
+   date of birth, height and avatar color. */
+
 .account-page {
   padding: 0;
+}
+
+/* ─── Page Header ────────────────────────────────────────────────────────── */
+
+/* The title bar itself is the shared `.section-header` (sticky, see page.css);
+   only the actions beside it are page-specific. */
+.account-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-header-actions .primary-btn,
+.account-header-actions .secondary-btn {
+  padding: 10px 18px;
+  font-size: 13px;
+}
+
+.account-header-actions .primary-btn:disabled,
+.account-header-actions .secondary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ─── Layout ─────────────────────────────────────────────────────────────── */
+
+.account-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .account-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ─── Identity Card ──────────────────────────────────────────────────────── */
+
+.account-hero {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-left: 4px solid #cfff04;
+  border-radius: 12px;
+}
+
+.account-avatar {
+  position: relative;
+  flex: 0 0 auto;
+  /* A flex box, not an inline baseline box: an inline <img> adds descender
+     space below itself, making the wrapper taller than it is wide, so the
+     photo would not be centred in a round box. The color ring itself is drawn
+     by UserAvatar, inside the avatar's footprint. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+}
+
+.account-avatar-btn {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #cfff04;
+  color: #1a1f24;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.account-avatar-btn:hover:not(:disabled) {
+  background: #b8e600;
+  transform: scale(1.06);
+}
+
+.account-avatar-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.account-avatar-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.account-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #cfff04;
+  border-radius: 50%;
+  animation: account-spin 0.8s linear infinite;
+}
+
+@keyframes account-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.account-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-name {
+  margin: 0 0 3px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1f24;
+  overflow-wrap: anywhere;
+}
+
+.account-email {
+  font-size: 13px;
+  color: #888;
+  overflow-wrap: anywhere;
+}
+
+.account-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.account-role {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f1f3f5;
+  color: #5a6570;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.account-photo-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.account-photo-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Both photo actions are the same button, one in the danger palette. */
+.account-photo-actions .secondary-btn,
+.account-photo-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.account-photo-remove {
+  background: none;
+  border: 1px solid #ffcdd2;
+  color: #e53935;
+}
+
+.account-photo-remove:hover:not(:disabled) {
+  background: #ffebee;
+  border-color: #ef9a9a;
+}
+
+.account-photo-remove:disabled,
+.account-photo-actions .secondary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.account-photo-actions .account-hint {
+  text-align: right;
+}
+
+.account-file-input {
+  display: none;
+}
+
+/* ─── Cards ──────────────────────────────────────────────────────────────── */
+
+.account-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Right-hand column: access + account facts. */
+.account-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* ─── Access ─────────────────────────────────────────────────────────────── */
+
+.account-access-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: #a4adb6;
+  white-space: nowrap;
+}
+
+.account-access-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* The memberships list is unbounded — cap it so the card can't run away. */
+  max-height: 248px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.account-access-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.account-access-list::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 3px;
+}
+
+/* One line per organization: name left, roles right. */
+.account-access-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f4f4f4;
+}
+
+.account-access-row:first-child {
+  padding-top: 0;
+}
+
+.account-access-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.account-access-org {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Lets a long name ellipsize instead of squeezing the role chips. */
+  min-width: 0;
+}
+
+.account-access-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1f24;
+  text-decoration: none;
+}
+
+.account-access-name:hover {
+  text-decoration: underline;
+}
+
+.account-access-type {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #f1f3f5;
+  color: #8a939c;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.account-access-roles {
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+  min-width: 0;
+}
+
+.account-access-roles .account-role {
+  padding: 2px 7px;
+}
+
+.account-access-none {
+  font-size: 12px;
+  font-style: italic;
+  color: #a4adb6;
+  white-space: nowrap;
+}
+
+.account-access-status {
+  font-size: 13px;
+  color: #a4adb6;
+}
+
+.account-access-status.error {
+  color: #b3261e;
+}
+
+.account-unsaved {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #b07d00;
+  white-space: nowrap;
+}
+
+/* ─── Fields ─────────────────────────────────────────────────────────────── */
+
+.account-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 700px) {
+  .account-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.account-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Label line; the unit (e.g. the cm conversion) rides on the right of it. */
+.account-field-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.account-field label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a939c;
+}
+
+.account-field input {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #1a1f24;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.account-field input:focus {
+  border-color: #cfff04;
+  box-shadow: 0 0 0 3px rgba(207, 255, 4, 0.18);
+}
+
+.account-field input:disabled {
+  background: #f7f8f9;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.account-field small {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: #a4adb6;
+}
+
+/* ─── Avatar Color ───────────────────────────────────────────────────────── */
+
+.account-section {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.account-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.account-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a939c;
+}
+
+.account-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.account-swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.account-swatch:hover:not(:disabled) {
+  transform: scale(1.12);
+}
+
+.account-swatch.selected {
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 0 0 2px #fff,
+    0 0 0 4px #1a1f24;
+}
+
+.account-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Custom color: the face is a color wheel until a custom color is chosen. */
+.account-swatch-custom {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: conic-gradient(
+    #e05353,
+    #f5b323,
+    #4caf6a,
+    #35b9a8,
+    #3b8ce0,
+    #9b6be3,
+    #e36ba8,
+    #e05353
+  );
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.account-swatch-custom svg {
+  pointer-events: none;
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.55));
+}
+
+.account-color-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.account-color-input:disabled {
+  cursor: not-allowed;
+}
+
+.account-hint {
+  font-size: 11px;
+  color: #a4adb6;
+}
+
+.account-swatches + .account-hint {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+/* ─── Actions ────────────────────────────────────────────────────────────── */
+
+.account-clear-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  color: #5a6570;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.account-clear-color:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #ccc;
+  color: #1a1f24;
+}
+
+/* Nothing to clear: keep the box (and the section height) but hide it. */
+.account-clear-color:disabled {
+  visibility: hidden;
+}
+
+.account-clear-color svg {
+  font-size: 10px;
+}
+
+/* ─── Status Bar ───────────────────────────────────────────────────────────
+   A page-wide bar pinned to the bottom of the viewport while the page scrolls,
+   so a save confirmation is never buried inside a card. */
+
+.account-status {
+  position: sticky;
+  bottom: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+}
+
+.account-status-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-status.success {
+  background: #f2ffd0;
+  color: #4a6b00;
+}
+
+.account-status.error {
+  background: #ffeaea;
+  color: #b3261e;
+}
+
+.account-status-dismiss {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.account-status-dismiss:hover {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+/* ─── Account Facts ──────────────────────────────────────────────────────── */
+
+.account-facts {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.account-fact {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid #f4f4f4;
+  font-size: 13px;
+}
+
+.account-fact:first-child {
+  padding-top: 0;
+}
+
+/* The card ends on this row, so it carries no trailing rule. */
+.account-fact:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.account-fact dt {
+  color: #8a939c;
+  font-weight: 600;
+}
+
+.account-fact dd {
+  margin: 0;
+  min-width: 0;
+  color: #1a1f24;
+  font-weight: 600;
+  text-align: right;
+  /* Version strings can be long ("v1.0.1 · abc1234 · development"). */
+  overflow-wrap: anywhere;
+}
+
+.account-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid #f4f4f4;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #a4adb6;
+}
+
+.account-note svg {
+  margin-top: 2px;
+  flex: 0 0 auto;
+}
+
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .account-status {
+    bottom: calc(
+      var(--mobile-tabbar-h, 0px) + env(safe-area-inset-bottom, 0px) + 12px
+    );
+  }
+}
+
+@media (max-width: 700px) {
+  /* Header actions drop onto their own line, split evenly. */
+  .account-header-actions {
+    width: 100%;
+  }
+
+  .account-header-actions .account-unsaved {
+    flex: 1 1 100%;
+  }
+
+  .account-header-actions .primary-btn,
+  .account-header-actions .secondary-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .account-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .account-photo-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .account-photo-buttons {
+    width: 100%;
+  }
+
+  .account-photo-buttons > button {
+    flex: 1;
+  }
+
+  .account-photo-actions .account-hint {
+    text-align: center;
+  }
 }

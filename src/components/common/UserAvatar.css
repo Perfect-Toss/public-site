@@ -12,6 +12,11 @@
   user-select: none;
 }
 
+/* The photo is inset by the ring (the box behind it), so it needs its own
+   rounding — the parent's clip would otherwise cut into the ring. */
 .user-avatar-img {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 50%;
   object-fit: cover;
 }

@@ -1,0 +1,282 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+
+import AccountPage from './AccountPage';
+import { AuthContext, type AuthContextType } from '../../contexts/useAuth';
+import type { User } from '../../api/api.users';
+
+const mocks = vi.hoisted(() => ({
+  fetchCurrentUser: vi.fn(),
+  updateUser: vi.fn(),
+  uploadUserThumbnail: vi.fn(),
+  deleteUserThumbnail: vi.fn(),
+  fetchAllEntities: vi.fn(),
+  fetchMetaInfo: vi.fn(),
+}));
+
+vi.mock('../../api/api.users', () => ({
+  fetchCurrentUser: mocks.fetchCurrentUser,
+  updateUser: mocks.updateUser,
+  uploadUserThumbnail: mocks.uploadUserThumbnail,
+  deleteUserThumbnail: mocks.deleteUserThumbnail,
+}));
+
+vi.mock('../../api/api.entities', () => ({
+  fetchAllEntities: mocks.fetchAllEntities,
+}));
+
+vi.mock('../../api/api.meta', () => ({
+  fetchMetaInfo: mocks.fetchMetaInfo,
+}));
+
+// Build metadata is injected by Vite, which is not running here.
+vi.mock('../../version', () => ({
+  APP_VERSION: {
+    version: '1.2.3',
+    sha: 'abcdef1234',
+    environment: 'test',
+    buildTime: '2026-01-01T00:00:00.000Z',
+  },
+  IS_PRODUCTION: false,
+  formatVersion: () => 'v1.2.3 · abcdef1 · test',
+}));
+
+const athlete: User = {
+  id: 'user-1',
+  email: 'sam@example.com',
+  firstName: 'Sam',
+  lastName: 'Sprinter',
+  birthdate: '1998-04-02',
+  heightInInches: 72,
+  colorHex: null,
+  thumbnailUrl: null,
+  roles: ['Athlete'],
+  createdAt: '2025-01-04T10:00:00Z',
+};
+
+function renderPage(user: User = athlete) {
+  const value: AuthContextType = {
+    currentUser: user,
+    firebaseUser: null,
+    initializing: false,
+    isAdmin: false,
+    canCreateEvents: false,
+  };
+
+  return render(
+    <MemoryRouter>
+      <AuthContext.Provider value={value}>
+        <AccountPage />
+      </AuthContext.Provider>
+    </MemoryRouter>,
+  );
+}
+
+/** The value of a labelled input. */
+const inputValue = (view: ReturnType<typeof renderPage>, label: string) =>
+  (view.getByLabelText(label) as HTMLInputElement).value;
+
+// Vitest globals are off, so testing-library's automatic cleanup is not registered.
+afterEach(cleanup);
+
+beforeEach(() => {
+  // Vitest globals are off, so mock call history is not reset automatically.
+  vi.clearAllMocks();
+  mocks.fetchCurrentUser.mockResolvedValue(athlete);
+  mocks.updateUser.mockResolvedValue(athlete);
+  mocks.uploadUserThumbnail.mockResolvedValue(undefined);
+  mocks.deleteUserThumbnail.mockResolvedValue(undefined);
+  mocks.fetchAllEntities.mockResolvedValue([]);
+  mocks.fetchMetaInfo.mockResolvedValue({
+    version: '2.4.1',
+    lastUpdated: '2026-11-01T09:00:00Z',
+  });
+});
+
+describe('AccountPage', () => {
+  it('shows the profile fields a user can change', () => {
+    const view = renderPage();
+
+    expect(view.getByText('Sam Sprinter')).toBeTruthy();
+    expect(view.getByText('sam@example.com')).toBeTruthy();
+    expect(inputValue(view, 'First name')).toBe('Sam');
+    expect(inputValue(view, 'Last name')).toBe('Sprinter');
+    expect(inputValue(view, 'Date of birth')).toBe('1998-04-02');
+    // The height picker shows feet/inches, with the metric conversion beside it.
+    expect(view.getByLabelText('Height').textContent).toBe('6′ 0″');
+    expect(view.container.querySelector('.account-field small')?.textContent).toBe('183 cm');
+  });
+
+  it('saves only the editable fields and never sends roles', async () => {
+    const view = renderPage();
+    const save = view.getByRole('button', { name: 'Save changes' }) as HTMLButtonElement;
+
+    // Nothing to save until something changes.
+    expect(save.disabled).toBe(true);
+
+    fireEvent.change(view.getByLabelText('First name'), { target: { value: 'Samantha' } });
+    // The identity header previews the edit before it is saved.
+    expect(view.getByText('Samantha Sprinter')).toBeTruthy();
+    expect(save.disabled).toBe(false);
+
+    fireEvent.click(save);
+
+    await waitFor(() => expect(mocks.updateUser).toHaveBeenCalledTimes(1));
+    expect(mocks.updateUser).toHaveBeenCalledWith({
+      id: 'user-1',
+      firstName: 'Samantha',
+      lastName: 'Sprinter',
+      birthdate: '1998-04-02',
+      heightInInches: 72,
+      colorHex: null,
+    });
+    expect(await view.findByText('Profile updated.')).toBeTruthy();
+  });
+
+  it('sends a custom avatar color', async () => {
+    const view = renderPage();
+
+    fireEvent.change(view.getByLabelText('Custom avatar color'), {
+      target: { value: '#123456' },
+    });
+    fireEvent.click(view.getByRole('button', { name: 'Save changes' }));
+
+    await waitFor(() =>
+      expect(mocks.updateUser).toHaveBeenCalledWith(
+        expect.objectContaining({ colorHex: '#123456' }),
+      ),
+    );
+  });
+
+  it('clears the avatar color', async () => {
+    const colored: User = { ...athlete, colorHex: '#E05353' };
+    const view = renderPage(colored);
+
+    fireEvent.click(view.getByRole('button', { name: 'Clear color' }));
+    fireEvent.click(view.getByRole('button', { name: 'Save changes' }));
+
+    await waitFor(() =>
+      expect(mocks.updateUser).toHaveBeenCalledWith(
+        expect.objectContaining({ colorHex: null }),
+      ),
+    );
+  });
+
+  it('keeps the avatar the same size with and without a color', () => {
+    const photo = (view: ReturnType<typeof renderPage>) =>
+      view.container.querySelector('.user-avatar-img') as HTMLElement;
+
+    const plain = renderPage({ ...athlete, thumbnailUrl: 'https://img/me.png' });
+    expect(photo(plain).style.width).toBe('88px');
+    cleanup();
+
+    // A color insets the photo by the ring, so the avatar's own size is unchanged.
+    const ringed = renderPage({
+      ...athlete,
+      colorHex: '#E05353',
+      thumbnailUrl: 'https://img/me.png',
+    });
+    expect(photo(ringed).style.width).toBe('82px');
+    expect((ringed.container.querySelector('.user-avatar') as HTMLElement).style.width).toBe(
+      '88px',
+    );
+  });
+
+  it('clears the avatar color when a photo is uploaded', async () => {
+    const view = renderPage({ ...athlete, colorHex: '#E05353' });
+    const input = view.container.querySelector('.account-file-input') as HTMLInputElement;
+
+    fireEvent.change(input, {
+      target: { files: [new File(['frame'], 'me.png', { type: 'image/png' })] },
+    });
+
+    await waitFor(() =>
+      expect(mocks.updateUser).toHaveBeenCalledWith(
+        // The rest of the profile rides along unchanged.
+        {
+          id: 'user-1',
+          firstName: 'Sam',
+          lastName: 'Sprinter',
+          birthdate: '1998-04-02',
+          heightInInches: 72,
+          colorHex: null,
+        },
+      ),
+    );
+  });
+
+  it('uploads a chosen photo', async () => {
+    const view = renderPage();
+    const input = view.container.querySelector('.account-file-input') as HTMLInputElement;
+    const file = new File(['frame'], 'me.png', { type: 'image/png' });
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => expect(mocks.uploadUserThumbnail).toHaveBeenCalledWith('user-1', file));
+    expect(await view.findByText('Profile photo updated.')).toBeTruthy();
+  });
+
+  it('summarises the organizations and roles the user holds', async () => {
+    mocks.fetchAllEntities.mockResolvedValue([
+      { id: 'org-b', name: 'Zephyr Club', entityType: 'Club', users: [{ user: { id: 'user-1' }, roles: [] }] },
+      { id: 'org-a', name: 'Atlas Club', entityType: 'Club', users: [{ user: { id: 'user-1' }, roles: ['Coach'] }] },
+      // The user is not a member here, so it is not part of their access.
+      { id: 'org-c', name: 'Other Club', entityType: 'Club', users: [{ user: { id: 'user-9' }, roles: ['Athlete'] }] },
+    ]);
+
+    const view = renderPage();
+
+    expect(await view.findByText('Atlas Club')).toBeTruthy();
+    // Alphabetical, memberships only.
+    expect(
+      Array.from(view.container.querySelectorAll('.account-access-name')).map(
+        (name) => name.textContent,
+      ),
+    ).toEqual(['Atlas Club', 'Zephyr Club']);
+    expect(view.getByText('Coach')).toBeTruthy();
+    expect(view.getByText('No role')).toBeTruthy();
+    expect(view.getByText('2 organizations')).toBeTruthy();
+    expect(mocks.fetchAllEntities).toHaveBeenCalledWith(true);
+  });
+
+  it('says so when the user belongs to no organization', async () => {
+    const view = renderPage();
+
+    expect(await view.findByText('You are not a member of any organization yet.')).toBeTruthy();
+  });
+
+  it('reports the site and API versions', async () => {
+    const view = renderPage();
+
+    // Site version comes from the build; the API reports its own.
+    expect(view.getByText('v1.2.3 · abcdef1 · test')).toBeTruthy();
+    expect(await view.findByText('2.4.1')).toBeTruthy();
+  });
+
+  it('rejects a photo over the size limit', async () => {
+    const view = renderPage();
+    const input = view.container.querySelector('.account-file-input') as HTMLInputElement;
+    const file = new File(['frame'], 'huge.png', { type: 'image/png' });
+    Object.defineProperty(file, 'size', { value: 6 * 1024 * 1024 });
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await view.findByText('That image is larger than 5 MB.')).toBeTruthy();
+    expect(mocks.uploadUserThumbnail).not.toHaveBeenCalled();
+  });
+
+  it('offers Remove photo only once a photo exists', async () => {
+    const withoutPhoto = renderPage();
+    expect(withoutPhoto.queryByRole('button', { name: 'Remove photo' })).toBeNull();
+    expect(withoutPhoto.getByRole('button', { name: 'Upload photo' })).toBeTruthy();
+    withoutPhoto.unmount();
+
+    const withPhoto = renderPage({ ...athlete, thumbnailUrl: 'https://img/me.png' });
+    expect(withPhoto.getByRole('button', { name: 'Replace photo' })).toBeTruthy();
+
+    fireEvent.click(withPhoto.getByRole('button', { name: 'Remove photo' }));
+
+    await waitFor(() => expect(mocks.deleteUserThumbnail).toHaveBeenCalledWith('user-1'));
+  });
+});

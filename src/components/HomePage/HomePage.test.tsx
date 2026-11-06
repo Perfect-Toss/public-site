@@ -1,23 +1,11 @@
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import { AuthContext } from '../../contexts/useAuth';
 import HomePage from './HomePage';
 
-// Build metadata is injected by Vite and sign-out goes through Firebase; neither
-// is available (or wanted) here.
-vi.mock('../../version', () => ({
-  APP_VERSION: {
-    version: '1.2.3',
-    sha: 'abcdef1234',
-    environment: 'test',
-    buildTime: '2026-01-01T00:00:00.000Z',
-  },
-  IS_PRODUCTION: false,
-  formatVersion: () => 'v1.2.3 · abcdef1 · test',
-}));
-
+// Sign-out goes through Firebase, which is not available (or wanted) here.
 vi.mock('../../firebase/auth', () => ({
   logout: vi.fn(async () => ({ success: true })),
 }));
@@ -30,6 +18,18 @@ afterEach(() => {
 
 // jsdom has no layout, so the real window.scrollTo only logs "not implemented".
 const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+
+// jsdom reports a fixed scroll offset; the shell's scroll memory needs a real one.
+let pageScroll = 0;
+
+beforeEach(() => {
+  pageScroll = 0;
+  Object.defineProperty(window, 'scrollY', {
+    configurable: true,
+    get: () => pageScroll,
+  });
+  scrollTo.mockClear();
+});
 
 function renderShell({ initialPath = '/', isAdmin = false } = {}) {
   return render(
@@ -140,10 +140,29 @@ describe('mobile shell', () => {
     expect(scrollTo).toHaveBeenCalledWith(0, 0);
   });
 
+  it('returns a page to where it was left', () => {
+    renderShell();
+
+    // Scroll down the videos page, then leave it.
+    fireEvent.click(screen.getByRole('link', { name: 'Videos' }));
+    pageScroll = 320;
+    fireEvent.scroll(window);
+
+    fireEvent.click(screen.getByRole('link', { name: 'Home' }));
+    scrollTo.mockClear();
+
+    fireEvent.click(screen.getByRole('link', { name: 'Videos' }));
+
+    expect(screen.getByText('videos outlet')).toBeTruthy();
+    expect(scrollTo).toHaveBeenCalledWith(0, 320);
+  });
+
   it('leaves the scroll alone for sheet actions that stay on the page', () => {
     const view = renderShell();
     openSheet(view);
 
+    // The mount itself places the page; what follows must not move it.
+    scrollTo.mockClear();
     fireEvent.click(within(sheetOf(view)).getByRole('button', { name: 'LOGOUT' }));
 
     expect(scrollTo).not.toHaveBeenCalled();
@@ -172,7 +191,6 @@ describe('mobile shell', () => {
     // Everything the sidebar holds is reachable from the sheet.
     expect(sheet.getByRole('link', { name: 'ACCOUNT' }).getAttribute('href')).toBe('/account');
     expect(sheet.getByRole('button', { name: 'LOGOUT' })).toBeTruthy();
-    expect(sheet.getByText('v1.2.3 · abcdef1 · test')).toBeTruthy();
   });
 
   it('omits the admin section in the sheet for non-admins', () => {

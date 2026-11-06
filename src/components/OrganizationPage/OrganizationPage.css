@@ -63,6 +63,15 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 28px;
+  /* Pinned like every other page title bar. The negative top margin + matching
+     padding buy breathing room above the title once it is stuck without
+     shifting the resting layout (the breadcrumb's own margin absorbs it). */
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  margin-top: -12px;
+  padding-top: 12px;
+  background: #fff;
 }
 
 .org-header-info {
@@ -86,8 +95,9 @@
 
 .org-title {
   margin: 0 0 4px;
-  font-size: 1.5rem;
+  font-size: 18px;
   font-weight: 700;
+  letter-spacing: 1px;
   color: #1a1f24;
 }
 
@@ -639,6 +649,14 @@
   }
 }
 
+/* The mobile shell fixes a top bar to the viewport; the pinned header sits
+   below it, like every other page title. */
+@media (max-width: 1024px) {
+  .org-header {
+    top: var(--mobile-topbar-h, 0px);
+  }
+}
+
 /* ─── Mobile ─────────────────────────────────────────────────────────────── */
 
 @media (max-width: 700px) {
@@ -656,7 +674,7 @@
   }
 
   .org-title {
-    font-size: 1.2rem;
+    font-size: 18px;
   }
 
   .org-tabs {

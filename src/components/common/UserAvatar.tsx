@@ -23,6 +23,9 @@ function resolveThumbnailSrc(user: UserAvatarProps['user']): string | null {
   return user.thumbnailUrl ?? null;
 }
 
+/** Ring drawn around a photo that carries the user's color. One width, every size. */
+const AVATAR_RING_WIDTH = 3;
+
 export function UserAvatar({ user, size = 32, className, alt }: UserAvatarProps) {
   const dimensionStyle = {
     width: size,
@@ -32,13 +35,27 @@ export function UserAvatar({ user, size = 32, className, alt }: UserAvatarProps)
 
   const thumbnailSrc = resolveThumbnailSrc(user);
   if (thumbnailSrc) {
+    // A photo plus a color draws the color as a ring around the photo. The ring
+    // lives inside the avatar's footprint, so picking a color never changes the
+    // avatar's size.
+    const ring = user.colorHex ? AVATAR_RING_WIDTH : 0;
+
     return (
-      <img
-        className={['user-avatar', 'user-avatar-img', className].filter(Boolean).join(' ')}
-        src={thumbnailSrc}
-        alt={alt ?? getDisplayName(user)}
-        style={dimensionStyle}
-      />
+      <span
+        className={['user-avatar', 'user-avatar-photo', className].filter(Boolean).join(' ')}
+        style={{
+          ...dimensionStyle,
+          padding: ring,
+          backgroundColor: user.colorHex ?? undefined,
+        }}
+      >
+        <img
+          className="user-avatar-img"
+          src={thumbnailSrc}
+          alt={alt ?? getDisplayName(user)}
+          style={{ width: size - ring * 2, height: size - ring * 2 }}
+        />
+      </span>
     );
   }
 

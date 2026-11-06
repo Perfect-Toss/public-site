@@ -8,9 +8,29 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  /* Fixed height: whatever sits on the right of the title (buttons, search,
+     a status chip) must not resize the bar when it appears or wraps. */
+  min-height: 56px;
   margin-bottom: 25px;
   padding-bottom: 15px;
   border-bottom: 2px solid #e0e0e0;
+}
+
+/* The page title bar pins to the top of the viewport so the page's identity —
+   and its actions — never scroll away. The negative top margin pulls the bar
+   into the page padding and the matching padding puts its contents back, so a
+   pinned bar's background reaches the viewport edge while nothing moves at
+   rest. Only the leading header of a section pins: a section that repeats
+   `.section-header` (home page sections) would otherwise stack bars. */
+.section > .section-header:first-child {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  margin-top: calc(-1 * var(--content-pad-y, 0px));
+  padding-top: var(--content-pad-y, 0px);
+  background-color: #fff;
+  /* The padding above is part of the box, so the height has to account for it. */
+  min-height: calc(var(--content-pad-y, 0px) + 56px);
 }
 
 .section-header h2 {
@@ -511,27 +531,34 @@
   }
 }
 
-/* ─── Pinned Header ─────────────────────────────────────────────────────────
+/* ─── Pinned Header ────────────────────────────────────────────────────────
 
-   A page opts in with `.pinned-header` on the block holding its page title and
-   search (or its calendar controls) to keep that block at the top of the
-   viewport while the list below scrolls. Only the mobile shell pins — the
-   desktop layout has room for both.
+   Opt-in for a title bar that carries a toolbar as well (search, calendar
+   controls): the wrapper holds the `.section-header` plus the toolbar, and it
+   is the wrapper — not the title — that pins. */
 
-   The bar is deliberately the same object as the one at rest: its offsets
-   cancel out (`margin-top` pulled into the .main-content padding, `padding-top`
-   putting it back inside the bar), so it sits exactly where it does without the
-   class, and keeps that same gap under the mobile top bar once it is stuck. The
-   bottom rule repeats the one `.section-header` already draws. */
+.pinned-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  margin-top: calc(-1 * var(--content-pad-y, 0px));
+  padding-top: var(--content-pad-y, 0px);
+  background-color: #fff;
+  border-bottom: 2px solid #e0e0e0;
+}
 
+/* The wrapper owns the pinning, so a nested title must not pin again. */
+.pinned-header .section-header {
+  position: static;
+  margin-top: 0;
+  padding-top: 0;
+  background: none;
+}
+
+/* The mobile shell fixes a top bar to the viewport; pinned headers sit below it. */
 @media (max-width: 1024px) {
+  .section > .section-header:first-child,
   .pinned-header {
-    position: sticky;
     top: var(--mobile-topbar-h, 0px);
-    z-index: 40;
-    margin-top: calc(-1 * var(--content-pad-y, 0px));
-    padding-top: var(--content-pad-y, 0px);
-    background-color: #fff;
-    border-bottom: 2px solid #e0e0e0;
   }
 }
