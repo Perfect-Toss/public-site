@@ -6,13 +6,15 @@ import {
   faBuilding,
   faChevronDown,
   faChevronUp,
-  faFlag,
+  faCircleInfo,
+  faClipboardList,
   faHardDrive,
   faShareNodes,
   faSpinner,
   faTimes,
   faTrash,
   faUser,
+  faUserGroup,
   faVideo,
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -23,7 +25,6 @@ import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 import { CustomVideoPlayer } from './CustomVideoPlayer';
 import { ReviewRequestModal } from './ReviewRequestModal';
 import { VideoReviewList } from './VideoReviewList';
-import { VideoReviewRequestList } from './VideoReviewRequestList';
 import { useVideoReviews } from './useVideoReviews';
 import {
   deleteVideo,
@@ -371,7 +372,7 @@ function VideoDetailPage() {
               title="Request review"
               aria-label="Request review"
             >
-              <FontAwesomeIcon icon={faFlag} />
+              <FontAwesomeIcon icon={faClipboardList} />
               <span>Request review</span>
             </button>
             <button
@@ -472,18 +473,37 @@ function VideoDetailPage() {
 
         {/* ── Access & Sharing ─────────────────────────────────── */}
         <section className="video-access-section">
-          <button
-            type="button"
-            className="video-access-header"
-            onClick={() => setAccessExpanded((open) => !open)}
-            aria-expanded={accessExpanded}
-          >
-            <h2>Access & Sharing</h2>
-            <FontAwesomeIcon
-              icon={accessExpanded ? faChevronUp : faChevronDown}
-              className="metadata-chevron"
-            />
-          </button>
+          <div className="video-access-header">
+            <button
+              type="button"
+              className="video-section-toggle"
+              onClick={() => setAccessExpanded((open) => !open)}
+              aria-expanded={accessExpanded}
+            >
+              <h2>
+                <FontAwesomeIcon icon={faUserGroup} />
+                Access &amp; Sharing
+              </h2>
+            </button>
+            <button
+              className="secondary-btn"
+              onClick={openShareModal}
+              title="Share"
+              aria-label="Share"
+            >
+              <FontAwesomeIcon icon={faShareNodes} />
+              <span>Share</span>
+            </button>
+            <button
+              type="button"
+              className="video-section-chevron"
+              onClick={() => setAccessExpanded((open) => !open)}
+              aria-expanded={accessExpanded}
+              aria-label="Toggle Access & Sharing"
+            >
+              <FontAwesomeIcon icon={accessExpanded ? faChevronUp : faChevronDown} />
+            </button>
+          </div>
 
           {accessExpanded && (
           accessLoading ? (
@@ -559,17 +579,16 @@ function VideoDetailPage() {
           )}
         </section>
 
-        {/* ── Review requests (below the video) ──────────────────── */}
-        <VideoReviewRequestList videoId={id ?? ''} requests={requests} reload={reload} />
-
-        {/* ── Reviews (below the video) ──────────────────────────── */}
+        {/* ── Reviews (below the video; open requests banner above them) ── */}
         <VideoReviewList
           videoId={id ?? ''}
           reviews={reviews}
+          requests={requests}
           loading={reviewsLoading}
           error={reviewsError}
           reload={reload}
           onSelectReview={handleSelectReview}
+          onRequestReview={() => setRequestReviewOpen(true)}
         />
 
         {/* ── Full Metadata ─────────────────────────────────────── */}
@@ -580,7 +599,10 @@ function VideoDetailPage() {
             onClick={() => setMetadataExpanded((prev) => !prev)}
             aria-expanded={metadataExpanded}
           >
-            <h2>Metadata</h2>
+            <h2>
+              <FontAwesomeIcon icon={faCircleInfo} />
+              Metadata
+            </h2>
             <FontAwesomeIcon
               icon={metadataExpanded ? faChevronUp : faChevronDown}
               className="metadata-chevron"

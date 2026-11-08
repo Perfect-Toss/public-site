@@ -227,17 +227,54 @@
 .video-access-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
   margin-bottom: 18px;
   padding: 0 0 12px;
+  border-bottom: 2px solid #e0e0e0;
+  transition: border-color 0.2s ease;
+}
+
+/* The title side of a section header. It is its own button so an action can sit
+   beside it (a button can't nest inside the toggle). */
+.video-section-toggle {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
   background: none;
   border: none;
-  border-bottom: 2px solid #e0e0e0;
   cursor: pointer;
   font-family: inherit;
-  transition: border-color 0.2s ease;
+  color: inherit;
+}
+
+/* Section actions keep the page's secondary button, sized to a title row. */
+.video-access-header .secondary-btn {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+/* Collapse caret sits at the far right of the row, after the action. */
+.video-section-chevron {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.video-section-chevron:hover {
+  color: #1a1f24;
 }
 
 .video-access-header:hover {
@@ -245,11 +282,20 @@
 }
 
 .video-access-header h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
   color: #1a1f24;
+}
+
+/* Section icons mark the section; the title carries the weight. */
+.video-access-header h2 svg,
+.video-metadata-header h2 svg {
+  color: #999;
 }
 
 .video-access-content {
@@ -564,6 +610,9 @@
 }
 
 .video-metadata-header h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
   font-size: 16px;
   font-weight: 700;
@@ -572,6 +621,7 @@
 }
 
 .metadata-chevron {
+  margin-left: auto;
   color: #999;
   font-size: 13px;
   flex-shrink: 0;

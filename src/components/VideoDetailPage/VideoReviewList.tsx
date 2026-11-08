@@ -3,6 +3,8 @@ import './VideoReviewsPanel.css';
 import {
   faChevronDown,
   faChevronUp,
+  faComments,
+  faPlus,
   faRotateRight,
   faSpinner,
   faTrash,
@@ -12,16 +14,51 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState, type KeyboardEvent } from 'react';
 import {
   deleteVideoReview,
+  deleteVideoReviewRequest,
   retranscribeVideoReview,
   type VideoReview,
+  type VideoReviewRequest,
 } from '../../api/api.videos';
 import { formatDateTime } from '../../utils/format';
+import { getDisplayName } from '../../utils/user';
+import { UserAvatar, UserInfo } from '../common';
 import { VideoReviewDetails } from './VideoReviewDetails';
 import { sortReviewsByTime } from './videoTime';
+
+/** The person or entity a request is addressed to, shown with its avatar/initial. */
+function RequestTarget({ request }: { request: VideoReviewRequest }) {
+  const reviewer = request.requestedReviewer;
+  if (reviewer) {
+    return (
+      <span className="vr-request-target-chip">
+        <UserAvatar user={reviewer} size={20} />
+        <span className="vr-request-target-name">{getDisplayName(reviewer)}</span>
+      </span>
+    );
+  }
+  const entityName = request.requestedEntity?.name?.trim();
+  if (entityName) {
+    return (
+      <span className="vr-request-target-chip">
+        <span className="vr-request-entity-mark" aria-hidden="true">
+          {entityName.charAt(0).toUpperCase()}
+        </span>
+        <span className="vr-request-target-name">{entityName}</span>
+      </span>
+    );
+  }
+  return (
+    <span className="vr-request-target-chip">
+      <span className="vr-request-target-name">anyone with access</span>
+    </span>
+  );
+}
 
 export interface VideoReviewListProps {
   videoId: string;
   reviews: VideoReview[];
+  /** Review requests for this video; only the OPEN ones are surfaced here. */
+  requests: VideoReviewRequest[];
   loading: boolean;
   error: string | null;
   /** Re-fetch reviews (e.g. after adding/deleting). */
@@ -32,6 +69,8 @@ export interface VideoReviewListProps {
   onFocusHandled?: () => void;
   /** Called when a review item is clicked so the player can seek/loop to it. */
   onSelectReview?: (reviewId: string) => void;
+  /** Opens the request-review dialog; the page owns it. */
+  onRequestReview?: () => void;
 }
 
 interface ReviewListItemProps {
@@ -116,16 +155,20 @@ function ReviewListItem({
 export function VideoReviewList({
   videoId,
   reviews,
+  requests,
   loading,
   error,
   reload,
   focusReviewId,
   onFocusHandled,
   onSelectReview,
+  onRequestReview,
 }: VideoReviewListProps) {
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [open, setOpen] = useState(true);
   const sortedReviews = sortReviewsByTime(reviews);
+  // A request only needs surfacing while it is still waiting on a review.
+  const activeRequests = requests.filter((request) => request.status === 'Open');
 
   // Scroll to + highlight the review selected from a timeline marker.
   useEffect(() => {
@@ -169,6 +212,18 @@ export function VideoReviewList({
     [videoId, reload],
   );
 
+  const handleDeleteRequest = useCallback(
+    async (requestId: string) => {
+      try {
+        await deleteVideoReviewRequest(videoId, requestId);
+        await reload();
+      } catch (err) {
+        console.error('Failed to delete review request:', err);
+      }
+    },
+    [videoId, reload],
+  );
+
   const handleItemKeyDown = useCallback(
     (e: KeyboardEvent<HTMLLIElement>, reviewId: string) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -180,20 +235,76 @@ export function VideoReviewList({
 
   return (
     <section className="video-reviews-list-section">
-      <button
-        type="button"
-        className="video-reviews-list-header"
-        onClick={() => setOpen((isOpen) => !isOpen)}
-        aria-expanded={open}
-      >
-        <h2>Reviews</h2>
-        <span className="vr-list-count">{reviews.length}</span>
-        <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} className="vr-chevron" />
-      </button>
+      <div className="video-reviews-list-header">
+        <button
+          type="button"
+          className="video-section-toggle"
+          onClick={() => setOpen((isOpen) => !isOpen)}
+          aria-expanded={open}
+        >
+          <h2>
+            <FontAwesomeIcon icon={faComments} />
+            Reviews
+          </h2>
+          <span className="vr-list-count">{reviews.length}</span>
+        </button>
+        {onRequestReview && (
+          <button
+            className="secondary-btn"
+            onClick={onRequestReview}
+            title="Request review"
+            aria-label="Request review"
+          >
+            <FontAwesomeIcon icon={faPlus} />
+            <span>Request review</span>
+          </button>
+        )}
+        <button
+          type="button"
+          className="video-section-chevron"
+          onClick={() => setOpen((isOpen) => !isOpen)}
+          aria-expanded={open}
+          aria-label="Toggle Reviews"
+        >
+          <FontAwesomeIcon icon={open ? faChevronUp : faChevronDown} />
+        </button>
+      </div>
 
       {open && (
         <>
           {error && <p className="vr-error">{error}</p>}
+
+          {activeRequests.length > 0 && (
+            <>
+              <ul className="vr-list vr-request-list">
+                {activeRequests.map((request) => (
+                  <li key={request.id} className="vr-item">
+                    <div className="vr-details-head">
+                      <UserInfo user={request.requestedBy ?? {}} size={24} />
+                      <span className="vr-req-status vr-req-open">Open</span>
+                      <span className="vr-item-time">{formatDateTime(request.createdAt)}</span>
+                      <button
+                        type="button"
+                        className="vr-delete"
+                        title="Delete request"
+                        onClick={() => void handleDeleteRequest(request.id)}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </div>
+                    <div className="vr-request-target">
+                      <span>Review requested from</span>
+                      <RequestTarget request={request} />
+                    </div>
+                    {request.requestNote && (
+                      <blockquote className="vr-request-note">{request.requestNote}</blockquote>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <hr className="vr-group-divider" />
+            </>
+          )}
 
           {loading ? (
             <p className="vr-empty">

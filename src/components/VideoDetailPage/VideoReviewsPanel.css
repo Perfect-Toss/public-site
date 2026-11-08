@@ -228,16 +228,41 @@
 .video-reviews-list-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   margin-bottom: 18px;
   padding: 0 0 12px;
   background: none;
   border: none;
   border-bottom: 2px solid #e0e0e0;
-  cursor: pointer;
   font-family: inherit;
   transition: border-color 0.2s ease;
+}
+
+/* Section actions keep the page's secondary button, sized to a title row. */
+.video-reviews-list-header .secondary-btn {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+/* Collapse caret sits at the far right of the row, after the action. */
+.video-section-chevron {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.video-section-chevron:hover {
+  color: #1a1f24;
 }
 
 .video-reviews-list-header:hover {
@@ -245,11 +270,19 @@
 }
 
 .video-reviews-list-header h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
   color: #1a1f24;
+}
+
+/* Section icons mark the section; the title carries the weight. */
+.video-reviews-list-header h2 svg {
+  color: #999;
 }
 
 .vr-list-count {
@@ -264,12 +297,6 @@
   color: #666;
   font-size: 12px;
   font-weight: 700;
-}
-
-.vr-chevron {
-  margin-left: auto;
-  color: #999;
-  font-size: 12px;
 }
 
 /* ─── Shared bits ────────────────────────────────────────────────────────── */
@@ -878,6 +905,84 @@
   outline-offset: -2px;
 }
 
+/* Open review requests are cards in their own list, above the reviews they are
+   waiting on. The tint + divider keep them distinct from review rows. */
+.vr-request-list {
+  margin-bottom: 0;
+}
+
+.vr-request-list .vr-item {
+  background: #fffdf4;
+}
+
+/* Small rule between the requests and the reviews below them — short and
+   centred, so it reads as a separator rather than a second header. */
+.vr-group-divider {
+  width: 72px;
+  height: 1px;
+  margin: 20px auto 12px;
+  border: 0;
+  background: #e0e0e0;
+}
+
+/* The requester's note reads as a quote under the request row. */
+.vr-request-note {
+  margin: 8px 0 0;
+  padding-left: 10px;
+  border-left: 3px solid #e8e2cf;
+  color: #777;
+  font-size: 13px;
+  font-style: italic;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Who the request was sent to: avatar/initial chip, centred on the text line. */
+.vr-request-target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1;
+  color: #777;
+}
+
+.vr-request-target-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+  color: #1a1f24;
+  font-weight: 600;
+}
+
+.vr-request-target-name {
+  display: inline-flex;
+  align-items: center;
+}
+
+.vr-request-entity-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #eef1f4;
+  color: #667;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.vr-item-time {
+  margin-left: auto;
+  font-size: 12px;
+  color: #999;
+}
+
 .vr-req-status {
   display: inline-block;
   padding: 2px 8px;
@@ -891,17 +996,6 @@
 .vr-req-open {
   color: #b45309;
   background: #fef3c7;
-}
-
-.vr-req-done {
-  color: #15803d;
-  background: #dcfce7;
-}
-
-.vr-item-time {
-  margin-left: auto;
-  font-size: 12px;
-  color: #999;
 }
 
 .vr-delete {

@@ -163,6 +163,24 @@ describe('VideoTimeline', () => {
     });
   });
 
+  it('still stacks close markers before the bar has been measured', () => {
+    // The real bar reports 0 until layout; treating that as "no width" let
+    // near-coincident dots share a lane and overlap in the player.
+    const { container } = render(
+      <VideoTimeline
+        reviews={[
+          review({ id: 'snap-1', timestamp: '00:00:07' }),
+          review({ id: 'snap-2', timestamp: '00:00:07.2' }),
+        ]}
+        duration={10}
+        onSelectReview={() => {}}
+      />,
+    );
+    const markers = container.querySelectorAll('.video-timeline-marker');
+    expect(markers).toHaveLength(2);
+    expect(topOf(markers[0])).not.toBe(topOf(markers[1]));
+  });
+
   it('gives a ranged review the same unified color as its author on a snapshot', () => {
     // The segment's embedded author color is a near-white "unset" default, while
     // the same author's snapshot carries the real color. Both must render in the

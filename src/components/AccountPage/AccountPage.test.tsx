@@ -195,24 +195,26 @@ describe('AccountPage', () => {
     );
   });
 
-  it('keeps the avatar the same size with and without a color', () => {
+  it('keeps the photo full size and only adds the colour ring', () => {
     const photo = (view: ReturnType<typeof renderPage>) =>
       view.container.querySelector('.user-avatar-img') as HTMLElement;
+    const avatar = (view: ReturnType<typeof renderPage>) =>
+      view.container.querySelector('.user-avatar') as HTMLElement;
 
     const plain = renderPage({ ...athlete, thumbnailUrl: 'https://img/me.png' });
     expect(photo(plain).style.width).toBe('88px');
+    expect(avatar(plain).style.boxShadow).toBe('');
     cleanup();
 
-    // A color insets the photo by the ring, so the avatar's own size is unchanged.
+    // A colour draws a ring AROUND the photo — the photo itself is unchanged.
     const ringed = renderPage({
       ...athlete,
       colorHex: '#E05353',
       thumbnailUrl: 'https://img/me.png',
     });
-    expect(photo(ringed).style.width).toBe('82px');
-    expect((ringed.container.querySelector('.user-avatar') as HTMLElement).style.width).toBe(
-      '88px',
-    );
+    expect(photo(ringed).style.width).toBe('88px');
+    expect(avatar(ringed).style.width).toBe('88px');
+    expect(avatar(ringed).style.boxShadow).toContain('#E05353');
   });
 
   it('clears the avatar color when a photo is uploaded', async () => {

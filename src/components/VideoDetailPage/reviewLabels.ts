@@ -1,14 +1,5 @@
-import type {
-  VideoReview,
-  VideoReviewRequestStatus,
-} from '../../api/api.videos';
+import type { VideoReview } from '../../api/api.videos';
 import { formatPosition, parseTimeSpanToSeconds } from './videoTime';
-
-export const REQUEST_STATUS_LABELS: Record<VideoReviewRequestStatus, string> = {
-  Unknown: 'Unknown',
-  Open: 'Open',
-  Done: 'Done',
-};
 
 /** Position text for a review item ("0:12" or "0:12 – 0:20"). */
 export function positionText(review: VideoReview): string {

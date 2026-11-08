@@ -13,6 +13,9 @@ import { buildVideoAnchors, formatPosition, type VideoAnchor } from './videoTime
 /** Hover time (ms) before a marker opens its review popup. */
 const HOVER_OPEN_DELAY_MS = 350;
 
+/** Track width assumed before the bar has been measured (px). */
+const ASSUMED_TRACK_WIDTH = 800;
+
 /** Popup anchor position (viewport px). */
 interface PopupPosition {
   top: number;
@@ -175,18 +178,20 @@ export function VideoTimeline({
   // Drop any pending popup when the timeline goes away.
   useEffect(() => () => cancelPendingPopup(), [cancelPendingPopup]);
 
-  // Measure the inner track once and on every resize. This runs before paint,
-  // so the first painted frame already uses the measured width; without a DOM
-  // (non-DOM tests) the width stays 0 and dots fall back to zero-width.
+  // Measure the inner track once, after layout, and on every resize. The extra
+  // animation-frame pass covers a first paint where the bar had no width yet.
   useLayoutEffect(() => {
     const el = innerRef.current;
     if (!el) return;
     const update = () => setTrackInnerWidth(el.clientWidth);
     update();
-    if (typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
+    const raf = window.requestAnimationFrame(update);
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    ro?.observe(el);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      ro?.disconnect();
+    };
   }, []);
 
   const safeDuration = Math.max(1, duration);
@@ -263,10 +268,11 @@ export function VideoTimeline({
 
   // Half of a marker's on-screen width, expressed in video time. Markers have
   // real width (ring included), so any whose visual extents would touch are
-  // stacked into different lanes. Before the track is measured (or in non-DOM
-  // tests) this is 0, preserving the old "only equal timestamps overlap" case.
-  const dotHalfSec =
-    trackInnerWidth > 0 ? MARKER_RADIUS * (safeDuration / trackInnerWidth) : 0;
+  // stacked into different lanes. Until the bar reports a width we assume a
+  // nominal one: falling back to 0 would let near-coincident markers share a
+  // lane and overlap, which is exactly the bug this guards.
+  const assumedWidth = trackInnerWidth > 0 ? trackInnerWidth : ASSUMED_TRACK_WIDTH;
+  const dotHalfSec = MARKER_RADIUS * (safeDuration / assumedWidth);
 
   const isPoint = (it: { start: number; end: number }) => it.end - it.start <= EPS;
   const overlaps = (a: { start: number; end: number }, b: { start: number; end: number }) => {

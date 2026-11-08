@@ -244,6 +244,12 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
       void onAdded?.();
     }, [onAdded]);
 
+    /** A text/voice review was submitted: close the overlay, then refresh. */
+    const handleReviewAdded = useCallback(() => {
+      closeAddReview();
+      void onAdded?.();
+    }, [closeAddReview, onAdded]);
+
     /**
      * Shared anchor change handler for the always-visible anchor control.
      * Updates the anchor only — the compose overlay opens on commit (pointer
@@ -547,7 +553,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
             onAnchorChange={handleAnchorChange}
             onStartDrawing={() => setDrawingMode(true)}
             onClose={closeAddReview}
-            onAdded={onAdded ?? (() => undefined)}
+            onAdded={handleReviewAdded}
           />
         )}
 

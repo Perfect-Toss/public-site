@@ -20,3 +20,14 @@
   border-radius: 50%;
   object-fit: cover;
 }
+
+/* The initials disc inside the ring — same box the photo occupies. */
+.user-avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  font-weight: 700;
+  line-height: 1;
+}
