@@ -380,8 +380,6 @@ function AccountPage() {
     ({ hex }) => hex.toLowerCase() === (form.colorHex ?? '').toLowerCase(),
   );
   const customColorActive = Boolean(form.colorHex) && !isPresetColor;
-  // With a photo the color becomes a ring around it instead of a fill.
-  const avatarRing = Boolean(currentUser.thumbnailUrl && form.colorHex);
   const apiVersion = meta?.version ?? (metaError ? 'Unavailable' : 'Checking\u2026');
 
   return (
@@ -669,9 +667,7 @@ function AccountPage() {
             )}
             {form.colorHex && (
               <span className="account-hint">
-                {avatarRing
-                  ? 'Drawn as a ring around your photo.'
-                  : 'Used as your avatar background.'}
+                Drawn as a ring around your avatar.
                 {customColorActive && ` Custom ${form.colorHex}.`}
               </span>
             )}

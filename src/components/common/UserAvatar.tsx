@@ -1,7 +1,7 @@
 import './UserAvatar.css';
 
 import { useEffect, useState } from 'react';
-import { colorFor, isLightColor } from '../../utils/color';
+import { colorFor, tintColor } from '../../utils/color';
 import { getDisplayName, getInitials } from '../../utils/user';
 
 export interface UserAvatarProps {
@@ -24,25 +24,37 @@ function resolveThumbnailSrc(user: UserAvatarProps['user']): string | null {
   return user.thumbnailUrl ?? null;
 }
 
-/** Neutral disc behind the initials so the user's colour reads as the ring. */
-const INITIALS_DISC = '#eef1f4';
+/** Share of the ring colour that carries into the initials disc. */
+const DISC_TINT = 0.12;
+
+/** Initials colour over the neutral disc. */
+const INITIALS_TEXT = '#1a1f24';
 
 /*
  * Ring width for a given avatar size: a 3px ring read as a heavy border on a
- * 24–32px avatar, so it stays a hairline at the small end — 1px up to 40px,
- * 2px up to 72px, 3px beyond.
+ * 24–32px avatar, so it stays slim at the small end — 2px up to 40px,
+ * 3px up to 72px, 4px beyond.
  */
 function ringWidth(size: number): number {
-  return Math.max(1, Math.round(size / 32));
+  return Math.max(2, Math.round(size / 32) + 1);
 }
-
+/**
+ * Initials size for a given avatar size. Wide pairs (MW, WH) set the ceiling:
+ * at this size the widest realistic pair still leaves a margin inside the disc,
+ * while every avatar keeps the same glyph height.
+ */
+function initialsFontSize(size: number): number {
+  return Math.max(9, Math.round(size * 0.35));
+}
 export function UserAvatar({ user, size = 32, className, alt }: UserAvatarProps) {
   // The colour is the RING around the disc, drawn OUTSIDE it so the photo (or the
   // initials) keeps its full size and the colour never shows through the image.
-  const ring = user.colorHex ? ringWidth(size) : 0;
-  // Without a chosen colour the disc keeps a stable name-derived colour.
-  const discColor = user.colorHex ? INITIALS_DISC : colorFor(getDisplayName(user));
+  // Without a chosen colour the ring keeps a stable name-derived colour.
+  const ringColor = user.colorHex ?? colorFor(getDisplayName(user));
+  const discColor = tintColor(ringColor, DISC_TINT);
+  const ring = ringWidth(size);
   const thumbnailSrc = resolveThumbnailSrc(user);
+  const initials = getInitials(user);
 
   // A photo that fails to load (expired token, deleted blob) would otherwise
   // paint its alt text inside the ring — fall back to the initials disc instead.
@@ -58,7 +70,7 @@ export function UserAvatar({ user, size = 32, className, alt }: UserAvatarProps)
       style={{
         width: size,
         height: size,
-        boxShadow: user.colorHex ? `0 0 0 ${ring}px ${user.colorHex}` : undefined,
+        boxShadow: `0 0 0 ${ring}px ${ringColor}`,
       }}
     >
       {showPhoto ? (
@@ -75,12 +87,12 @@ export function UserAvatar({ user, size = 32, className, alt }: UserAvatarProps)
           style={{
             width: size,
             height: size,
-            fontSize: Math.max(11, Math.round(size * 0.4)),
+            fontSize: initialsFontSize(size),
             background: discColor,
-            color: isLightColor(discColor) ? '#1a1f24' : '#fff',
+            color: INITIALS_TEXT,
           }}
         >
-          {getInitials(user)}
+          {initials}
         </span>
       )}
     </span>

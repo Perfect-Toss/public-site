@@ -85,6 +85,20 @@ export function hexToRgba(hex: string | null | undefined, alpha: number): string
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+/**
+ * Opaque mix of `hex` towards white: `strength` 0 is white, 1 is `hex`. Used to
+ * derive a pale solid tint from a colour without relying on alpha.
+ */
+export function tintColor(hex: string | null | undefined, strength: number): string {
+  const c = (hex ?? '').replace('#', '');
+  if (c.length < 6) return '#ffffff';
+  const mix = (channel: string) => {
+    const value = parseInt(channel, 16);
+    return Math.round(value + (255 - value) * (1 - strength));
+  };
+  return rgbToHex(mix(c.substring(0, 2)), mix(c.substring(2, 4)), mix(c.substring(4, 6)));
+}
+
 /** sRGB relative luminance, matching Dart's `Color.getLuminance()`. */
 function relativeLuminance(r: number, g: number, b: number): number {
   const linearize = (v: number) => {

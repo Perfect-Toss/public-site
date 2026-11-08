@@ -203,7 +203,8 @@ describe('AccountPage', () => {
 
     const plain = renderPage({ ...athlete, thumbnailUrl: 'https://img/me.png' });
     expect(photo(plain).style.width).toBe('88px');
-    expect(avatar(plain).style.boxShadow).toBe('');
+    // Without a chosen colour the ring still carries the name-derived colour.
+    expect(avatar(plain).style.boxShadow).toContain('0 0 0 4px');
     cleanup();
 
     // A colour draws a ring AROUND the photo — the photo itself is unchanged.
