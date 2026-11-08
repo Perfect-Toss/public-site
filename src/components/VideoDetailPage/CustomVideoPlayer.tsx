@@ -32,6 +32,12 @@ import { VideoDrawingOverlay } from './VideoDrawingOverlay';
 import { VideoReviewComposer } from './VideoReviewComposer';
 import { VideoFilmstrip } from './VideoFilmstrip';
 import { VideoTimeline } from './VideoTimeline';
+import {
+  pauseAllReviewAudio,
+  pauseReviewAudio,
+  playReviewAudio,
+  setReviewAudioOutput,
+} from './reviewContent';
 import { buildVideoAnchors, formatPosition } from './videoTime';
 
 export interface CustomVideoPlayerProps {
@@ -115,6 +121,8 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
     const [drawingMode, setDrawingMode] = useState(false);
     /** Anchor the inline composer starts with (seeded at the current playhead). */
     const [addAnchor, setAddAnchor] = useState<ReviewAnchor>({ kind: 'none' });
+    /** Latest reviews, readable from effects without re-running them on reload. */
+    const reviewsRef = useRef(reviews);
 
     const setVideoRef = useCallback(
       (node: HTMLVideoElement | null) => {
@@ -132,6 +140,20 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
     useEffect(() => {
       loopRangeRef.current = loopRange;
     }, [loopRange]);
+
+    // Same for the review list: selecting a review plays its voice note, but a
+    // reload of that list must not replay it.
+    useEffect(() => {
+      reviewsRef.current = reviews;
+    }, [reviews]);
+
+    // Stop review audio when the player goes away.
+    useEffect(() => () => pauseAllReviewAudio(), []);
+
+    // Review notes follow the player's output settings.
+    useEffect(() => {
+      setReviewAudioOutput({ muted, volume });
+    }, [muted, volume]);
 
     // ── Video events ────────────────────────────────────────────────────
     useEffect(() => {
@@ -279,9 +301,9 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
 
     /**
      * React to the selected review (timeline marker, keyboard nav, or the
-     * review list): seek to its position. Segment reviews (start + end) loop
-     * the video between those bounds; snapshot/general notes just jump and
-     * clear the loop.
+     * review list): jump to it and play the review itself — its recorded voice
+     * note. A segment review also scopes playback to its bounds (see the loop
+     * badge), but the video is never started on the reviewer's behalf.
      */
     useEffect(() => {
       if (!activeReviewId) return;
@@ -297,31 +319,37 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
       }
       video.currentTime = anchor.start;
       setCurrentTime(anchor.start);
-      // Looping a segment implies replaying it from the start.
-      if (anchor.end != null) void video.play();
       // Return keyboard focus to the player so shortcuts (e.g. Space) toggle
       // play/pause instead of re-triggering the clicked review control.
       containerRef.current?.focus({ preventScroll: true });
     }, [activeReviewId, selectNonce, anchors]);
 
     /**
-     * Select a review from the timeline: seek/loop to it (the effect above),
-     * and — when not already composing — anchor a new review at the same spot
-     * and open the review-type picker so the user can add to that moment.
+     * Play the selected review's voice note. Text-only reviews have nothing to
+     * play, so they just leave the player on their frame.
+     *
+     * Playback goes through the shared review-audio controller, so this and the
+     * play control in the review list are the SAME element and the SAME cached
+     * download — never two requests for one note.
      */
-    const selectAnchor = useCallback(
+    useEffect(() => {
+      if (!activeReviewId || !videoId) return;
+      const review = reviewsRef.current.find((r) => r.id === activeReviewId);
+      if (review?.contentKind !== 'Audio') return;
+      void playReviewAudio(videoId, review.id);
+      return () => pauseReviewAudio();
+    }, [activeReviewId, selectNonce, videoId]);
+
+    /**
+     * Select a review (timeline marker or ↑/↓): jump to it, and play it when it
+     * covers a range. Writing a review is a separate action — the anchor bar
+     * above the scrub bar, or the `A` shortcut.
+     */
+    const selectReview = useCallback(
       (id: string) => {
         onSelectReview?.(id);
-        const anchor = anchors.find((a) => a.id === id);
-        if (!anchor) return;
-        setAddAnchor(
-          anchor.end != null
-            ? { kind: 'segment', start: anchor.start, end: anchor.end }
-            : { kind: 'snapshot', time: anchor.start },
-        );
-        setAddOpen(true);
       },
-      [onSelectReview, anchors],
+      [onSelectReview],
     );
 
     /** Step to the previous (-1) or next (+1) review anchor. */
@@ -335,9 +363,9 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
         let next = activeIdx >= 0 ? activeIdx + dir : dir === 1 ? 0 : anchors.length - 1;
         // Wrap around so up/down cycle through the reviews instead of stopping.
         next = ((next % anchors.length) + anchors.length) % anchors.length;
-        selectAnchor(anchors[next].id);
+        selectReview(anchors[next].id);
       },
-      [anchors, activeReviewId, positionAnchorIndex, selectAnchor],
+      [anchors, activeReviewId, positionAnchorIndex, selectReview],
     );
 
     // Focus the player so keyboard shortcuts work right away.
@@ -474,7 +502,6 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
 
     const volumeIcon =
       muted || volume === 0 ? faVolumeXmark : volume < 0.5 ? faVolumeLow : faVolumeHigh;
-    const progressPct = safeDuration > 0 ? Math.min(100, (currentTime / safeDuration) * 100) : 0;
 
     return (
       <div
@@ -555,25 +582,23 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
             </div>
           )}
 
-          <div className="cvp-timeline-stack">
+          {/* ONE bar: the filmstrip scrubber that also carries the review markers. */}
+          <VideoFilmstrip
+            filmstripUrl={filmstripUrl}
+            durationFallback={safeDuration}
+            currentTime={currentTime}
+            onSeek={seekTo}
+            isPlaying={isPlaying}
+          >
             <VideoTimeline
               reviews={reviews}
               videoId={videoId}
               duration={safeDuration}
               activeReviewId={activeReviewId}
-              onSelectReview={selectAnchor}
+              onSelectReview={selectReview}
+              embedded
             />
-
-            <VideoFilmstrip
-              filmstripUrl={filmstripUrl}
-              durationFallback={safeDuration}
-              currentTime={currentTime}
-              onSeek={seekTo}
-            />
-
-            {/* One continuous position line spanning the review timeline + scrub. */}
-            <div className="cvp-position-line" style={{ left: `${progressPct}%` }} />
-          </div>
+          </VideoFilmstrip>
 
           <div className="cvp-controls">
             <button

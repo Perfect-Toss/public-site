@@ -39,7 +39,7 @@
   pointer-events: auto;
 }
 
-/* Chrome stack: review timeline (top) → scrub bar → controls (bottom). */
+/* Chrome stack: anchor bar (top) → scrub bar with review markers → controls. */
 .cvp-chrome {
   position: absolute;
   left: 0;
@@ -63,22 +63,14 @@
   display: none;
 }
 
-/* Stack holding the review timeline + filmstrip; the position line spans both. */
-.cvp-timeline-stack {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* ─── Always-visible anchor control (above the review timeline) ─────────── */
+/* ─── Always-visible anchor control (above the scrub bar) ────────────────── */
 
 .cvp-anchor-row {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  /* Lift the bar slightly off the review timeline below. */
+  /* Lift the bar slightly off the scrub bar below. */
   margin-bottom: 8px;
 }
 
@@ -102,26 +94,6 @@
   color: #cfff04;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-/* One continuous vertical position line spanning the timeline + scrub. */
-.cvp-position-line {
-  position: absolute;
-  top: -10px;
-  bottom: -10px;
-  width: 1px;
-  transform: translateX(-50%);
-  border-radius: 1px;
-  background: #cfff04;
-  z-index: 5;
-  /* Never block pointer events so the scrub bar stays fully selectable. */
-  pointer-events: none;
-  transition: width 0.15s ease;
-}
-
-/* Grow the line slightly while the pointer is over the timeline + scrub. */
-.cvp-timeline-stack:hover .cvp-position-line {
-  width: 2px;
 }
 
 /* ─── Controls bar ───────────────────────────────────────────────────────── */

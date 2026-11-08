@@ -3,7 +3,6 @@ import './VideoReviewsPanel.css';
 import {
   faChevronDown,
   faChevronUp,
-  faClock,
   faRotateRight,
   faSpinner,
   faTrash,
@@ -13,24 +12,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState, type KeyboardEvent } from 'react';
 import {
   deleteVideoReview,
-  deleteVideoReviewRequest,
   retranscribeVideoReview,
   type VideoReview,
-  type VideoReviewRequest,
 } from '../../api/api.videos';
 import { formatDateTime } from '../../utils/format';
-import { UserInfo } from '../common';
-import {
-  positionText,
-  REQUEST_STATUS_LABELS,
-} from './reviewLabels';
-import { useReviewContentUrl } from './reviewContent';
+import { VideoReviewDetails } from './VideoReviewDetails';
 import { sortReviewsByTime } from './videoTime';
 
 export interface VideoReviewListProps {
   videoId: string;
   reviews: VideoReview[];
-  requests: VideoReviewRequest[];
   loading: boolean;
   error: string | null;
   /** Re-fetch reviews (e.g. after adding/deleting). */
@@ -64,10 +55,6 @@ function ReviewListItem({
   onRetranscribe,
   onKeyDown,
 }: ReviewListItemProps) {
-  const { url: contentUrl, onError: onContentError } = useReviewContentUrl(videoId, review);
-  const pos = positionText(review);
-  // An audio item carries no text of its own — its transcript stands in for it.
-  const body = review.text ?? review.transcript ?? null;
   const isAudio = review.contentKind === 'Audio';
 
   return (
@@ -82,28 +69,28 @@ function ReviewListItem({
       tabIndex={selectable ? 0 : undefined}
       title={selectable ? 'Jump to this review in the video' : undefined}
     >
-      <div className="vr-item-head">
-        <UserInfo user={review.createdByUser ?? {}} size={24} />
-        {pos && (
-          <span className="vr-item-pos">
-            <FontAwesomeIcon icon={faClock} />
-            {pos}
-          </span>
-        )}
-        <span className="vr-item-time">{formatDateTime(review.createdAt)}</span>
-        <button
-          type="button"
-          className="vr-delete"
-          title="Delete review"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(review.id);
-          }}
-        >
-          <FontAwesomeIcon icon={faTrash} />
-        </button>
-      </div>
-      {body && <p className="vr-item-text">{body}</p>}
+      <VideoReviewDetails
+        videoId={videoId}
+        review={review}
+        audioPlayer
+        trailing={
+          <>
+            <span className="vr-item-time">{formatDateTime(review.createdAt)}</span>
+            <button
+              type="button"
+              className="vr-delete"
+              title="Delete review"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(review.id);
+              }}
+            >
+              <FontAwesomeIcon icon={faTrash} />
+            </button>
+          </>
+        }
+      />
+
       {isAudio && review.transcriptionStatus === 'Pending' && (
         <p className="vr-transcribing">
           <FontAwesomeIcon icon={faSpinner} spin /> Transcribing…
@@ -122,23 +109,6 @@ function ReviewListItem({
           Retry transcription
         </button>
       )}
-      {contentUrl && isAudio && (
-        <audio
-          controls
-          src={contentUrl}
-          className="vr-item-audio"
-          onClick={(e) => e.stopPropagation()}
-          onError={onContentError}
-        />
-      )}
-      {contentUrl && review.contentKind === 'Drawing' && (
-        <img
-          className="vr-item-drawing"
-          src={contentUrl}
-          alt="Review drawing"
-          onError={onContentError}
-        />
-      )}
     </li>
   );
 }
@@ -146,7 +116,6 @@ function ReviewListItem({
 export function VideoReviewList({
   videoId,
   reviews,
-  requests,
   loading,
   error,
   reload,
@@ -200,18 +169,6 @@ export function VideoReviewList({
     [videoId, reload],
   );
 
-  const handleDeleteRequest = useCallback(
-    async (requestId: string) => {
-      try {
-        await deleteVideoReviewRequest(videoId, requestId);
-        await reload();
-      } catch (err) {
-        console.error('Failed to delete review request:', err);
-      }
-    },
-    [videoId, reload],
-  );
-
   const handleItemKeyDown = useCallback(
     (e: KeyboardEvent<HTMLLIElement>, reviewId: string) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
@@ -238,35 +195,6 @@ export function VideoReviewList({
         <>
           {error && <p className="vr-error">{error}</p>}
 
-          <h4 className="vr-list-title">Review requests</h4>
-          {requests.length === 0 ? (
-            <p className="vr-empty">No review requests.</p>
-          ) : (
-            <ul className="vr-list">
-              {requests.map((request) => (
-                <li key={request.id} className="vr-item vr-request-item">
-                  <div className="vr-item-head">
-                    <UserInfo user={request.requestedBy ?? {}} size={24} />
-                    <span className={`vr-req-status vr-req-${(request.status ?? 'Unknown').toLowerCase()}`}>
-                      {REQUEST_STATUS_LABELS[request.status ?? 'Unknown']}
-                    </span>
-                    <span className="vr-item-time">{formatDateTime(request.createdAt)}</span>
-                    <button
-                      type="button"
-                      className="vr-delete"
-                      title="Delete request"
-                      onClick={() => void handleDeleteRequest(request.id)}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                  </div>
-                  {request.requestNote && <p className="vr-item-text">{request.requestNote}</p>}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <h4 className="vr-list-title">Review items</h4>
           {loading ? (
             <p className="vr-empty">
               <FontAwesomeIcon icon={faSpinner} spin /> Loading reviews...

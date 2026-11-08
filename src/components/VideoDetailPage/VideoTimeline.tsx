@@ -1,14 +1,23 @@
 import './VideoTimeline.css';
 
-import { useCallback, useLayoutEffect, useRef, useState, type FocusEvent, type MouseEvent } from 'react';
+import { faTimes } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FocusEvent, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { VideoReview } from '../../api/api.videos';
 import { colorFor } from '../../utils/color';
 import { getDisplayName } from '../../utils/user';
-import { AudioPlayer, UserInfo } from '../common';
-import { positionText } from './reviewLabels';
-import { useReviewContentUrl } from './reviewContent';
+import { VideoReviewDetails } from './VideoReviewDetails';
 import { buildVideoAnchors, formatPosition, type VideoAnchor } from './videoTime';
+
+/** Hover time (ms) before a marker opens its review popup. */
+const HOVER_OPEN_DELAY_MS = 350;
+
+/** Popup anchor position (viewport px). */
+interface PopupPosition {
+  top: number;
+  left: number;
+}
 
 export interface VideoTimelineProps {
   reviews: VideoReview[];
@@ -20,46 +29,49 @@ export interface VideoTimelineProps {
   activeReviewId?: string | null;
   /** Called when a review marker is clicked. */
   onSelectReview: (reviewId: string) => void;
+  /**
+   * Draw the markers over the filmstrip scrub bar instead of in their own
+   * strip: the rail turns transparent and a press falls through to the bar
+   * underneath so the whole bar stays scrubbable.
+   */
+  embedded?: boolean;
 }
 
 interface ReviewPopupContentProps {
   videoId?: string | null;
   review: VideoReview;
+  /** Pinned popups stay up until dismissed, so they carry their own close control. */
+  onClose?: () => void;
 }
 
-/** Popup body for a hovered marker: author, position, text/transcript and content. */
-function ReviewPopupContent({ videoId, review }: ReviewPopupContentProps) {
-  const { url: contentUrl, onError: onContentError } = useReviewContentUrl(videoId, review);
-  const pos = positionText(review);
-  // An audio item carries no text of its own — its transcript stands in for it.
-  const body = review.text ?? review.transcript ?? null;
-
+/** Popup body for a marker — the SAME component the review list renders. */
+function ReviewPopupContent({ videoId, review, onClose }: ReviewPopupContentProps) {
   return (
-    <>
-      <div className="vtp-user">
-        <UserInfo user={review.createdByUser ?? {}} size={34} />
-        {pos && <span className="vtp-pos">{pos}</span>}
-      </div>
-      {body && <p className="vtp-text">{body}</p>}
-      {contentUrl && review.contentKind === 'Audio' && (
-        <AudioPlayer src={contentUrl} className="vtp-audio" onError={onContentError} />
-      )}
-      {contentUrl && review.contentKind === 'Drawing' && (
-        <img
-          className="vtp-drawing"
-          src={contentUrl}
-          alt="Review drawing"
-          onError={onContentError}
-        />
-      )}
-    </>
+    <VideoReviewDetails
+      videoId={videoId}
+      review={review}
+      size={34}
+      trailing={
+        onClose ? (
+          <button
+            type="button"
+            className="video-timeline-popup-close"
+            onClick={onClose}
+            aria-label="Close review"
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
+        ) : undefined
+      }
+    />
   );
 }
 
 /**
  * The review-marker strip shown above the custom video controls. Marks review
  * snapshots/general notes (dots) and segments (colored ranges). Hovering a
- * marker shows a popup with the review details; clicking selects it.
+ * marker previews the review; selecting it pins that preview open until it is
+ * closed (close button, Esc, or a press outside it).
  */
 export function VideoTimeline({
   reviews,
@@ -67,38 +79,101 @@ export function VideoTimeline({
   duration,
   activeReviewId,
   onSelectReview,
+  embedded = false,
 }: VideoTimelineProps) {
   const [hoverId, setHoverId] = useState<string | null>(null);
-  const [hoverPos, setHoverPos] = useState<{ top: number; left: number } | null>(null);
-  const hoverTimer = useRef<number | null>(null);
+  const [hoverPos, setHoverPos] = useState<PopupPosition | null>(null);
+  /** Selected review's popup — pinned open, unlike the transient hover preview. */
+  const [pinned, setPinned] = useState<(PopupPosition & { id: string }) | null>(null);
+  /** Pending "hover long enough to open the popup" timer. */
+  const openTimer = useRef<number | null>(null);
+  const popupRef = useRef<HTMLDivElement | null>(null);
 
   // Measured width of the inner track, used to translate the fixed snapshot
   // dot size into video time so close markers stack instead of overlapping.
   const innerRef = useRef<HTMLDivElement | null>(null);
   const [trackInnerWidth, setTrackInnerWidth] = useState(0);
 
-  // Keep the popup open briefly after leaving a marker so it stays usable while
-  // the pointer is over it (e.g. to click audio controls).
-  const showPopup = useCallback((id: string, rect: DOMRect) => {
-    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
-    hoverTimer.current = null;
-    setHoverId(id);
-    // Keep the popup fully on-screen even for markers near the edges (general
-    // notes sit at position 0, so their popup would otherwise go off the left).
+  const cancelPendingPopup = useCallback(() => {
+    if (openTimer.current) window.clearTimeout(openTimer.current);
+    openTimer.current = null;
+  }, []);
+
+  /**
+   * Popup position: above the marker, kept fully on-screen even for markers near
+   * the edges (general notes sit at position 0, so their popup would otherwise
+   * go off the left).
+   */
+  const popupPosition = useCallback((rect: DOMRect): PopupPosition => {
     const viewportMargin = 12;
     const popupHalf = Math.min(196, (window.innerWidth - viewportMargin * 2) / 2);
     const center = rect.left + rect.width / 2;
     const left = Math.min(window.innerWidth - popupHalf, Math.max(popupHalf, center));
-    setHoverPos({ top: rect.top - 8, left });
+    return { top: rect.top - 8, left };
   }, []);
+
+  /** Show the hover preview now (positioned above the marker). */
+  const showPopup = useCallback(
+    (id: string, rect: DOMRect) => {
+      cancelPendingPopup();
+      setHoverId(id);
+      setHoverPos(popupPosition(rect));
+    },
+    [cancelPendingPopup, popupPosition],
+  );
+
+  /**
+   * Pointer hover waits briefly before opening: the markers sit on the scrub bar,
+   * so sweeping across it to scrub must not be interrupted by popups flashing up
+   * under the pointer. Keyboard focus opens immediately.
+   */
+  const schedulePopup = useCallback(
+    (id: string, rect: DOMRect) => {
+      cancelPendingPopup();
+      openTimer.current = window.setTimeout(() => {
+        openTimer.current = null;
+        showPopup(id, rect);
+      }, HOVER_OPEN_DELAY_MS);
+    },
+    [cancelPendingPopup, showPopup],
+  );
+
   const endHover = useCallback(() => {
-    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
-    hoverTimer.current = window.setTimeout(() => setHoverId(null), 150);
+    cancelPendingPopup();
+    setHoverId(null);
+  }, [cancelPendingPopup]);
+
+  /** Dismiss the pinned popup (its close button, Esc, or a press outside it). */
+  const closePinned = useCallback(() => {
+    setPinned(null);
+    setHoverId(null);
   }, []);
-  const cancelHoverClose = useCallback(() => {
-    if (hoverTimer.current) window.clearTimeout(hoverTimer.current);
-    hoverTimer.current = null;
-  }, []);
+
+  // A pinned popup outlives the pointer: only Esc or a press outside it closes it.
+  useEffect(() => {
+    if (!pinned) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closePinned();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Node && popupRef.current?.contains(event.target)) return;
+      closePinned();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown, true);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown, true);
+    };
+  }, [pinned, closePinned]);
+
+  // Drop the pinned popup when its review is no longer there (deleted elsewhere).
+  useEffect(() => {
+    if (pinned && !reviews.some((item) => item.id === pinned.id)) setPinned(null);
+  }, [pinned, reviews]);
+
+  // Drop any pending popup when the timeline goes away.
+  useEffect(() => () => cancelPendingPopup(), [cancelPendingPopup]);
 
   // Measure the inner track once and on every resize. This runs before paint,
   // so the first painted frame already uses the measured width; without a DOM
@@ -119,8 +194,11 @@ export function VideoTimeline({
   if (anchors.length === 0) return null;
 
   const reviewById = new Map(reviews.map((review) => [review.id, review]));
-  const hoverAnchor = hoverId ? anchors.find((a) => a.id === hoverId) : undefined;
-  const hoverReview = hoverId ? reviewById.get(hoverId) : undefined;
+  // A pinned (selected) preview wins over the transient hover one.
+  const popupId = pinned?.id ?? hoverId;
+  const popupAnchor = popupId ? anchors.find((item) => item.id === popupId) : undefined;
+  const popupReview = popupId ? reviewById.get(popupId) : undefined;
+  const popupAt = pinned ? { top: pinned.top, left: pinned.left } : hoverPos;
 
   const pct = (seconds: number) =>
     `${Math.min(100, Math.max(0, (seconds / safeDuration) * 100))}%`;
@@ -174,25 +252,29 @@ export function VideoTimeline({
   // ── Stacked lane layout ─────────────────────────────────────────────
   const LANE_PITCH = 18;
   const DOT_SIZE = 12;
+  // Ring drawn just outside a marker's body while it is the selected one.
+  const SELECTION_RING = 3;
+  // Half the space a marker takes on screen: its body plus that ring.
+  const MARKER_RADIUS = DOT_SIZE / 2 + SELECTION_RING;
   // Segment bars render at the same height as snapshot dots so both marker
   // kinds read as equal-sized, identically-colored bubbles (border-box sizing).
   const SEGMENT_HEIGHT = DOT_SIZE;
   const EPS = 0.001;
 
-  // Half of a snapshot dot's on-screen width, expressed in video time. Snapshot
-  // bubbles have real width, so dots whose visual extents would collide are
+  // Half of a marker's on-screen width, expressed in video time. Markers have
+  // real width (ring included), so any whose visual extents would touch are
   // stacked into different lanes. Before the track is measured (or in non-DOM
   // tests) this is 0, preserving the old "only equal timestamps overlap" case.
   const dotHalfSec =
-    trackInnerWidth > 0 ? (DOT_SIZE / 2) * (safeDuration / trackInnerWidth) : 0;
+    trackInnerWidth > 0 ? MARKER_RADIUS * (safeDuration / trackInnerWidth) : 0;
 
   const isPoint = (it: { start: number; end: number }) => it.end - it.start <= EPS;
   const overlaps = (a: { start: number; end: number }, b: { start: number; end: number }) => {
     const aPoint = isPoint(a);
     const bPoint = isPoint(b);
     if (aPoint && bPoint) {
-      // Two dots collide when their centers are closer than the dot width
-      // (dotHalfSec on each side); equal timestamps always overlap.
+      // Two dots collide when their centers are closer than their combined
+      // half-widths (ring included); equal timestamps always overlap.
       return Math.abs(a.start - b.start) <= 2 * dotHalfSec;
     }
     if (aPoint) return b.start <= a.start + dotHalfSec && a.start - dotHalfSec < b.end;
@@ -238,23 +320,34 @@ export function VideoTimeline({
   /** Vertical center (px from the top) of a lane; lane 0 is at the bottom. */
   const laneCenterY = (lane: number) => trackHeight - lane * LANE_PITCH - LANE_PITCH / 2;
 
-  const renderPopup = (review: VideoReview) => <ReviewPopupContent videoId={videoId} review={review} />;
+  const renderPopup = (review: VideoReview, onClose?: () => void) => (
+    <ReviewPopupContent videoId={videoId} review={review} onClose={onClose} />
+  );
 
   return (
-    <div className="video-timeline" aria-label="Video review timeline">
+    <div
+      className={`video-timeline${embedded ? ' video-timeline--embedded' : ''}`}
+      aria-label="Video review timeline"
+    >
       <div className="video-timeline-track" style={{ height: trackHeight }}>
         <div className="video-timeline-inner" ref={innerRef}>
         {placed.map((item) => {
           const anchor = item.anchor;
           const hoverBind = {
             onMouseEnter: (e: MouseEvent<HTMLButtonElement>) =>
-              showPopup(anchor.id, e.currentTarget.getBoundingClientRect()),
+              schedulePopup(anchor.id, e.currentTarget.getBoundingClientRect()),
             onMouseLeave: endHover,
             onFocus: (e: FocusEvent<HTMLButtonElement>) =>
               showPopup(anchor.id, e.currentTarget.getBoundingClientRect()),
             onBlur: endHover,
           };
           const centerY = laneCenterY(item.lane);
+          // Selecting pins the preview open; it closes on request or a press outside.
+          const select = (event: MouseEvent<HTMLButtonElement>) => {
+            endHover();
+            setPinned({ id: anchor.id, ...popupPosition(event.currentTarget.getBoundingClientRect()) });
+            onSelectReview(anchor.id);
+          };
           return anchor.end != null ? (
             <button
               key={anchor.id}
@@ -268,7 +361,7 @@ export function VideoTimeline({
                 // Solid reviewer color (no translucency), matching the dot markers.
                 background: item.color,
               }}
-              onClick={() => onSelectReview(anchor.id)}
+              onClick={select}
               aria-label={`Segment review ${formatPosition(anchor.start)} – ${formatPosition(anchor.end)}`}
               {...hoverBind}
             />
@@ -286,7 +379,7 @@ export function VideoTimeline({
                 height: DOT_SIZE,
                 background: item.color,
               }}
-              onClick={() => onSelectReview(anchor.id)}
+              onClick={select}
               aria-label={
                 anchor.general
                   ? 'General review (start of video)'
@@ -297,18 +390,18 @@ export function VideoTimeline({
           );
         })}
         </div>
-        {hoverAnchor &&
-          hoverReview &&
-          hoverPos &&
+        {popupAnchor &&
+          popupReview &&
+          popupAt &&
           createPortal(
             <div
-              className="video-timeline-popup"
-              role="tooltip"
-              style={{ top: hoverPos.top, left: hoverPos.left }}
-              onMouseEnter={cancelHoverClose}
-              onMouseLeave={endHover}
+              ref={pinned ? popupRef : undefined}
+              className={`video-timeline-popup${pinned ? ' video-timeline-popup--pinned' : ''}`}
+              role={pinned ? 'dialog' : 'tooltip'}
+              aria-label={pinned ? 'Selected review' : undefined}
+              style={popupAt}
             >
-              {renderPopup(hoverReview)}
+              {renderPopup(popupReview, pinned ? closePinned : undefined)}
             </div>,
             document.body,
           )}

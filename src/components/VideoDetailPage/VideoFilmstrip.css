@@ -1,12 +1,17 @@
-/* ─── Filmstrip scrubber (tablet-generated sprite) ──────────────────────── */
+/* ─── Filmstrip scrub bar (tablet-generated sprite + review markers) ─────── */
 
 .video-filmstrip {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
   width: 100%;
   cursor: pointer;
   touch-action: none;
   border-radius: 6px;
-  overflow: hidden;
+  /* NOT hidden: the sprite is clipped by .vf-clip so the bar keeps its rounded
+     corners while the marker lanes can grow the bar. */
+  overflow: visible;
   background: #2a2f36; /* visible bar behind the sprite */
 }
 
@@ -16,6 +21,14 @@
   border-radius: 3px;
 }
 
+/* Rounded clip for the sprite only. */
+.vf-clip {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
 /* The tablet-generated sprite — scaled to fill the bar (whole strip visible). */
 .vf-sprite {
   position: absolute;
@@ -23,4 +36,35 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+/* Review-marker layer, in flow at the bottom of the bar (the bar's min-height
+   is the strip; its real height is whichever is taller — strip or lanes). The
+   bar itself keeps handling scrubbing; only the markers opt into pointers. */
+.vf-overlay {
+  position: relative;
+  margin-top: auto;
+  width: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Playhead: aligned with the review markers' inset gutter.
+   Never blocks pointer events so the bar stays fully scrubbable. */
+.vf-playhead {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 1px;
+  transform: translateX(-50%);
+  border-radius: 1px;
+  background: #cfff04;
+  pointer-events: none;
+  z-index: 5;
+  transition: width 0.15s ease;
+}
+
+/* Grow the line slightly while the pointer is over the bar. */
+.video-filmstrip:hover .vf-playhead {
+  width: 2px;
 }

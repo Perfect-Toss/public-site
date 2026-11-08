@@ -23,6 +23,7 @@ import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 import { CustomVideoPlayer } from './CustomVideoPlayer';
 import { ReviewRequestModal } from './ReviewRequestModal';
 import { VideoReviewList } from './VideoReviewList';
+import { VideoReviewRequestList } from './VideoReviewRequestList';
 import { useVideoReviews } from './useVideoReviews';
 import {
   deleteVideo,
@@ -128,7 +129,7 @@ function VideoDetailPage() {
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const [metadataExpanded, setMetadataExpanded] = useState(true);
+  const [metadataExpanded, setMetadataExpanded] = useState(false);
   const [accessExpanded, setAccessExpanded] = useState(true);
   const [requestReviewOpen, setRequestReviewOpen] = useState(false);
 
@@ -558,11 +559,13 @@ function VideoDetailPage() {
           )}
         </section>
 
+        {/* ── Review requests (below the video) ──────────────────── */}
+        <VideoReviewRequestList videoId={id ?? ''} requests={requests} reload={reload} />
+
         {/* ── Reviews (below the video) ──────────────────────────── */}
         <VideoReviewList
           videoId={id ?? ''}
           reviews={reviews}
-          requests={requests}
           loading={reviewsLoading}
           error={reviewsError}
           reload={reload}

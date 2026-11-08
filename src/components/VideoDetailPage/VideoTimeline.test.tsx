@@ -1,7 +1,12 @@
-import { render } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { VideoReview } from '../../api/api.videos';
+import { SnackbarProvider } from '../common';
 import { VideoTimeline } from './VideoTimeline';
+
+// Popups render through a portal into <body>, so they outlive a test unless the
+// tree is unmounted — clear every render between cases.
+afterEach(cleanup);
 
 function review(overrides: Partial<VideoReview> = {}): VideoReview {
   return { id: 'r1', ...overrides };
@@ -83,11 +88,13 @@ describe('VideoTimeline', () => {
     };
     const calls: string[] = [];
     const { container } = render(
-      <VideoTimeline
-        reviews={[review({ id: 'snap-1', timestamp: '00:00:03' })]}
-        duration={10}
-        onSelectReview={onSelect}
-      />,
+      <SnackbarProvider>
+        <VideoTimeline
+          reviews={[review({ id: 'snap-1', timestamp: '00:00:03' })]}
+          duration={10}
+          onSelectReview={onSelect}
+        />
+      </SnackbarProvider>,
     );
     const marker = container.querySelector('.video-timeline-marker');
     expect(marker).not.toBeNull();
@@ -132,6 +139,27 @@ describe('VideoTimeline', () => {
       const markers = container.querySelectorAll('.video-timeline-marker');
       expect(markers).toHaveLength(2);
       expect(topOf(markers[0])).toBe(topOf(markers[1]));
+    });
+  });
+
+  it('stacks markers whose rings would touch, even when the dots themselves clear', () => {
+    // Two snapshots 0.14s apart on a 10s / 976px track sit ~14px apart — clear
+    // of the 12px dot body but inside the 6px selection ring, so they must
+    // land in different lanes.
+    withTrackWidth(976, () => {
+      const { container } = render(
+        <VideoTimeline
+          reviews={[
+            review({ id: 'snap-1', timestamp: '00:00:07' }),
+            review({ id: 'snap-2', timestamp: '00:00:07.14' }),
+          ]}
+          duration={10}
+          onSelectReview={() => {}}
+        />,
+      );
+      const markers = container.querySelectorAll('.video-timeline-marker');
+      expect(markers).toHaveLength(2);
+      expect(topOf(markers[0])).not.toBe(topOf(markers[1]));
     });
   });
 
@@ -190,5 +218,112 @@ describe('VideoTimeline', () => {
     expect(segment?.getAttribute('style')).not.toContain('rgb(207, 255, 4)'); // #CFFF04
     expect(segment?.getAttribute('style')).not.toContain('#F0F0F0');
     expect(marker?.getAttribute('style')).toContain('rgb(207, 255, 4)'); // #CFFF04
+  });
+
+  it('lets a marker press reach the scrub bar but still selects on click', () => {
+    const onBarPointerDown = vi.fn();
+    const selected: string[] = [];
+    const { container } = render(
+      <SnackbarProvider>
+        <div onPointerDown={onBarPointerDown}>
+          <VideoTimeline
+            reviews={[review({ id: 'snap-1', timestamp: '00:00:03' })]}
+            duration={10}
+            onSelectReview={(id) => selected.push(id)}
+            embedded
+          />
+        </div>
+      </SnackbarProvider>,
+    );
+    expect(container.querySelector('.video-timeline--embedded')).not.toBeNull();
+
+    // The press must fall through, or the bar under the markers can't scrub.
+    const marker = container.querySelector('.video-timeline-marker')!;
+    fireEvent.pointerDown(marker);
+    expect(onBarPointerDown).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(marker);
+    expect(selected).toEqual(['snap-1']);
+  });
+
+  it('opens the review popup only after a deliberate hover, not on a sweep', () => {
+    vi.useFakeTimers();
+    try {
+      const { container, unmount } = render(
+        <SnackbarProvider>
+          <VideoTimeline
+            reviews={[review({ id: 'snap-1', timestamp: '00:00:03', text: 'Watch the elbow' })]}
+            duration={10}
+            onSelectReview={() => {}}
+          />
+        </SnackbarProvider>,
+      );
+      const marker = container.querySelector('.video-timeline-marker')!;
+
+      // Sweeping over the marker (scrubbing across the bar) pops nothing up.
+      act(() => {
+        fireEvent.mouseOver(marker);
+        vi.advanceTimersByTime(120);
+        fireEvent.mouseOut(marker);
+        vi.advanceTimersByTime(1000);
+      });
+      expect(document.querySelector('.video-timeline-popup')).toBeNull();
+
+      // Resting on it does.
+      act(() => {
+        fireEvent.mouseOver(marker);
+        vi.advanceTimersByTime(400);
+      });
+      expect(document.querySelector('.video-timeline-popup')).not.toBeNull();
+
+      // Selecting it pins the preview open instead of dismissing it.
+      act(() => {
+        fireEvent.click(marker);
+      });
+      expect(document.querySelector('.video-timeline-popup--pinned')).not.toBeNull();
+
+      unmount();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps a selected review popup open until it is dismissed', () => {
+    const { unmount } = render(
+      <SnackbarProvider>
+        <VideoTimeline
+          reviews={[review({ id: 'snap-1', timestamp: '00:00:03', text: 'Watch the elbow' })]}
+          duration={10}
+          onSelectReview={() => {}}
+        />
+      </SnackbarProvider>,
+    );
+    const marker = document.querySelector('.video-timeline-marker')!;
+    const popup = () => document.querySelector('.video-timeline-popup');
+
+    fireEvent.click(marker);
+    expect(popup()).not.toBeNull();
+
+    // Leaving the marker does not close a pinned preview.
+    fireEvent.mouseOver(marker);
+    fireEvent.mouseOut(marker);
+    expect(popup()).not.toBeNull();
+
+    // Esc closes it.
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(popup()).toBeNull();
+
+    // A press outside it closes it.
+    fireEvent.click(marker);
+    expect(popup()).not.toBeNull();
+    fireEvent.pointerDown(document.body);
+    expect(popup()).toBeNull();
+
+    // Its close button does too.
+    fireEvent.click(marker);
+    fireEvent.click(document.querySelector('.video-timeline-popup-close')!);
+    expect(popup()).toBeNull();
+
+    unmount();
   });
 });

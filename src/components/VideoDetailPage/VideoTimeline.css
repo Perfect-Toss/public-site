@@ -26,6 +26,25 @@
   bottom: 0;
 }
 
+/* ─── Embedded in the filmstrip scrub bar ────────────────────────────────────
+   The lanes sit in the bar's bottom region (the bar grows to fit them) and the
+   rail keeps no background of its own so the frames stay visible. Markers use
+   the bar's FULL width — no side gutter — so a marker at time T lines up with
+   the playhead at time T (and with the pointer that seeks there). */
+.video-timeline--embedded {
+  padding: 0;
+}
+
+.video-timeline--embedded .video-timeline-track {
+  background: none;
+  border-radius: 0;
+}
+
+.video-timeline--embedded .video-timeline-inner {
+  left: 0;
+  right: 0;
+}
+
 .video-timeline-marker,
 .video-timeline-segment {
   pointer-events: auto;
@@ -54,8 +73,10 @@
   transform: translate(-50%, -50%) scale(1.3);
 }
 
+/* Selected dot: same 3px ring as .video-timeline-segment.active, with no scale
+   (scaling would stretch the dark border and white ring past the segment's). */
 .video-timeline-marker.active {
-  transform: translate(-50%, -50%) scale(1.45);
+  transform: translate(-50%, -50%);
   box-shadow: 0 0 0 3px #fff;
 }
 
@@ -83,7 +104,11 @@
 
 /* ─── Hover preview popup on markers ─────────────────────────────────────── */
 
-/* Rendered in a portal to <body> so the video/player can't clip it. */
+/* Rendered in a portal to <body> so the video/player can't clip it.
+   The HOVER preview never takes pointer events: the markers sit on the scrub
+   bar, so a popup that swallowed hover would freeze scrubbing/play-pause under
+   it. A PINNED (selected) popup does take them — it stays until dismissed and
+   carries its own close control. */
 .video-timeline-popup {
   position: fixed;
   transform: translate(-50%, -100%);
@@ -99,61 +124,47 @@
   color: #e8e8e8;
   font-size: 13px;
   z-index: 2000;
-  pointer-events: auto;
+  pointer-events: none;
   text-align: left;
 }
 
-/* Reviewer row — full avatar + name on the left, timestamp on the right. */
-.vtp-user {
-  display: flex;
+.video-timeline-popup--pinned {
+  pointer-events: auto;
+}
+
+.video-timeline-popup-close {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.vtp-user .user-info {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-}
-
-.vtp-user .user-info-name {
+.video-timeline-popup-close:hover {
+  background: rgba(255, 255, 255, 0.12);
   color: #fff;
 }
 
-.vtp-user .user-info-email {
+/* Reviewer row / body / drawing now come from the shared .vr-details* rules in
+   VideoReviewsPanel.css (the same markup the review list renders), so only the
+   dark-surface text colours are overridden here. */
+.video-timeline-popup .user-info-name {
+  color: #fff;
+}
+
+.video-timeline-popup .user-info-email {
   color: #ccc;
 }
 
-.vtp-pos {
-  flex-shrink: 0;
-  color: #999;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12px;
-}
-
-.vtp-text {
-  margin: 0;
-  color: #e8e8e8;
-  line-height: 1.5;
-  font-size: 13px;
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.vtp-audio {
-  margin-top: 8px;
-}
-
-.vtp-drawing {
-  display: block;
-  max-width: 100%;
-  max-height: 200px;
-  margin-top: 8px;
-  border-radius: 8px;
-  object-fit: contain;
+.video-timeline-popup .vr-details-head {
+  margin-bottom: 2px;
 }

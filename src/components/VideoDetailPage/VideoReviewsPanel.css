@@ -290,15 +290,6 @@
   border-radius: 8px;
 }
 
-.vr-list-title {
-  margin: 24px 0 12px;
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #666;
-}
-
 .vr-btn {
   display: inline-flex;
   align-items: center;
@@ -756,7 +747,113 @@
   padding: 12px 14px;
   border-bottom: 1px solid #f0f0f0;
   background: #fff;
+  color: #333;
   transition: box-shadow 0.2s ease, background 0.2s ease;
+}
+
+/* ─── Review body — SHARED by the review list and the marker preview ────────
+   Colour comes from the container (white list vs dark popup), so both render
+   the identical review the identical way. */
+
+.vr-details-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vr-details-head .user-info {
+  padding: 0;
+}
+
+.vr-details-pos {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: inherit;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+.vr-details-text {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.vr-details-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Voice-note player: play/pause + seek + clock, driven by the ONE shared review
+   audio element (never a second element, so never a second download). */
+.vr-audio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.vr-audio-play {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* One accent for this control: hover and the seek line share the ink colour,
+   and playing is told apart by the icon (not by a colour wash). */
+.vr-audio-play:hover,
+.vr-audio-play.playing {
+  border-color: #1a1f24;
+}
+
+.vr-audio-seek {
+  flex: 1 1 auto;
+  min-width: 60px;
+  accent-color: #1a1f24;
+  cursor: pointer;
+}
+
+.vr-audio-seek:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.vr-audio-time {
+  flex: 0 0 auto;
+  font-size: 11px;
+  color: inherit;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.vr-details-drawing {
+  display: block;
+  margin-top: 10px;
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 8px;
+  object-fit: contain;
 }
 
 .vr-item:last-child {
@@ -781,17 +878,6 @@
   outline-offset: -2px;
 }
 
-.vr-item-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.vr-item-head .user-info {
-  padding: 0;
-}
-
 .vr-req-status {
   display: inline-block;
   padding: 2px 8px;
@@ -812,15 +898,6 @@
   background: #dcfce7;
 }
 
-.vr-item-pos {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #1a1f24;
-}
-
 .vr-item-time {
   margin-left: auto;
   font-size: 12px;
@@ -838,21 +915,6 @@
 
 .vr-delete:hover {
   color: #dc3545;
-}
-
-.vr-item-text {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: #333;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.vr-item-audio {
-  display: block;
-  margin-top: 10px;
-  height: 36px;
-  max-width: 100%;
 }
 
 .vr-transcribing {
@@ -878,15 +940,6 @@
 .vr-retranscribe:hover {
   border-color: #999;
   color: #333;
-}
-
-.vr-item-drawing {
-  display: block;
-  margin-top: 10px;
-  max-width: 100%;
-  max-height: 260px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
 }
 
 /* ─── Request form ───────────────────────────────────────────────────────── */
