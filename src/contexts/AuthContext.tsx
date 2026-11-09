@@ -11,7 +11,7 @@ import {
   useViewAsStore,
 } from '../stores/viewAsStore';
 import { AuthContext, type AuthContextType } from './useAuth';
-import { canCreateEvent, isSuperUser } from '../utils/roles';
+import { canCreateEvent } from '../utils/roles';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -20,7 +20,7 @@ interface AuthProviderProps {
 /**
  * Apply the account selected for view-as.
  *
- * Only a super user may emulate another account, so a selection made by anyone
+ * Only an admin may emulate another account, so a selection made by anyone
  * else — or one that no longer resolves — is dropped. Returns true when an
  * account is being emulated.
  */
@@ -28,7 +28,7 @@ async function applyViewAs(apiUser: User): Promise<boolean> {
   const targetId = readViewAsUserId();
   if (!targetId) return false;
 
-  if (targetId === apiUser.id || !isSuperUser(apiUser)) {
+  if (targetId === apiUser.id || !isAdminUser(apiUser)) {
     clearPersistedViewAs();
     return false;
   }

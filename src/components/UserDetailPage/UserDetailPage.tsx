@@ -10,7 +10,7 @@ import {
   uploadUserThumbnail,
 } from '../../api/api.users';
 import type { Role as RoleType } from '../../utils/roles';
-import { assignableRoles, canAssignRole, isSuperUser } from '../../utils/roles';
+import { assignableRoles, canAssignRole } from '../../utils/roles';
 import {
   faArrowLeft,
   faCamera,
@@ -98,9 +98,9 @@ function UserDetailPage() {
   const { currentUser } = useAuth();
   const signedInUser = useAuthStore((state) => state.user);
   const viewAsTarget = useViewAsTarget();
-  /** Only a super user may emulate, and only while not already emulating. */
+  /** Only an admin may emulate, and only while not already emulating. */
   const canViewAs =
-    isSuperUser(signedInUser) && viewAsTarget === null && signedInUser?.id !== user?.id;
+    isAdminUser(signedInUser) && viewAsTarget === null && signedInUser?.id !== user?.id;
 
   /** Roles the acting user may grant — their own authority level and below. */
   const grantableRoles = assignableRoles(currentUser?.roles);

@@ -1,9 +1,9 @@
 /**
  * Scope helpers for "view as" mode.
  *
- * A super user's token already returns everything, so what the emulated account
+ * An admin's token returns more than the emulated account can reach, so what it
  * can see is narrowed here from its organization memberships. The API stays the
- * authority on access — these helpers only filter a super user's own result set.
+ * authority on access — these helpers only filter the signed-in admin's result set.
  */
 
 import type { Entity } from '../api/api.entities';
