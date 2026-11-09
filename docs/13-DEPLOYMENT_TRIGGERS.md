@@ -55,7 +55,12 @@ Notes:
 - Nothing is released or tagged here — the release already happened when the change merged to `main`.
 - The version the app reports comes from `package.json` at that tag, so production always shows the
   tag you asked for.
-- Re-running with the same version is a plain redeploy, and the run summary records the tag + commit.
+- Re-running with the same version is a plain redeploy, and the run summary records the tag, the
+  commit and the change that shipped.
+- The run is titled `Deploy to production - v1.2.3` (`- latest release` when **version** is blank).
+  A run title is fixed when the run is created, so it can only carry what the dispatch knows; the
+  shipped change goes in the summary heading instead —
+  `### Deployed v1.2.3 to production - feat: avatar update`.
 
 ## Version shown in the app
 

@@ -21,6 +21,13 @@ on:
                 required: false
                 type: string
 
+# Only `github` and `inputs` exist when the run is created, so the title names the version; the
+# deployed commit's subject is added to the run summary once the tag has been resolved.
+run-name: >-
+    Deploy to production - ${{ inputs.version == '' && 'latest release'
+    || (startsWith(inputs.version, 'v') && inputs.version
+    || format('v{0}', inputs.version)) }}
+
 permissions:
     contents: read
 
@@ -93,10 +100,20 @@ jobs:
                     echo "::error::'$tag' is not on main; only released commits on main can go to production."
                     exit 1
                   fi
+                  # The tag points at semantic-release's bump commit, so the subject describing the shipped
+                  # change is the one before it — that release commit only says "chore(release): 1.2.3".
+                  subject="$(git log -1 --pretty=%s)"
+                  if [ "${subject#chore(release): }" != "$subject" ]; then
+                    previous="$(git log -1 --pretty=%s HEAD^ 2>/dev/null || true)"
+                    if [ -n "$previous" ]; then
+                      subject="$previous"
+                    fi
+                  fi
                   printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
                   printf 'sha=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+                  printf 'subject=%s\n' "$subject" >> "$GITHUB_OUTPUT"
                   printf 'version=%s\n' "$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT"
-                  echo "Deploying $tag ($(git rev-parse --short HEAD))"
+                  echo "Deploying $tag ($(git rev-parse --short HEAD)) - $subject"
 
             - name: Install dependencies
               run: npm ci
@@ -156,12 +173,13 @@ jobs:
                   URL: ${{ steps.deploy.outputs.static_web_app_url }}
                   TAG: ${{ steps.resolve.outputs.tag }}
                   SHA: ${{ steps.resolve.outputs.sha }}
+                  SUBJECT: ${{ steps.resolve.outputs.subject }}
                   VERSION: ${{ steps.resolve.outputs.version }}
               run: |
                   {
-                    echo "### Deployed $TAG to production"
+                    echo "### Deployed $TAG to production - $SUBJECT"
                     echo ""
                     echo "- URL: $URL"
                     echo "- Version: \`v$VERSION\`"
-                    echo "- Commit: \`${SHA:0:7}\`"
+                    echo "- Commit: \`${SHA:0:7}\` $SUBJECT"
                   } >> "$GITHUB_STEP_SUMMARY"
