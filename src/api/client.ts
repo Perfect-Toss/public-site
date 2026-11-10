@@ -51,14 +51,31 @@ export const READ_ONLY_MESSAGE = 'Actions are disabled while viewing the app as 
 // signed-in account, not to the account on screen.
 let mutationsBlocked = false;
 
-/** Refuse every non-GET request while a read-only session is active. */
+/**
+ * POSTs that change nothing — they mint a short-lived URL or run a query. A
+ * read-only session still needs them, since playing a video asks for a URL.
+ */
+const READ_ONLY_POST_PATHS: RegExp[] = [
+  /^\/api\/v1\/videos\/[^/]+\/request-download-token$/,
+  /^\/api\/v1\/videos\/[^/]+\/reviews\/[^/]+\/content\/url$/,
+  /^\/api\/v1\/eventlogs\/search$/,
+];
+
+function isReadOnlyRequest(request: Request): boolean {
+  if (request.method === 'GET') return true;
+  if (request.method !== 'POST') return false;
+  const { pathname } = new URL(request.url, 'http://localhost');
+  return READ_ONLY_POST_PATHS.some((pattern) => pattern.test(pathname));
+}
+
+/** Refuse every write while a read-only session is active. */
 export function setMutationsBlocked(blocked: boolean): void {
   mutationsBlocked = blocked;
 }
 
 apiClient.use({
   onRequest({ request }) {
-    if (mutationsBlocked && request.method !== 'GET') {
+    if (mutationsBlocked && !isReadOnlyRequest(request)) {
       throw new Error(READ_ONLY_MESSAGE);
     }
     return request;

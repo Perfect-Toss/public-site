@@ -1,9 +1,42 @@
-import videoPlaceholder from '../assets/video-placeholder.svg';
+import type { Video, VideoAccessLevel } from '../api/api.videos';
+
 import type { Entity } from '../api/api.entities';
+import { Role } from './roles';
 import type { Tag } from '../api/api.tags';
 import type { User } from '../api/api.users';
-import type { Video } from '../api/api.videos';
 import { getDisplayName } from './user';
+import videoPlaceholder from '../assets/video-placeholder.svg';
+
+/** Access levels from weakest to strongest. */
+const ACCESS_LEVEL_RANK: Record<VideoAccessLevel, number> = {
+  ReadOnly: 0,
+  Review: 1,
+  Edit: 2,
+};
+
+/**
+ * The strongest of the levels an account holds on a video — grants stack, so a
+ * weak direct grant never caps a stronger organization grant.
+ */
+export function highestAccessLevel(levels: VideoAccessLevel[]): VideoAccessLevel {
+  return levels.reduce<VideoAccessLevel>(
+    (strongest, level) =>
+      ACCESS_LEVEL_RANK[level] > ACCESS_LEVEL_RANK[strongest] ? level : strongest,
+    'ReadOnly',
+  );
+}
+
+/** Organization roles that carry a video shared with the organization. Athletes are not included. */
+const VIDEO_ORGANIZATION_ROLES: Role[] = [Role.Coach, Role.EntityAdmin, Role.OrganizationAdmin];
+
+/**
+ * Whether the roles held on an organization reach the videos shared with it —
+ * only its coaches and admins do, an athlete membership does not.
+ */
+export function isVideoOrganizationStaff(roles?: readonly string[] | null): boolean {
+  if (!roles?.length) return false;
+  return roles.some((role) => VIDEO_ORGANIZATION_ROLES.includes(role as Role));
+}
 
 /** A direct URL to the video's thumbnail image, or a bundled default placeholder when the video has none. */
 export function thumbnailSrc(video: Video): string {

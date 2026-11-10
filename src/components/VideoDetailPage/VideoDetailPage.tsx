@@ -19,7 +19,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 import { CustomVideoPlayer } from './CustomVideoPlayer';
@@ -46,6 +46,9 @@ import {
 import { fetchAllEntities, type Entity } from '../../api/api.entities';
 import { fetchAllUsers, type User } from '../../api/api.users';
 import { getDisplayName } from '../../utils/user';
+import { isAdminUser } from '../../utils/roles';
+import { useAuth } from '../../contexts/useAuth';
+import { useViewAsTarget } from '../../stores/viewAsStore';
 import { MetadataItem, OrganizationPicker, StyledSelect, UserAvatar, UserInfo, VirtualizedSelect } from '../common';
 import {
   formatAspectRatio,
@@ -59,6 +62,8 @@ import {
   formatEntityNames,
   formatTagNames,
   formatUserNames,
+  highestAccessLevel,
+  isVideoOrganizationStaff,
   thumbnailSrc,
 } from '../../utils/videos';
 
@@ -94,6 +99,8 @@ const REVIEW_STATUS_LABELS: Record<ReviewStatus, string> = {
 function VideoDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const viewAsUserId = useViewAsTarget()?.id;
   const { reviews, requests, loading: reviewsLoading, error: reviewsError, reload } =
     useVideoReviews(id ?? '');
 
@@ -133,6 +140,11 @@ function VideoDetailPage() {
   const [metadataExpanded, setMetadataExpanded] = useState(false);
   const [accessExpanded, setAccessExpanded] = useState(true);
   const [requestReviewOpen, setRequestReviewOpen] = useState(false);
+
+  /** The roles the viewer holds on each organization it belongs to. */
+  const [viewerRoles, setViewerRoles] = useState<Record<string, string[]>>({});
+  /** The roles decide which controls to offer, so the page waits for them. */
+  const [rolesLoading, setRolesLoading] = useState(true);
 
   // Review currently selected in the player (drives the timeline highlight and
   // segment looping). A nonce lets re-clicking the same review re-seek/re-loop.
@@ -238,7 +250,7 @@ function VideoDetailPage() {
       if (!id) return;
       try {
         await removeVideoUserAccess(id, userId);
-        setAccessUsers((prev) => prev.filter((a) => a.user.id !== userId));
+        setAccessUsers((prev) => prev.filter((entry) => entry.user.id !== userId));
       } catch (err) {
         console.error('Failed to remove user access:', err);
       }
@@ -251,7 +263,7 @@ function VideoDetailPage() {
       if (!id) return;
       try {
         await removeVideoEntityAccess(id, entityId);
-        setAccessEntities((prev) => prev.filter((a) => a.entity.id !== entityId));
+        setAccessEntities((prev) => prev.filter((entry) => entry.entity.id !== entityId));
       } catch (err) {
         console.error('Failed to remove entity access:', err);
       }
@@ -303,6 +315,41 @@ function VideoDetailPage() {
     }
   }, [id, navigate]);
 
+  // Organization grants only reach its coaches and admins, so the viewer's
+  // roles per organization decide what the page may offer.
+  const viewerId = currentUser?.id;
+
+  useEffect(() => {
+    if (!viewerId) {
+      setViewerRoles({});
+      setRolesLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setRolesLoading(true);
+    fetchAllEntities(true, viewAsUserId)
+      .then((entities) => {
+        if (cancelled) return;
+        const roles: Record<string, string[]> = {};
+        for (const entity of entities) {
+          const member = entity.users?.find((entry) => entry.user.id === viewerId);
+          if (member) roles[entity.id] = member.roles ?? [];
+        }
+        setViewerRoles(roles);
+      })
+      .catch((err) => {
+        if (!cancelled) console.error('Failed to load organization roles:', err);
+      })
+      .finally(() => {
+        if (!cancelled) setRolesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [viewerId, viewAsUserId]);
+
   // Escape cancels / Enter accepts on the share and delete modals.
   useModalKeyboard({
     active: shareOpen,
@@ -322,8 +369,46 @@ function VideoDetailPage() {
   // The picker drops an excluded organization together with its descendants.
   const sharedEntityIds = accessEntities.map((a) => a.entity.id);
 
+  /**
+   * What this account may do with the video. The API is the authority on
+   * access; this only decides which controls to offer.
+   */
+  const accessLevel: VideoAccessLevel = useMemo(() => {
+    if (!currentUser) return 'ReadOnly';
+    if (isAdminUser(currentUser) || video?.ownerId === currentUser.id) return 'Edit';
+
+    // A direct grant and every organization grant the viewer is staff of all
+    // apply, so the strongest of them wins.
+    const granted: VideoAccessLevel[] = [
+      ...accessUsers
+        .filter((entry) => entry.user.id === currentUser.id)
+        .map((entry) => entry.accessLevel),
+      ...accessEntities
+        .filter((entry) => isVideoOrganizationStaff(viewerRoles[entry.entity.id]))
+        .map((entry) => entry.accessLevel),
+    ];
+    if (granted.length > 0) return highestAccessLevel(granted);
+
+    // No grant: the account can still be seeing this as staff of an
+    // organization the video is tagged to.
+    const viaOrganization = (video?.associatedEntities ?? []).some((entity) =>
+      isVideoOrganizationStaff(viewerRoles[entity.id]),
+    );
+    return viaOrganization ? 'Review' : 'ReadOnly';
+  }, [
+    currentUser,
+    video?.ownerId,
+    video?.associatedEntities,
+    accessUsers,
+    accessEntities,
+    viewerRoles,
+  ]);
+
+  const canReview = accessLevel !== 'ReadOnly';
+  const canEdit = accessLevel === 'Edit';
+
   const renderContent = () => {
-    if (loading) {
+    if (loading || rolesLoading) {
       return (
         <div className="loading-container">
           <div className="spinner" />
@@ -366,33 +451,39 @@ function VideoDetailPage() {
           <h1 className="video-detail-header-title">{video.label || 'Untitled video'}</h1>
 
           <div className="video-detail-actions">
-            <button
-              className="secondary-btn icon-only-btn"
-              onClick={() => setRequestReviewOpen(true)}
-              title="Request review"
-              aria-label="Request review"
-            >
-              <FontAwesomeIcon icon={faClipboardList} />
-              <span>Request review</span>
-            </button>
-            <button
-              className="secondary-btn icon-only-btn"
-              onClick={openShareModal}
-              title="Share"
-              aria-label="Share"
-            >
-              <FontAwesomeIcon icon={faShareNodes} />
-              <span>Share</span>
-            </button>
-            <button
-              className="delete-btn icon-only-btn"
-              onClick={() => setDeleteConfirmOpen(true)}
-              title="Delete"
-              aria-label="Delete"
-            >
-              <FontAwesomeIcon icon={faTrash} />
-              <span>Delete</span>
-            </button>
+            {canReview && (
+              <button
+                className="secondary-btn icon-only-btn"
+                onClick={() => setRequestReviewOpen(true)}
+                title="Request review"
+                aria-label="Request review"
+              >
+                <FontAwesomeIcon icon={faClipboardList} />
+                <span>Request review</span>
+              </button>
+            )}
+            {canEdit && (
+              <button
+                className="secondary-btn icon-only-btn"
+                onClick={openShareModal}
+                title="Share"
+                aria-label="Share"
+              >
+                <FontAwesomeIcon icon={faShareNodes} />
+                <span>Share</span>
+              </button>
+            )}
+            {canEdit && (
+              <button
+                className="delete-btn icon-only-btn"
+                onClick={() => setDeleteConfirmOpen(true)}
+                title="Delete"
+                aria-label="Delete"
+              >
+                <FontAwesomeIcon icon={faTrash} />
+                <span>Delete</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -411,6 +502,7 @@ function VideoDetailPage() {
               selectNonce={selectNonce}
               onSelectReview={handleSelectReview}
               videoId={id ?? ''}
+              canReview={canReview}
               onAdded={() => void reload()}
               topBar={
                 <div className="video-cvp-info">
@@ -472,6 +564,7 @@ function VideoDetailPage() {
         </div>
 
         {/* ── Access & Sharing ─────────────────────────────────── */}
+        {canEdit && (
         <section className="video-access-section">
           <div className="video-access-header">
             <button
@@ -578,6 +671,7 @@ function VideoDetailPage() {
           )
           )}
         </section>
+        )}
 
         {/* ── Reviews (below the video; open requests banner above them) ── */}
         <VideoReviewList
@@ -588,7 +682,7 @@ function VideoDetailPage() {
           error={reviewsError}
           reload={reload}
           onSelectReview={handleSelectReview}
-          onRequestReview={() => setRequestReviewOpen(true)}
+          onRequestReview={canReview ? () => setRequestReviewOpen(true) : undefined}
         />
 
         {/* ── Full Metadata ─────────────────────────────────────── */}

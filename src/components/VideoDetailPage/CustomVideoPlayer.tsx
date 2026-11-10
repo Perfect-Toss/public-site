@@ -61,6 +61,8 @@ export interface CustomVideoPlayerProps {
   onSelectReview?: (reviewId: string) => void;
   /** Video id — enables the inline "add review" button in the controls. */
   videoId?: string;
+  /** Whether this account may add reviews; hides the composer, the anchor row and the shortcut. Off unless granted. */
+  canReview?: boolean;
   /** Called after an inline review is added (parent refreshes the review list). */
   onAdded?: () => void | Promise<void>;
 }
@@ -96,6 +98,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
       selectNonce,
       onSelectReview,
       videoId,
+      canReview = false,
       onAdded,
     },
     ref,
@@ -477,6 +480,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
             break;
           case 'a':
           case 'A':
+            if (!canReview) break;
             e.preventDefault();
             if (addOpen) closeAddReview();
             else openComposer();
@@ -494,6 +498,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
         toggleMute,
         toggleFullscreen,
         addOpen,
+        canReview,
         openComposer,
         closeAddReview,
       ],
@@ -534,7 +539,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
           </div>
         )}
 
-        {videoId && drawingActive && (
+        {canReview && videoId && drawingActive && (
           <VideoDrawingOverlay
             videoId={videoId}
             videoElement={videoRef.current}
@@ -546,7 +551,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
           />
         )}
 
-        {videoId && composingActive && !drawingActive && (
+        {canReview && videoId && composingActive && !drawingActive && (
           <VideoReviewComposer
             videoId={videoId}
             anchor={addAnchor}
@@ -562,7 +567,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
           onClick={(e) => e.stopPropagation()}
         >
           {/* Always-visible anchor control: set a snapshot/segment at any time. */}
-          {videoId && (
+          {canReview && videoId && (
             <div className="cvp-anchor-row">
               <div className="cvp-anchor-row-head">
                 {addAnchor.kind === 'none' ? (
@@ -679,7 +684,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
                     <FontAwesomeIcon icon={faKeyboard} />
                     Keyboard shortcuts
                   </div>
-                  {SHORTCUTS.map((s) => (
+                  {SHORTCUTS.filter((shortcut) => canReview || shortcut.keys !== 'A').map((s) => (
                     <div key={s.keys} className="cvp-help-row">
                       <span className="cvp-help-keys">{s.keys}</span>
                       <span className="cvp-help-label">{s.label}</span>

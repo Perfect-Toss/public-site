@@ -1,5 +1,5 @@
+import { READ_ONLY_MESSAGE, apiClient, setAuthTokenProvider, setMutationsBlocked } from './client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiClient, setAuthTokenProvider } from './client';
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -104,6 +104,67 @@ describe('apiClient auth', () => {
     const result = await apiClient.GET('/api/v1/users', { fetch });
 
     expect(result.response.status).toBe(201);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('apiClient read-only session', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    setAuthTokenProvider({ getToken: async () => 'token', onUnauthorized: vi.fn() });
+  });
+
+  afterEach(() => {
+    setMutationsBlocked(false);
+    setAuthTokenProvider(null);
+    vi.restoreAllMocks();
+  });
+
+  it('refuses a write', async () => {
+    setMutationsBlocked(true);
+    const { fetchMock, fetch } = stubFetch(() => json({}));
+
+    await expect(
+      apiClient.POST('/api/v1/videos/{id}/upload-complete', {
+        params: { path: { id: 'video-1' } },
+        fetch,
+      }),
+    ).rejects.toThrow(READ_ONLY_MESSAGE);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('allows reads', async () => {
+    setMutationsBlocked(true);
+    const { fetchMock, fetch } = stubFetch(() => json([]));
+
+    await apiClient.GET('/api/v1/videos', { fetch });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows the playback link a video needs', async () => {
+    setMutationsBlocked(true);
+    const { fetchMock, fetch } = stubFetch(() => json({ sasUrl: 'blob' }));
+
+    const result = await apiClient.POST('/api/v1/videos/{id}/request-download-token', {
+      params: { path: { id: 'video-1' } },
+      fetch,
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.data).toEqual({ sasUrl: 'blob' });
+  });
+
+  it('allows the link behind a review recording', async () => {
+    setMutationsBlocked(true);
+    const { fetchMock, fetch } = stubFetch(() => json({ sasUrl: 'blob' }));
+
+    await apiClient.POST('/api/v1/videos/{videoId}/reviews/{itemId}/content/url', {
+      params: { path: { videoId: 'video-1', itemId: 'item-1' } },
+      fetch,
+    });
+
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

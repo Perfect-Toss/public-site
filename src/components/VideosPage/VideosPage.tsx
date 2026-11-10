@@ -13,6 +13,8 @@ import { CACHE_KEYS, readCache, writeCache } from '../../utils/pageCache';
 import { formatBytes, formatDateTime, formatDuration, formatEnum } from '../../utils/format';
 import { ownerDisplayName, thumbnailSrc } from '../../utils/videos';
 import { useViewAsTarget } from '../../stores/viewAsStore';
+import { useAuth } from '../../contexts/useAuth';
+import { isAdminUser } from '../../utils/roles';
 
 const PAGE_SIZE = 12;
 
@@ -148,6 +150,13 @@ function VideosPage() {
   const [exhausted, setExhausted] = useState(false);
   const viewAsTarget = useViewAsTarget();
   const viewAsUserId = viewAsTarget?.id;
+  const { currentUser } = useAuth();
+
+  /** Only the owner and admins may delete, and never while viewing as someone else. */
+  const canDelete = (video: Video): boolean =>
+    !viewAsUserId &&
+    Boolean(currentUser) &&
+    (isAdminUser(currentUser) || video.ownerId === currentUser?.id);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const inFlightRef = useRef(false);
@@ -347,7 +356,7 @@ function VideosPage() {
             <VideoCard
               key={video.id}
               video={video}
-              onDelete={viewAsUserId ? undefined : setPendingDelete}
+              onDelete={canDelete(video) ? setPendingDelete : undefined}
             />
           ))}
         </div>

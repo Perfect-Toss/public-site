@@ -6,12 +6,15 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OrganizationCard } from '../common';
+import { canManageOrganization } from '../../utils/roles';
+import { useAuth } from '../../contexts/useAuth';
 import { useEntityStore } from '../../stores/entityStore';
 import { useViewAsTarget } from '../../stores/viewAsStore';
 
 function OrganizationsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const { entityMap, loading, error, loadEntities } = useEntityStore();
+  const { currentUser } = useAuth();
   const isViewingAs = useViewAsTarget() !== null;
   const organizations = useMemo(() => entityMap['root'] ?? [], [entityMap]);
 
@@ -24,8 +27,7 @@ function OrganizationsPage() {
     loadEntities();
   }, [loadEntities]);
 
-  // TODO: Replace with actual user role from API/AuthContext
-  const canCreateOrganization = true; // Will check for EntityAdmin, Admin, or SuperUser roles
+  const canCreateOrganization = canManageOrganization(currentUser?.roles);
 
   const handleCreateOrganization = () => {
     // TODO: Implement create organization functionality
