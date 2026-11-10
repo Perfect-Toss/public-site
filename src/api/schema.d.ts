@@ -2841,6 +2841,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{userId}/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Gets the entities a user belongs to, with the roles the user holds on each.
+         *     Requires admin authorization.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the user. */
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UserMembership"][];
+                        "application/json": components["schemas"]["UserMembership"][];
+                        "text/json": components["schemas"]["UserMembership"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/current": {
         parameters: {
             query?: never;
@@ -5148,6 +5192,10 @@ export interface components {
             environment?: string | null;
             /** @description The git commit SHA stamped as build metadata, if present. */
             gitSha?: string | null;
+            /** @description Environment the configured database belongs to: development, production or unknown. */
+            databaseEnvironment?: string | null;
+            /** @description Environment the configured Firebase project belongs to: development, production or unknown. */
+            firebaseEnvironment?: string | null;
         };
         /** @description Request model for requesting a review against a video. */
         RequestVideoReviewRequest: {
@@ -5678,6 +5726,13 @@ export interface components {
             email?: string | null;
             colorHex?: string | null;
             thumbnailUrl?: string | null;
+        };
+        UserMembership: {
+            /** Format: uuid */
+            entityId?: string;
+            entityName: string | null;
+            entityType?: string | null;
+            roles: components["schemas"]["Roles"][] | null;
         };
         Video: {
             /** Format: uuid */

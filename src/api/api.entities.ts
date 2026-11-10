@@ -14,6 +14,7 @@ export type UpdateEntityRequest = components['schemas']['UpdateEntityRequest'];
 export type AddUserToEntityRequest = components['schemas']['AddUserToEntityRequest'];
 export type UpdateUserRolesForEntityRequest = components['schemas']['UpdateUserRolesForEntityRequest'];
 export type EntityUserRole = components['schemas']['Roles'];
+export type UserMembership = components['schemas']['UserMembership'];
 
 /**
  * Fetch all root-level entities (organizations without a parent)
@@ -249,6 +250,23 @@ export async function fetchEntitiesForUser(userId: string): Promise<Entity[]> {
   if (error) {
     console.error('Failed to fetch user entities:', error);
     throw new Error('Failed to fetch user entities');
+  }
+
+  return data || [];
+}
+
+/**
+ * Fetch the entities a user belongs to, each with the roles the user holds on it.
+ * Admin only.
+ */
+export async function fetchUserMemberships(userId: string): Promise<UserMembership[]> {
+  const { data, error } = await api.GET('/api/v1/users/{userId}/memberships', {
+    params: { path: { userId } },
+  });
+
+  if (error) {
+    console.error('Failed to fetch user memberships:', error);
+    throw new Error('Failed to fetch user memberships');
   }
 
   return data || [];

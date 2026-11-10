@@ -1,5 +1,5 @@
-import { create } from 'zustand';
 import type { User } from '../api/api.users';
+import { create } from 'zustand';
 
 /**
  * The account a super user is viewing the app as.
@@ -11,15 +11,18 @@ interface ViewAsState {
   target: User | null;
   /** Organizations the emulated account belongs to. */
   entityIds: string[];
-  setTarget: (target: User, entityIds: string[]) => void;
+  /** Roles the emulated account holds on each of those organizations. */
+  entityRoles: Record<string, string[]>;
+  setTarget: (target: User, entityIds: string[], entityRoles: Record<string, string[]>) => void;
   clear: () => void;
 }
 
 export const useViewAsStore = create<ViewAsState>((set) => ({
   target: null,
   entityIds: [],
-  setTarget: (target, entityIds) => set({ target, entityIds }),
-  clear: () => set({ target: null, entityIds: [] }),
+  entityRoles: {},
+  setTarget: (target, entityIds, entityRoles) => set({ target, entityIds, entityRoles }),
+  clear: () => set({ target: null, entityIds: [], entityRoles: {} }),
 }));
 
 /** Session key holding the account to view as. */

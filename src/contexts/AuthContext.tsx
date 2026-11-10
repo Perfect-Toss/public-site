@@ -4,7 +4,7 @@ import { onAuthStateChange, logout as firebaseLogout, getIdToken } from '../fire
 import { setAuthTokenProvider, setMutationsBlocked } from '../api/client';
 import { useAuthStore } from '../stores/authStore';
 import { fetchCurrentUser, fetchUserById, isAdminUser, type User } from '../api/api.users';
-import { fetchEntitiesForUser } from '../api/api.entities';
+import { fetchUserMemberships } from '../api/api.entities';
 import {
   clearPersistedViewAs,
   readViewAsUserId,
@@ -34,15 +34,26 @@ async function applyViewAs(apiUser: User): Promise<boolean> {
   }
 
   try {
-    const [target, entities] = await Promise.all([
+    const [target, memberships] = await Promise.all([
       fetchUserById(targetId),
-      fetchEntitiesForUser(targetId),
+      fetchUserMemberships(targetId),
     ]);
     if (!target) {
       clearPersistedViewAs();
       return false;
     }
-    useViewAsStore.getState().setTarget(target, entities.map((entity) => entity.id));
+    // One admin-only call carries every organization the account belongs to
+    // together with the roles it holds on each.
+    const scoped = memberships.flatMap((membership) =>
+      membership.entityId ? [{ entityId: membership.entityId, roles: membership.roles ?? [] }] : [],
+    );
+    useViewAsStore
+      .getState()
+      .setTarget(
+        target,
+        scoped.map((membership) => membership.entityId),
+        Object.fromEntries(scoped.map((m) => [m.entityId, m.roles])),
+      );
     return true;
   } catch (error) {
     console.error('[AuthProvider] Failed to resolve the view-as account:', error);

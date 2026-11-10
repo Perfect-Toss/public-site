@@ -11,9 +11,19 @@ import { useViewAsStore } from '../stores/viewAsStore';
 export function useViewAsScope(): IViewAsScope | null {
   const target = useViewAsStore((state) => state.target);
   const entityIds = useViewAsStore((state) => state.entityIds);
+  const entityRoles = useViewAsStore((state) => state.entityRoles);
 
   return useMemo(
-    () => (target ? { userId: target.id, entityIds: new Set(entityIds) } : null),
-    [target, entityIds],
+    () =>
+      target
+        ? {
+            userId: target.id,
+            entityIds: new Set(entityIds),
+            entityRoles: new Map(
+              Object.entries(entityRoles).map(([entityId, roles]) => [entityId, new Set(roles)]),
+            ),
+          }
+        : null,
+    [target, entityIds, entityRoles],
   );
 }

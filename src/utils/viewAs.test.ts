@@ -7,6 +7,12 @@ import { describe, expect, it } from 'vitest';
 const scope: IViewAsScope = {
   userId: 'user-1',
   entityIds: new Set(['org-1']),
+  entityRoles: new Map([['org-1', new Set(['Athlete'])]]),
+};
+
+const coachedScope: IViewAsScope = {
+  ...scope,
+  entityRoles: new Map([['org-1', new Set(['Coach'])]]),
 };
 
 const org = (id: string) => ({ id, name: id }) as Entity;
@@ -50,14 +56,26 @@ describe('videoInScope', () => {
     expect(videoInScope(scope, video({ coaches: [{ id: 'user-1', email: null }] }))).toBe(true);
   });
 
-  it('accepts a video associated with a member organization', () => {
-    expect(videoInScope(scope, video({ associatedEntities: [org('org-1')] }))).toBe(true);
+  it('accepts a video associated with an organization the account coaches', () => {
+    expect(videoInScope(coachedScope, video({ associatedEntities: [org('org-1')] }))).toBe(true);
+  });
+
+  it('accepts a video associated with an organization the account administers', () => {
+    const adminScope: IViewAsScope = {
+      ...scope,
+      entityRoles: new Map([['org-1', new Set(['EntityAdmin'])]]),
+    };
+    expect(videoInScope(adminScope, video({ associatedEntities: [org('org-1')] }))).toBe(true);
+  });
+
+  it('rejects a video associated with an organization the account only belongs to', () => {
+    expect(videoInScope(scope, video({ associatedEntities: [org('org-1')] }))).toBe(false);
   });
 
   it('rejects a video belonging to someone else', () => {
     expect(
       videoInScope(
-        scope,
+        coachedScope,
         video({
           ownerId: 'user-2',
           coaches: [{ id: 'user-2', email: null }],
