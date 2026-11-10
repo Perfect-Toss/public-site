@@ -12,8 +12,7 @@ import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 import { CACHE_KEYS, readCache, writeCache } from '../../utils/pageCache';
 import { formatBytes, formatDateTime, formatDuration, formatEnum } from '../../utils/format';
 import { ownerDisplayName, thumbnailSrc } from '../../utils/videos';
-import { useViewAsScope } from '../../hooks/useViewAsScope';
-import { videoInScope } from '../../utils/viewAs';
+import { useViewAsTarget } from '../../stores/viewAsStore';
 
 const PAGE_SIZE = 12;
 
@@ -145,12 +144,15 @@ function VideosPage() {
   const [initialLoading, setInitialLoading] = useState(snapshot === undefined);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const scope = useViewAsScope();
+  // Set once a page comes back empty, so a wrong totalCount cannot spin forever.
+  const [exhausted, setExhausted] = useState(false);
+  const viewAsTarget = useViewAsTarget();
+  const viewAsUserId = viewAsTarget?.id;
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const inFlightRef = useRef(false);
 
-  const hasMore = videos.length < totalCount;
+  const hasMore = videos.length < totalCount && !exhausted;
 
   // Delete-from-list confirm state.
   const [pendingDelete, setPendingDelete] = useState<Video | null>(null);
@@ -167,8 +169,9 @@ function VideosPage() {
     setError(null);
 
     try {
-      const response = await fetchVideos(page, PAGE_SIZE);
+      const response = await fetchVideos(page, PAGE_SIZE, viewAsUserId);
       const items = response.items ?? [];
+      if (items.length === 0) setExhausted(true);
 
       setVideos((prev) => {
         if (isFirst) return items;
@@ -185,7 +188,7 @@ function VideosPage() {
       setInitialLoading(false);
       setLoadingMore(false);
     }
-  }, []);
+  }, [viewAsUserId]);
 
   /**
    * Refresh the library already on screen. Fresh page 1 rows lead the list and
@@ -193,7 +196,7 @@ function VideosPage() {
    */
   const revalidate = useCallback(async () => {
     try {
-      const response = await fetchVideos(1, PAGE_SIZE);
+      const response = await fetchVideos(1, PAGE_SIZE, viewAsUserId);
       const items = response.items ?? [];
       setVideos((prev) => {
         const fresh = new Set(items.map((video) => video.id));
@@ -204,7 +207,7 @@ function VideosPage() {
       // The cached library stays on screen — a failed refresh needs no error state.
       console.error('Failed to refresh videos:', err);
     }
-  }, []);
+  }, [viewAsUserId]);
 
   const handleDelete = useCallback(async () => {
     if (!pendingDelete) return;
@@ -274,20 +277,17 @@ function VideosPage() {
     return () => observer.disconnect();
   }, [hasMore, pageNumber, initialLoading, loadPage]);
 
-  // Client-side search over the accumulated metadata, narrowed to the account
-  // being viewed as when the super user is emulating someone else.
+  // Client-side search over the rows the API has already narrowed.
   const filteredVideos = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return videos.filter((v) => {
-      if (scope && !videoInScope(scope, v)) return false;
-      if (!q) return true;
-      return (
+    if (!q) return videos;
+    return videos.filter(
+      (v) =>
         (v.label ?? '').toLowerCase().includes(q) ||
         ownerDisplayName(v).toLowerCase().includes(q) ||
-        (v.tags ?? []).some((t) => (t.name ?? '').toLowerCase().includes(q))
-      );
-    });
-  }, [videos, searchQuery, scope]);
+        (v.tags ?? []).some((t) => (t.name ?? '').toLowerCase().includes(q)),
+    );
+  }, [videos, searchQuery]);
 
   const renderContent = () => {
     if (initialLoading) {
@@ -310,32 +310,32 @@ function VideosPage() {
       );
     }
 
-    if (videos.length === 0) {
+    if (filteredVideos.length === 0) {
+      if (viewAsUserId && !searchQuery.trim()) {
+        return (
+          <div className="empty-state-large">
+            <FontAwesomeIcon icon={faVideo} size="3x" style={{ opacity: 0.3 }} />
+            <h3>No videos</h3>
+            <p>This account does not have access to any videos</p>
+          </div>
+        );
+      }
+
+      if (searchQuery.trim()) {
+        return (
+          <div className="empty-state-large">
+            <FontAwesomeIcon icon={faSearch} size="3x" style={{ opacity: 0.3 }} />
+            <h3>No matches</h3>
+            <p>No videos match your search for “{searchQuery.trim()}”</p>
+          </div>
+        );
+      }
+
       return (
         <div className="empty-state-large">
           <FontAwesomeIcon icon={faVideo} size="3x" style={{ opacity: 0.3 }} />
           <h3>No videos yet</h3>
           <p>Your video library will appear here once you start uploading content</p>
-        </div>
-      );
-    }
-
-    if (filteredVideos.length === 0 && scope && !searchQuery.trim()) {
-      return (
-        <div className="empty-state-large">
-          <FontAwesomeIcon icon={faVideo} size="3x" style={{ opacity: 0.3 }} />
-          <h3>No videos</h3>
-          <p>This account does not have access to any videos</p>
-        </div>
-      );
-    }
-
-    if (filteredVideos.length === 0) {
-      return (
-        <div className="empty-state-large">
-          <FontAwesomeIcon icon={faSearch} size="3x" style={{ opacity: 0.3 }} />
-          <h3>No matches</h3>
-          <p>No videos match your search for “{searchQuery.trim()}”</p>
         </div>
       );
     }
@@ -347,7 +347,7 @@ function VideosPage() {
             <VideoCard
               key={video.id}
               video={video}
-              onDelete={scope ? undefined : setPendingDelete}
+              onDelete={viewAsUserId ? undefined : setPendingDelete}
             />
           ))}
         </div>

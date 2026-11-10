@@ -20,6 +20,7 @@ import {
   type UpdateEntityRequest,
 } from '../api/api.entities';
 import type { User } from '../api/api.users';
+import { useViewAsStore } from './viewAsStore';
 
 /** Rebuild a hierarchy map from a flat entity list. */
 function buildEntityMap(flat: Entity[]): Record<string, Entity[]> {
@@ -69,7 +70,9 @@ export const useEntityStore = create<EntityState>((set, get) => ({
   loadEntities: async () => {
     set({ loading: true, error: null });
     try {
-      const data = await fetchAllEntities();
+      // While emulating another account the API narrows the list to that
+      // account's organizations, so every consumer sees the same view.
+      const data = await fetchAllEntities(false, useViewAsStore.getState().target?.id);
       set({ entities: data, entityMap: buildEntityMap(data), loading: false });
     } catch (err) {
       set({

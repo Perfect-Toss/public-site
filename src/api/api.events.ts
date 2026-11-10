@@ -48,9 +48,10 @@ export async function fetchEvents(
   pageSize?: number,
   organizationId?: string,
   includeEnded?: boolean,
+  viewAsUserId?: string,
 ): Promise<EventIEnumerablePagedResponse> {
   const { data, error } = await api.GET('/api/v1/events', {
-    params: { query: { pageNumber, pageSize, organizationId, includeEnded } },
+    params: { query: { pageNumber, pageSize, organizationId, includeEnded, viewAsUserId } },
   });
 
   if (error) {

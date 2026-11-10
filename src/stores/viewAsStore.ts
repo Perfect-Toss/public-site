@@ -9,20 +9,14 @@ import { create } from 'zustand';
  */
 interface ViewAsState {
   target: User | null;
-  /** Organizations the emulated account belongs to. */
-  entityIds: string[];
-  /** Roles the emulated account holds on each of those organizations. */
-  entityRoles: Record<string, string[]>;
-  setTarget: (target: User, entityIds: string[], entityRoles: Record<string, string[]>) => void;
+  setTarget: (target: User) => void;
   clear: () => void;
 }
 
 export const useViewAsStore = create<ViewAsState>((set) => ({
   target: null,
-  entityIds: [],
-  entityRoles: {},
-  setTarget: (target, entityIds, entityRoles) => set({ target, entityIds, entityRoles }),
-  clear: () => set({ target: null, entityIds: [], entityRoles: {} }),
+  setTarget: (target) => set({ target }),
+  clear: () => set({ target: null }),
 }));
 
 /** Session key holding the account to view as. */

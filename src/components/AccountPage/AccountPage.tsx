@@ -36,7 +36,7 @@ import { IMAGE_ACCEPT, isImageFile, normalizeAvatarImage } from '../../utils/ima
 import { getDisplayName } from '../../utils/user';
 import { useAuth } from '../../contexts/useAuth';
 import { useAuthStore } from '../../stores/authStore';
-import { useViewAsScope } from '../../hooks/useViewAsScope';
+import { useViewAsTarget } from '../../stores/viewAsStore';
 import {
   HANDEDNESS_VALUES,
   ustaRatingOptions,
@@ -179,8 +179,7 @@ function formatFeetInches(inches: number): string {
 
 function AccountPage() {
   const { currentUser } = useAuth();
-  const viewAsScope = useViewAsScope();
-  const readOnly = viewAsScope !== null;
+  const readOnly = useViewAsTarget() !== null;
 
   const initialForm = useMemo(
     () => (currentUser ? toForm(currentUser) : null),

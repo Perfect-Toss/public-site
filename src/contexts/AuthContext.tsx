@@ -4,7 +4,6 @@ import { onAuthStateChange, logout as firebaseLogout, getIdToken } from '../fire
 import { setAuthTokenProvider, setMutationsBlocked } from '../api/client';
 import { useAuthStore } from '../stores/authStore';
 import { fetchCurrentUser, fetchUserById, isAdminUser, type User } from '../api/api.users';
-import { fetchUserMemberships } from '../api/api.entities';
 import {
   clearPersistedViewAs,
   readViewAsUserId,
@@ -34,26 +33,14 @@ async function applyViewAs(apiUser: User): Promise<boolean> {
   }
 
   try {
-    const [target, memberships] = await Promise.all([
-      fetchUserById(targetId),
-      fetchUserMemberships(targetId),
-    ]);
+    const target = await fetchUserById(targetId);
     if (!target) {
       clearPersistedViewAs();
       return false;
     }
-    // One admin-only call carries every organization the account belongs to
-    // together with the roles it holds on each.
-    const scoped = memberships.flatMap((membership) =>
-      membership.entityId ? [{ entityId: membership.entityId, roles: membership.roles ?? [] }] : [],
-    );
-    useViewAsStore
-      .getState()
-      .setTarget(
-        target,
-        scoped.map((membership) => membership.entityId),
-        Object.fromEntries(scoped.map((m) => [m.entityId, m.roles])),
-      );
+    // The list endpoints narrow themselves from this id, so nothing else about
+    // the account has to be resolved up front.
+    useViewAsStore.getState().setTarget(target);
     return true;
   } catch (error) {
     console.error('[AuthProvider] Failed to resolve the view-as account:', error);

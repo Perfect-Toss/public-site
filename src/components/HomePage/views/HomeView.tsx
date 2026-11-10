@@ -6,9 +6,8 @@ import { useEffect, useMemo, useState } from 'react';
 import DrillsSection from './DrillsSection';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OrganizationCard } from '../../common';
-import { organizationInScope } from '../../../utils/viewAs';
 import { useEntityStore } from '../../../stores/entityStore';
-import { useViewAsScope } from '../../../hooks/useViewAsScope';
+import { useViewAsTarget } from '../../../stores/viewAsStore';
 
 export interface PendingReview {
   id: string;
@@ -24,13 +23,9 @@ function HomeView() {
   const [pendingReviews] = useState<PendingReview[]>([]);
 
   const { entityMap, loading: storeLoading, error: storeError, loadEntities } = useEntityStore();
-  const scope = useViewAsScope();
+  const isViewingAs = useViewAsTarget() !== null;
 
-  /** A super user viewing another account sees only that account's organizations. */
-  const organizations = useMemo(() => {
-    const roots = entityMap['root'] ?? [];
-    return scope ? roots.filter((org) => organizationInScope(scope, org)) : roots;
-  }, [entityMap, scope]);
+  const organizations = useMemo(() => entityMap['root'] ?? [], [entityMap]);
 
   // Entities the store already holds stay on screen while it refreshes them, so
   // returning to this page does not show the loading state again.
@@ -71,9 +66,9 @@ function HomeView() {
               ) : (
                 <div className="empty-state-large">
                   <FontAwesomeIcon icon={faBuilding} size="3x" style={{ opacity: 0.3 }} />
-                  <h3>{scope ? 'No organizations' : 'No organizations yet'}</h3>
+                  <h3>{isViewingAs ? 'No organizations' : 'No organizations yet'}</h3>
                   <p>
-                    {scope
+                    {isViewingAs
                       ? 'This account is not a member of any organization'
                       : 'Create or join an organization to get started'}
                   </p>

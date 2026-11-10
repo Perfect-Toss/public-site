@@ -34,9 +34,12 @@ export async function fetchEntities(): Promise<Entity[]> {
  * Fetch the entities the current user has access to (every entity for admins).
  * Pass `includeUsers` to have each entity carry its members and their roles.
  */
-export async function fetchAllEntities(includeUsers = false): Promise<EntityMembership[]> {
+export async function fetchAllEntities(
+  includeUsers = false,
+  viewAsUserId?: string,
+): Promise<EntityMembership[]> {
   const { data, error } = await api.GET('/api/v1/entities/all', {
-    params: { query: { includeUsers } },
+    params: { query: { includeUsers, viewAsUserId } },
   });
 
   if (error) {

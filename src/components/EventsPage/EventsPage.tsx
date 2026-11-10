@@ -27,10 +27,9 @@ import { fetchEvents } from '../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
 import { CACHE_KEYS, readCache, writeCache } from '../../utils/pageCache';
-import { eventInScope } from '../../utils/viewAs';
 import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { useViewAsScope } from '../../hooks/useViewAsScope';
+import { useViewAsTarget } from '../../stores/viewAsStore';
 
 /** Events are fetched a page at a time; a week view wants them all. */
 const PAGE_SIZE = 200;
@@ -39,7 +38,7 @@ const MAX_PAGES = 10;
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 /** Loads every event the current user can access, including ended schedules. */
-async function fetchAllEvents(): Promise<Event[]> {
+async function fetchAllEvents(viewAsUserId?: string): Promise<Event[]> {
   const all: Event[] = [];
   for (let page = 1; page <= MAX_PAGES; page += 1) {
     const response: EventIEnumerablePagedResponse = await fetchEvents(
@@ -47,6 +46,7 @@ async function fetchAllEvents(): Promise<Event[]> {
       PAGE_SIZE,
       undefined,
       true,
+      viewAsUserId,
     );
     const items = response.items ?? [];
     all.push(...items);
@@ -83,7 +83,7 @@ function OccurrenceCard({ occurrence }: { occurrence: IEventOccurrence }) {
 function EventsPage() {
   const navigate = useNavigate();
   const { canCreateEvents } = useAuth();
-  const scope = useViewAsScope();
+  const viewAsUserId = useViewAsTarget()?.id;
   // Events already loaded once stay on screen while this route fetches them
   // again, so coming back to the calendar does not show the loading state.
   const cachedEvents = readCache<Event[]>(CACHE_KEYS.EVENTS);
@@ -95,7 +95,7 @@ function EventsPage() {
   const loadEvents = useCallback(async () => {
     setError(null);
     try {
-      const fresh = await fetchAllEvents();
+      const fresh = await fetchAllEvents(viewAsUserId);
       writeCache(CACHE_KEYS.EVENTS, fresh);
       setEvents(fresh);
     } catch (err) {
@@ -104,7 +104,7 @@ function EventsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [viewAsUserId]);
 
   useEffect(() => {
     loadEvents();
@@ -117,16 +117,10 @@ function EventsPage() {
   const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart]);
   const today = useMemo(() => startOfDay(new Date()), []);
 
-  /** A super user viewing another account sees only its organizations' events. */
-  const visibleEvents = useMemo(
-    () => (scope ? events.filter((event) => eventInScope(scope, event)) : events),
-    [events, scope],
-  );
-
   // Expand the schedules into the occurrences that fall inside the visible week.
   const occurrences = useMemo(
-    () => expandEventsInRange(visibleEvents, getWeekRange(weekStart)),
-    [visibleEvents, weekStart],
+    () => expandEventsInRange(events, getWeekRange(weekStart)),
+    [events, weekStart],
   );
 
   const occurrenceCount = occurrences.length;
@@ -220,7 +214,7 @@ function EventsPage() {
           </div>
         )}
 
-        {!loading && !showError && occurrenceCount === 0 && visibleEvents.length === 0 && (
+        {!loading && !showError && occurrenceCount === 0 && events.length === 0 && (
           <div className="empty-state-large">
             <FontAwesomeIcon icon={faCalendarDays} size="3x" style={{ opacity: 0.3 }} />
             <h3>No events yet</h3>
@@ -228,7 +222,7 @@ function EventsPage() {
           </div>
         )}
 
-        {!loading && !showError && occurrenceCount === 0 && visibleEvents.length > 0 && (
+        {!loading && !showError && occurrenceCount === 0 && events.length > 0 && (
           <div className="empty-state-large">
             <FontAwesomeIcon icon={faCircleNotch} size="3x" style={{ opacity: 0.3 }} />
             <h3>Nothing scheduled this week</h3>

@@ -34,9 +34,13 @@ export type AddVideoReviewRequest = components['schemas']['AddVideoReviewRequest
 /**
  * Get all video metadata records with paging
  */
-export async function fetchVideos(pageNumber?: number, pageSize?: number): Promise<VideoIEnumerablePagedResponse> {
+export async function fetchVideos(
+  pageNumber?: number,
+  pageSize?: number,
+  viewAsUserId?: string,
+): Promise<VideoIEnumerablePagedResponse> {
   const { data, error } = await api.GET('/api/v1/videos', {
-    params: { query: { pageNumber, pageSize } },
+    params: { query: { pageNumber, pageSize, viewAsUserId } },
   });
 
   if (error) {
@@ -115,9 +119,14 @@ export async function deleteVideo(id: string): Promise<boolean> {
 /**
  * Get all video metadata records associated with a specific entity
  */
-export async function fetchVideosByEntity(entityId: string, pageNumber?: number, pageSize?: number): Promise<VideoIEnumerablePagedResponse> {
+export async function fetchVideosByEntity(
+  entityId: string,
+  pageNumber?: number,
+  pageSize?: number,
+  viewAsUserId?: string,
+): Promise<VideoIEnumerablePagedResponse> {
   const { data, error } = await api.GET('/api/v1/videos/entity/{entityId}', {
-    params: { path: { entityId }, query: { pageNumber, pageSize } },
+    params: { path: { entityId }, query: { pageNumber, pageSize, viewAsUserId } },
   });
 
   if (error) {

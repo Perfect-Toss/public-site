@@ -361,6 +361,8 @@ export interface paths {
                 query?: {
                     /** @description When true, each entity also carries its members with the roles they hold on it. */
                     includeUsers?: boolean;
+                    /** @description Admin-only: narrow the result set to the entities that user belongs to. Read-only; GET only. */
+                    viewAsUserId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -1458,6 +1460,8 @@ export interface paths {
                      *     they are returned too, so an organization's full event history can be listed.
                      */
                     includeEnded?: boolean;
+                    /** @description Admin-only: narrow the result set to what that user can see. Read-only; GET only. */
+                    viewAsUserId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3815,6 +3819,8 @@ export interface paths {
                     pageNumber?: number;
                     /** @description The page size (default 10, max 200). */
                     pageSize?: number;
+                    /** @description Admin-only: narrow the result set to what that user can see. Read-only; GET only. */
+                    viewAsUserId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3890,6 +3896,8 @@ export interface paths {
                     pageNumber?: number;
                     /** @description The page size (default 10, max 200). */
                     pageSize?: number;
+                    /** @description Admin-only: narrow the result set to what that user can see. Read-only; GET only. */
+                    viewAsUserId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3936,6 +3944,8 @@ export interface paths {
                     pageNumber?: number;
                     /** @description The page size (default 10, max 200). */
                     pageSize?: number;
+                    /** @description Admin-only: narrow the result set to what that user can see. Read-only; GET only. */
+                    viewAsUserId?: string;
                 };
                 header?: never;
                 path?: never;
@@ -4073,6 +4083,8 @@ export interface paths {
                     pageNumber?: number;
                     /** @description The page size (default 10, max 200). */
                     pageSize?: number;
+                    /** @description Admin-only: narrow the result set to what that user can see. Read-only; GET only. */
+                    viewAsUserId?: string;
                 };
                 header?: never;
                 path: {
