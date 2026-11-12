@@ -1,5 +1,5 @@
-/* Upcoming events — the current user's own events over the next two weeks,
-   laid out as a horizontal strip like the organizations section. */
+/* Upcoming events — the current user's own events over the next two weeks:
+   a horizontal strip on wide screens, one stacked column on phones. */
 
 /* The header action is a link here, not a button. */
 .upcoming-events-link {
@@ -28,6 +28,34 @@
 
 .upcoming-events-scroll::-webkit-scrollbar {
   display: none;
+}
+
+@media (max-width: 700px) {
+  /* One stacked column, like the drills. A phone-sized strip showed barely one
+     card and pushed the rest off-screen behind a scroll nobody discovers. */
+  .upcoming-events-scroll {
+    flex-direction: column;
+    /* In column direction the cross axis is horizontal, so the strip's
+       flex-start would shrink every card to its content — stretch them. */
+    align-items: stretch;
+    overflow: visible;
+    /* The negative side margins only existed to give the cards' hover shadows
+       room inside the scroller; nothing clips here, and they would drag the
+       cards past the section's edges. */
+    margin: 0;
+    padding: 0;
+    scroll-snap-type: none;
+    -webkit-overflow-scrolling: auto;
+  }
+
+  /* VIEW ALL is a thumb target at this width, not a hover affordance. */
+  .upcoming-events-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 16px;
+  }
 }
 
 

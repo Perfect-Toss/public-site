@@ -1,8 +1,6 @@
 import './EventCard.css';
 
 import { faBuilding, faClock, faLocationDot, faUserGroup } from '@fortawesome/free-solid-svg-icons';
-import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IEventOccurrence } from '../../utils/events';
@@ -10,6 +8,8 @@ import { Tag } from './Tag';
 import { UserInfo } from './UserInfo';
 import { formatTimeRange } from '../../utils/events';
 import { getDisplayName } from '../../utils/user';
+import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export interface EventCardProps {
   occurrence: IEventOccurrence;
@@ -82,7 +82,7 @@ export function EventCard({ occurrence, dayLabel }: EventCardProps) {
                   key={organizer.id ?? getDisplayName(organizer)}
                   className="event-card-organizer"
                 >
-                  <UserInfo user={organizer} size={18} />
+                  <UserInfo user={organizer} size={26} />
                   <sup className="event-card-pro">PRO</sup>
                 </span>
               ))}
