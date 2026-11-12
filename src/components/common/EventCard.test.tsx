@@ -1,18 +1,24 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, fireEvent, render } from '@testing-library/react';
 
 import { EventCard } from './EventCard';
 import type { IEventOccurrence } from '../../utils/events';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { SnackbarProvider } from './Snackbar';
 
 // Vitest globals are off, so testing-library's automatic cleanup is not registered.
 afterEach(cleanup);
 
 const renderCard = (occurrence: IEventOccurrence) =>
   render(
-    <MemoryRouter>
-      <EventCard occurrence={occurrence} dayLabel="Today" />
-    </MemoryRouter>,
+    <SnackbarProvider>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<EventCard occurrence={occurrence} dayLabel="Today" />} />
+          <Route path="/events/:id" element={<p>event page</p>} />
+        </Routes>
+      </MemoryRouter>
+    </SnackbarProvider>,
   );
 
 /** A one-hour occurrence of `event`. */
@@ -24,7 +30,7 @@ const occurrenceOf = (event: IEventOccurrence['event']): IEventOccurrence => ({
 });
 
 describe('EventCard', () => {
-  it('shows the day, name, first tag and links to the event', () => {
+  it('shows the day, name and first tag, and opens the event', () => {
     const view = renderCard(
       occurrenceOf({
         id: 'e1',
@@ -41,7 +47,9 @@ describe('EventCard', () => {
     expect(view.getByText('Serve')).toBeDefined();
     // Only the first tag is shown.
     expect(view.queryByText('Technique')).toBeNull();
-    expect(view.container.querySelector('a')?.getAttribute('href')).toBe('/events/e1');
+
+    fireEvent.click(view.getByRole('button', { name: 'Open event Serve clinic' }));
+    expect(view.getByText('event page')).toBeTruthy();
   });
 
   it('lists organizers with the PRO marker and the athlete count', () => {

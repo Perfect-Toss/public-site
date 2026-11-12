@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 
 import { AuthContext, type AuthContextType } from '../../contexts/useAuth';
 import { Role, type User } from '../../api/api.users';
+import { SnackbarProvider } from './Snackbar';
 import { useEntityStore } from '../../stores/entityStore';
 import { useUserStore } from '../../stores/userStore';
 import { RoleMemberPicker } from './RoleMemberPicker';
@@ -109,14 +110,16 @@ beforeEach(() => {
 function renderCoachPicker(props: Partial<Parameters<typeof RoleMemberPicker>[0]> = {}) {
   const view = render(
     <AuthContext.Provider value={authValue()}>
-      <RoleMemberPicker
-        id="coaches"
-        organizationId="org-1"
-        role={Role.Coach}
-        label="Coaches"
-        placeholder="Add coaches"
-        {...props}
-      />
+      <SnackbarProvider>
+        <RoleMemberPicker
+          id="coaches"
+          organizationId="org-1"
+          role={Role.Coach}
+          label="Coaches"
+          placeholder="Add coaches"
+          {...props}
+        />
+      </SnackbarProvider>
     </AuthContext.Provider>,
   );
 
@@ -134,7 +137,9 @@ const panelNames = () =>
 
 /** The members listed above the picker as already holding the role. */
 const memberNames = () =>
-  Array.from(document.querySelectorAll('.rmp-member-name')).map((el) => el.textContent);
+  Array.from(document.querySelectorAll('.rmp-member .user-info-name')).map(
+    (el) => el.textContent,
+  );
 
 /** The rendered option row whose text contains `text`. */
 const optionWith = (text: string) => {

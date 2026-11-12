@@ -23,3 +23,11 @@ export function formatUstaRating(rating?: number | null): string {
   if (rating == null) return '-';
   return rating.toFixed(1);
 }
+
+/** 72 → "6′ 0″"; unset → "-". */
+export function formatHeight(inches?: number | null): string {
+  if (inches == null) return '-';
+  const total = Math.round(inches);
+  const feet = Math.floor(total / 12);
+  return `${feet}′ ${total - feet * 12}″`;
+}

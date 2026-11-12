@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthContext } from '../../../contexts/useAuth';
 import type { Event } from '../../../api/api.events';
 import { MemoryRouter } from 'react-router-dom';
+import { SnackbarProvider } from '../../common';
 import UpcomingEventsSection from './UpcomingEventsSection';
 import type { User } from '../../../api/api.users';
 import { clearCache } from '../../../utils/pageCache';
@@ -57,7 +58,9 @@ function renderSection() {
       }}
     >
       <MemoryRouter>
-        <UpcomingEventsSection />
+        <SnackbarProvider>
+          <UpcomingEventsSection />
+        </SnackbarProvider>
       </MemoryRouter>
     </AuthContext.Provider>,
   );
@@ -70,12 +73,12 @@ async function settle() {
 }
 
 describe('UpcomingEventsSection', () => {
-  it('lists an event the user is on the roster for, linked to its detail page', async () => {
+  it('lists an event the user is on the roster for, opening its detail page', async () => {
     fetchAllEvents.mockResolvedValue([singleEvent('e1', 'Tuesday clinic', 2)]);
     renderSection();
 
-    const link = await screen.findByRole('link', { name: /Tuesday clinic/ });
-    expect(link.getAttribute('href')).toBe('/events/e1');
+    const card = await screen.findByRole('button', { name: 'Open event Tuesday clinic' });
+    expect(card.classList.contains('event-card')).toBe(true);
     expect(screen.getByText('Upcoming Events')).toBeTruthy();
   });
 

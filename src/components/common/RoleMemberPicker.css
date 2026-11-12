@@ -37,16 +37,17 @@
   color: #1a1f24;
 }
 
-.rmp-member-name {
-  white-space: nowrap;
+/* The chip supplies its own type; the pill supplies the frame. */
+.rmp-member .user-info {
+  gap: 6px;
+  padding: 0 2px;
+  min-width: 0;
 }
 
-.rmp-member-email {
+.rmp-member .user-info-email {
+  min-width: 0;
   overflow: hidden;
-  font-size: 12px;
-  color: #8a939b;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .rmp-members-empty {

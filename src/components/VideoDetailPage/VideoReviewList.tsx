@@ -20,8 +20,7 @@ import {
   type VideoReviewRequest,
 } from '../../api/api.videos';
 import { formatDateTime } from '../../utils/format';
-import { getDisplayName } from '../../utils/user';
-import { UserAvatar, UserInfo } from '../common';
+import { UserInfo } from '../common';
 import { VideoReviewDetails } from './VideoReviewDetails';
 import { sortReviewsByTime } from './videoTime';
 
@@ -31,8 +30,7 @@ function RequestTarget({ request }: { request: VideoReviewRequest }) {
   if (reviewer) {
     return (
       <span className="vr-request-target-chip">
-        <UserAvatar user={reviewer} size={20} />
-        <span className="vr-request-target-name">{getDisplayName(reviewer)}</span>
+        <UserInfo user={reviewer} size={20} />
       </span>
     );
   }

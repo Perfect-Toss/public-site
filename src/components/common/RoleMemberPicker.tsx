@@ -5,7 +5,7 @@ import { getDisplayName, hasRole, sortUsersByName } from '../../utils/user';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { UserAvatar } from './UserAvatar';
+import { UserInfo } from './UserInfo';
 import { UserPicker } from './UserPicker';
 import { canAssignRole } from '../../utils/roles';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -165,9 +165,7 @@ export function RoleMemberPicker({
           ) : (
             assignedMembers.map((member) => (
               <li key={member.id} className="rmp-member">
-                <UserAvatar user={member} size={22} />
-                <span className="rmp-member-name">{getDisplayName(member)}</span>
-                {member.email ? <span className="rmp-member-email">{member.email}</span> : null}
+                <UserInfo user={member} size={22} showEmail />
                 {canAssign && (
                   <button
                     type="button"

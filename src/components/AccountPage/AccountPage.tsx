@@ -39,6 +39,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useViewAsTarget } from '../../stores/viewAsStore';
 import {
   HANDEDNESS_VALUES,
+  formatHeight,
   ustaRatingOptions,
   type HandednessValue,
 } from '../../utils/profile';
@@ -168,13 +169,6 @@ async function loadAccess(userId: string): Promise<IAccessEntry[]> {
     })
     .filter((entry): entry is IAccessEntry => entry !== null)
     .sort((a, b) => a.name.localeCompare(b.name));
-}
-
-/** 72 → "6′ 0″". */
-function formatFeetInches(inches: number): string {
-  const total = Math.round(inches);
-  const feet = Math.floor(total / 12);
-  return `${feet}′ ${total - feet * 12}″`;
 }
 
 function AccountPage() {
@@ -547,7 +541,7 @@ function AccountPage() {
                 <option value="">Not set</option>
                 {heightChoices.map((inches) => (
                   <option key={inches} value={String(inches)}>
-                    {formatFeetInches(inches)}
+                    {formatHeight(inches)}
                   </option>
                 ))}
               </StyledSelect>

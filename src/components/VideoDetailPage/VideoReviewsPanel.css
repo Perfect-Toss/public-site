@@ -957,6 +957,10 @@
   font-weight: 600;
 }
 
+.vr-request-target-chip .user-info {
+  padding: 0;
+}
+
 .vr-request-target-name {
   display: inline-flex;
   align-items: center;

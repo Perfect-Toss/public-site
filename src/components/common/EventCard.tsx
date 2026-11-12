@@ -1,12 +1,13 @@
 import './EventCard.css';
 
 import { faBuilding, faClock, faLocationDot, faUserGroup } from '@fortawesome/free-solid-svg-icons';
+import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IEventOccurrence } from '../../utils/events';
-import { Link } from 'react-router-dom';
 import { Tag } from './Tag';
-import { UserAvatar } from './UserAvatar';
+import { UserInfo } from './UserInfo';
 import { formatTimeRange } from '../../utils/events';
 import { getDisplayName } from '../../utils/user';
 
@@ -16,16 +17,31 @@ export interface EventCardProps {
   dayLabel: string;
 }
 
-/** One upcoming occurrence as a card, linked to its event. */
+/** One upcoming occurrence as a card, opening its event. */
 export function EventCard({ occurrence, dayLabel }: EventCardProps) {
+  const navigate = useNavigate();
   const { event, start, end } = occurrence;
   const organizers = event.organizers ?? [];
   const firstTag = event.tags?.[0] ?? null;
   const athleteCount = event.athletes?.length ?? 0;
   const hasMeta = Boolean(event.organization?.name || event.location);
 
+  const openEvent = useCallback(() => navigate(`/events/${event.id}`), [navigate, event.id]);
+
   return (
-    <Link to={`/events/${event.id}`} className="event-card">
+    <div
+      className="event-card"
+      role="button"
+      tabIndex={0}
+      aria-label={`Open event ${event.name || 'Untitled event'}`}
+      onClick={openEvent}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openEvent();
+        }
+      }}
+    >
       <span className="event-card-head">
         <span className="event-card-when">
           <span className="event-card-day">{dayLabel}</span>
@@ -66,8 +82,7 @@ export function EventCard({ occurrence, dayLabel }: EventCardProps) {
                   key={organizer.id ?? getDisplayName(organizer)}
                   className="event-card-organizer"
                 >
-                  <UserAvatar user={organizer} size={18} />
-                  <span className="event-card-organizer-name">{getDisplayName(organizer)}</span>
+                  <UserInfo user={organizer} size={18} />
                   <sup className="event-card-pro">PRO</sup>
                 </span>
               ))}
@@ -82,6 +97,6 @@ export function EventCard({ occurrence, dayLabel }: EventCardProps) {
           )}
         </span>
       )}
-    </Link>
+    </div>
   );
 }

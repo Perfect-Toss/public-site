@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 
 import { AuthContext, type AuthContextType } from '../../../contexts/useAuth';
 import type { Entity, UpdateEntityRequest } from '../../../api/api.entities';
+import { SnackbarProvider } from '../../common';
 import SettingsView from './SettingsView';
 import type { User } from '../../../api/api.users';
 import { useEntityStore } from '../../../stores/entityStore';
@@ -130,7 +131,9 @@ beforeEach(() => {
 function renderSettings() {
   const view = render(
     <AuthContext.Provider value={authValue()}>
-      <SettingsView />
+      <SnackbarProvider>
+        <SettingsView />
+      </SnackbarProvider>
     </AuthContext.Provider>,
   );
 
@@ -150,7 +153,9 @@ const panelNames = () =>
 const rosterNames = (pickerId: string) => {
   const field = document.getElementById(pickerId)?.closest('.rmp-field');
   if (!field) throw new Error(`No staff field for "${pickerId}"`);
-  return Array.from(field.querySelectorAll('.rmp-member-name')).map((el) => el.textContent);
+  return Array.from(field.querySelectorAll('.rmp-member .user-info-name')).map(
+    (el) => el.textContent,
+  );
 };
 
 /** The organizations listed in the open organization picker. */
