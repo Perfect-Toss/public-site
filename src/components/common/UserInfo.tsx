@@ -310,6 +310,11 @@ export function UserInfo({
             }}
             onMouseEnter={cancelClose}
             onMouseLeave={scheduleClose}
+            // The card is portaled, but React still bubbles its events up the
+            // tree to whatever clickable row holds the chip — reading the card
+            // must not also trigger that row's action.
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
           >
             {profileHref ? (
               <Link

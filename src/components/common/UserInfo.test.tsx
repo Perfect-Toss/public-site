@@ -124,6 +124,22 @@ describe('UserInfo', () => {
     expect(onRowClick).not.toHaveBeenCalled();
   });
 
+  it('keeps a click on the card itself off a clickable row underneath', () => {
+    const onRowClick = vi.fn();
+    const { container } = renderInfo(
+      <div onClick={onRowClick}>
+        <UserInfo user={ada} />
+      </div>,
+    );
+
+    fireEvent.click(chip(container));
+    // Reading the open card must not run the row's action (it navigates).
+    fireEvent.click(screen.getByRole('tooltip'));
+
+    expect(screen.getByRole('tooltip')).toBeTruthy();
+    expect(onRowClick).not.toHaveBeenCalled();
+  });
+
   it('opens the card only after resting on the chip', async () => {
     const { container } = renderInfo(<UserInfo user={ada} />);
 

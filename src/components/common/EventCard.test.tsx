@@ -1,9 +1,9 @@
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/react';
 
 import { EventCard } from './EventCard';
 import type { IEventOccurrence } from '../../utils/events';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { SnackbarProvider } from './Snackbar';
 
 // Vitest globals are off, so testing-library's automatic cleanup is not registered.
@@ -65,6 +65,36 @@ describe('EventCard', () => {
     expect(view.getByText('Ada Athlete')).toBeDefined();
     expect(view.getByText('PRO')).toBeDefined();
     expect(view.getByText('2 athletes')).toBeDefined();
+  });
+
+  it('keeps an organizer click off the event', () => {
+    const view = renderCard(
+      occurrenceOf({
+        id: 'e1',
+        name: 'Serve clinic',
+        organizers: [{ id: 'o1', firstName: 'Ada', lastName: 'Athlete' }],
+      }),
+    );
+
+    fireEvent.click(view.getByRole('button', { name: 'View Ada Athlete' }));
+
+    expect(view.queryByText('event page')).toBeNull();
+  });
+
+  it('keeps a click on the organizer card off the event', () => {
+    const view = renderCard(
+      occurrenceOf({
+        id: 'e1',
+        name: 'Serve clinic',
+        organizers: [{ id: 'o1', firstName: 'Ada', lastName: 'Athlete' }],
+      }),
+    );
+
+    fireEvent.click(view.getByRole('button', { name: 'View Ada Athlete' }));
+    fireEvent.click(view.getByRole('tooltip'));
+
+    expect(view.getByRole('tooltip')).toBeTruthy();
+    expect(view.queryByText('event page')).toBeNull();
   });
 
   it('skips the organization block when neither org nor venue is set', () => {
