@@ -62,6 +62,26 @@ export async function fetchEvents(
   return data ?? {};
 }
 
+/** Events are fetched a page at a time; a calendar or feed wants them all. */
+const EVENT_PAGE_SIZE = 200;
+const MAX_EVENT_PAGES = 10;
+
+/**
+ * Every event the current user can access, ended schedules included, by paging
+ * `fetchEvents` until `totalCount` is reached (or a page comes back empty).
+ */
+export async function fetchAllEvents(viewAsUserId?: string): Promise<Event[]> {
+  const all: Event[] = [];
+  for (let page = 1; page <= MAX_EVENT_PAGES; page += 1) {
+    const response = await fetchEvents(page, EVENT_PAGE_SIZE, undefined, true, viewAsUserId);
+    const items = response.items ?? [];
+    all.push(...items);
+    const total = response.totalCount ?? all.length;
+    if (items.length === 0 || all.length >= total) break;
+  }
+  return all;
+}
+
 /**
  * Get a single event by ID (verifies the current user can access its organization)
  */

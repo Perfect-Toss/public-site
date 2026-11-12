@@ -8,7 +8,7 @@ import { clearCache } from '../../utils/pageCache';
 
 // The calendar only needs the paged fetch; everything else it imports is types.
 vi.mock('../../api/api.events', () => ({
-  fetchEvents: vi.fn(async () => ({ pageNumber: 1, pageSize: 200, totalCount: 0, items: [] })),
+  fetchAllEvents: vi.fn(async () => []),
 }));
 
 // Vitest globals are off, so testing-library's automatic cleanup never registers.

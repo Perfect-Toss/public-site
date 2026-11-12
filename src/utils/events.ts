@@ -299,6 +299,17 @@ export function hasEnded(event: Event, from: Date): boolean {
   return nextOccurrence(event, from) === null;
 }
 
+/**
+ * True when `userId` is on the event's athlete or organizer roster — the
+ * event's own people, not the organization's membership.
+ */
+export function isEventParticipant(event: Event, userId?: string | null): boolean {
+  if (!userId) return false;
+  return [event.athletes, event.organizers].some((roster) =>
+    (roster ?? []).some((person) => person.id === userId),
+  );
+}
+
 /** "Weekly on Mon, Wed at 6:00 PM", "One-off on Sep 14, 2026", "No schedule". */
 export function describeSchedule(event: Event): string {
   const schedule = event.schedule;

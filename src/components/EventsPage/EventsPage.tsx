@@ -11,7 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { Event, EventIEnumerablePagedResponse } from '../../api/api.events';
+import type { Event } from '../../api/api.events';
 import {
   addDays,
   expandEventsInRange,
@@ -23,7 +23,7 @@ import {
   startOfDay,
   type IEventOccurrence,
 } from '../../utils/events';
-import { fetchEvents } from '../../api/api.events';
+import { fetchAllEvents } from '../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
 import { CACHE_KEYS, readCache, writeCache } from '../../utils/pageCache';
@@ -31,30 +31,7 @@ import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useViewAsTarget } from '../../stores/viewAsStore';
 
-/** Events are fetched a page at a time; a week view wants them all. */
-const PAGE_SIZE = 200;
-const MAX_PAGES = 10;
-
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-/** Loads every event the current user can access, including ended schedules. */
-async function fetchAllEvents(viewAsUserId?: string): Promise<Event[]> {
-  const all: Event[] = [];
-  for (let page = 1; page <= MAX_PAGES; page += 1) {
-    const response: EventIEnumerablePagedResponse = await fetchEvents(
-      page,
-      PAGE_SIZE,
-      undefined,
-      true,
-      viewAsUserId,
-    );
-    const items = response.items ?? [];
-    all.push(...items);
-    const total = response.totalCount ?? all.length;
-    if (items.length === 0 || all.length >= total) break;
-  }
-  return all;
-}
 
 function OccurrenceCard({ occurrence }: { occurrence: IEventOccurrence }) {
   const { event, start, end } = occurrence;

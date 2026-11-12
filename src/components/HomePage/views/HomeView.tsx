@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import DrillsSection from './DrillsSection';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OrganizationCard } from '../../common';
+import UpcomingEventsSection from './UpcomingEventsSection';
 import { useEntityStore } from '../../../stores/entityStore';
 import { useViewAsTarget } from '../../../stores/viewAsStore';
 
@@ -76,6 +77,9 @@ function HomeView() {
               )}
             </div>
           </section>
+
+          {/* Upcoming Events — the user's own events over the next two weeks */}
+          <UpcomingEventsSection />
 
           {/* Pending Review Section — hidden when there is nothing to review */}
           {pendingReviews.length > 0 && (

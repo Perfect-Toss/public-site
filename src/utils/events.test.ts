@@ -10,6 +10,7 @@ import {
   groupByOrganization,
   instanceChangeCount,
   instanceStatus,
+  isEventParticipant,
   nextOccurrence,
   occurrencesOnDay,
   startOfWeek,
@@ -300,5 +301,30 @@ describe('groupByOrganization', () => {
 
     expect(groups).toHaveLength(1);
     expect(groups[0].items.map((e) => e.id)).toEqual(['e1', 'e2']);
+  });
+});
+
+describe('isEventParticipant', () => {
+  const roster = (ids: string[]) => ids.map((id) => ({ id }));
+
+  it('matches an athlete on the event roster', () => {
+    const mine = event({}, { athletes: roster(['a1']) });
+    expect(isEventParticipant(mine, 'a1')).toBe(true);
+  });
+
+  it('matches an organizer on the event roster', () => {
+    const mine = event({}, { organizers: roster(['o1']) });
+    expect(isEventParticipant(mine, 'o1')).toBe(true);
+  });
+
+  it('ignores anyone else, and an absent user id', () => {
+    const mine = event({}, { athletes: roster(['a1']), organizers: roster(['o1']) });
+    expect(isEventParticipant(mine, 'someone-else')).toBe(false);
+    expect(isEventParticipant(mine, undefined)).toBe(false);
+    expect(isEventParticipant(mine, null)).toBe(false);
+  });
+
+  it('treats missing rosters as empty', () => {
+    expect(isEventParticipant(event({}), 'a1')).toBe(false);
   });
 });
