@@ -34,7 +34,11 @@ import {
   type User,
 } from '../../api/api.users';
 import { StyledSelect, UserAvatar } from '../common';
-import { fetchAllEntities } from '../../api/api.entities';
+import {
+  fetchAllEntities,
+  fetchUserMemberships,
+  type UserMembership,
+} from '../../api/api.entities';
 import { fetchMetaInfo, type MetaResponse } from '../../api/api.meta';
 import { Role, assignableRoles, canAssignRole } from '../../utils/roles';
 import { isLightColor } from '../../utils/color';
@@ -159,14 +163,35 @@ async function refreshSignedInUser(): Promise<void> {
   if (fresh) useAuthStore.getState().setAuth(useAuthStore.getState().firebaseUser, fresh);
 }
 
+/** A membership the server named an entity for. */
+type NamedMembership = UserMembership & { entityId: string };
+
 /**
  * The organizations the user belongs to, each with the roles they hold there.
  *
- * `/entities/all` is scoped to the caller (every entity for an admin), so the
- * membership row is what proves the user belongs to that organization — it also
- * carries their roles on it, which avoids one request per organization.
+ * An admin reads the account's own memberships, which carry the roles the
+ * account holds on each organization. Anyone else falls back to the
+ * caller-scoped entity list, whose membership row proves the organization and
+ * carries its roles too.
  */
-async function loadAccess(userId: string): Promise<IAccessEntry[]> {
+async function loadAccess(
+  userId: string,
+  canReadMemberships: boolean,
+): Promise<IAccessEntry[]> {
+  if (canReadMemberships) {
+    const memberships = await fetchUserMemberships(userId);
+
+    return memberships
+      .filter((membership): membership is NamedMembership => Boolean(membership.entityId))
+      .map((membership) => ({
+        id: membership.entityId,
+        name: membership.entityName ?? 'Untitled organization',
+        entityType: membership.entityType ?? null,
+        roles: membership.roles ?? [],
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   const entities = await fetchAllEntities(true);
 
   return entities
@@ -274,13 +299,15 @@ function AccountPage() {
   }, [id]);
 
   const userId = user?.id;
+  /** Memberships are an admin-only read, whatever account is on screen. */
+  const canReadMemberships = isAdminUser(signedInUser);
   useEffect(() => {
     if (!userId) return;
 
     let active = true;
     setAccessLoading(true);
     setAccessError(null);
-    loadAccess(userId)
+    loadAccess(userId, canReadMemberships)
       .then((rows) => {
         if (active) setAccess(rows);
       })
@@ -295,7 +322,7 @@ function AccountPage() {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, canReadMemberships]);
 
   // The API reports its own build, which is the only way to tell a stale API
   // from a stale site.

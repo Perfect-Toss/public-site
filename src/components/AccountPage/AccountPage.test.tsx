@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   uploadUserThumbnail: vi.fn(),
   deleteUserThumbnail: vi.fn(),
   fetchAllEntities: vi.fn(),
+  fetchUserMemberships: vi.fn(),
   fetchMetaInfo: vi.fn(),
 }));
 
@@ -29,6 +30,7 @@ vi.mock('../../api/api.users', async (importOriginal) => ({
 
 vi.mock('../../api/api.entities', () => ({
   fetchAllEntities: mocks.fetchAllEntities,
+  fetchUserMemberships: mocks.fetchUserMemberships,
 }));
 
 vi.mock('../../api/api.meta', () => ({
@@ -106,6 +108,7 @@ beforeEach(() => {
   mocks.uploadUserThumbnail.mockResolvedValue(undefined);
   mocks.deleteUserThumbnail.mockResolvedValue(undefined);
   mocks.fetchAllEntities.mockResolvedValue([]);
+  mocks.fetchUserMemberships.mockResolvedValue([]);
   mocks.fetchMetaInfo.mockResolvedValue({
     version: '2.4.1',
     lastUpdated: '2026-11-01T09:00:00Z',
@@ -422,6 +425,28 @@ describe('AccountPage — admin route', () => {
     const view = renderManagedPage(actor, null);
 
     expect(await view.findByText('This account could not be found.')).toBeTruthy();
+  });
+
+  it('reads the account memberships for its organization access', async () => {
+    mocks.fetchUserMemberships.mockResolvedValue([
+      { entityId: 'org-2', entityName: 'Zephyr Club', entityType: 'Club', roles: null },
+      { entityId: 'org-1', entityName: 'Atlas Club', entityType: 'Club', roles: ['Coach'] },
+    ]);
+
+    const view = renderManagedPage();
+
+    expect(await view.findByText('Atlas Club')).toBeTruthy();
+    expect(
+      Array.from(view.container.querySelectorAll('.account-access-name')).map(
+        (name) => name.textContent,
+      ),
+    ).toEqual(['Atlas Club', 'Zephyr Club']);
+    // The roles are the ones the account holds on the organization.
+    expect(view.getByText('Coach')).toBeTruthy();
+    expect(view.getByText('No role')).toBeTruthy();
+    expect(view.getByText('2 organizations')).toBeTruthy();
+    expect(mocks.fetchUserMemberships).toHaveBeenCalledWith('user-1');
+    expect(mocks.fetchAllEntities).not.toHaveBeenCalled();
   });
 
   it('offers a super user every role', async () => {
