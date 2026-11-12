@@ -36,7 +36,6 @@ import SubOrgsView from './components/OrganizationPage/views/SubOrgsView'
 import TabletFormPage from './components/AdminTabletsPage/TabletFormPage'
 import TabletTypeFormPage from './components/AdminTabletTypesPage/TabletTypeFormPage'
 import TagFormPage from './components/AdminTagsPage/TagFormPage'
-import UserDetailPage from './components/UserDetailPage'
 import VideoDetailPage from './components/VideoDetailPage'
 import VideosPage from './components/VideosPage'
 import { useAuth } from './contexts/useAuth'
@@ -154,7 +153,8 @@ function AppContent() {
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/new" element={<AddUserPage />} />
           <Route path="users/import" element={<BulkImportPage />} />
-          <Route path="users/:id" element={<UserDetailPage />} />
+          {/* One account screen: the same page as /account, with roles editable. */}
+          <Route path="users/:id" element={<AccountPage />} />
           <Route path="cache" element={<AdminCachePage />} />
           <Route path="*" element={<AdminPage />} />
         </Route>

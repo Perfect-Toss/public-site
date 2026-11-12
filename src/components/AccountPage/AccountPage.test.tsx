@@ -1,13 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import AccountPage from './AccountPage';
 import { AuthContext, type AuthContextType } from '../../contexts/useAuth';
+import { useAuthStore } from '../../stores/authStore';
 import type { User } from '../../api/api.users';
 
 const mocks = vi.hoisted(() => ({
   fetchCurrentUser: vi.fn(),
+  fetchUserById: vi.fn(),
   updateUser: vi.fn(),
   uploadUserThumbnail: vi.fn(),
   deleteUserThumbnail: vi.fn(),
@@ -15,8 +17,11 @@ const mocks = vi.hoisted(() => ({
   fetchMetaInfo: vi.fn(),
 }));
 
-vi.mock('../../api/api.users', () => ({
+// The module's own role helpers stay real — only the requests are faked.
+vi.mock('../../api/api.users', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../api/api.users')>()),
   fetchCurrentUser: mocks.fetchCurrentUser,
+  fetchUserById: mocks.fetchUserById,
   updateUser: mocks.updateUser,
   uploadUserThumbnail: mocks.uploadUserThumbnail,
   deleteUserThumbnail: mocks.deleteUserThumbnail,
@@ -93,7 +98,10 @@ afterEach(cleanup);
 beforeEach(() => {
   // Vitest globals are off, so mock call history is not reset automatically.
   vi.clearAllMocks();
+  // The actor's store carries the roles an admin may grant.
+  useAuthStore.setState({ user: null });
   mocks.fetchCurrentUser.mockResolvedValue(athlete);
+  mocks.fetchUserById.mockResolvedValue(athlete);
   mocks.updateUser.mockResolvedValue(athlete);
   mocks.uploadUserThumbnail.mockResolvedValue(undefined);
   mocks.deleteUserThumbnail.mockResolvedValue(undefined);
@@ -333,5 +341,135 @@ describe('AccountPage', () => {
     fireEvent.click(withPhoto.getByRole('button', { name: 'Remove photo' }));
 
     await waitFor(() => expect(mocks.deleteUserThumbnail).toHaveBeenCalledWith('user-1'));
+  });
+});
+
+/* ─── Admin route: /admin/users/:id ────────────────────────────────────────── */
+
+/** The account an admin opened. */
+const managed: User = {
+  id: 'user-1',
+  email: 'sam@example.com',
+  firstName: 'Sam',
+  lastName: 'Super',
+  roles: ['Admin', 'SuperUser'],
+  isEmailVerified: true,
+};
+
+/** The signed-in admin doing the editing. */
+const actor: User = { id: 'actor-1', email: 'actor@example.com', roles: ['Admin'] };
+
+/** Renders the admin route; the URL (not the auth context) names the account. */
+function renderManagedPage(grantor: User = actor, target: User | null = managed) {
+  const id = target?.id ?? managed.id;
+  mocks.fetchUserById.mockResolvedValue(target);
+  mocks.updateUser.mockResolvedValue(target);
+  // The role rules read the acting user's own roles from the auth store.
+  useAuthStore.setState({ user: grantor });
+
+  const value: AuthContextType = {
+    currentUser: grantor,
+    firebaseUser: null,
+    initializing: false,
+    isAdmin: true,
+    canCreateEvents: true,
+  };
+
+  return render(
+    <MemoryRouter initialEntries={[`/admin/users/${id}`]}>
+      <AuthContext.Provider value={value}>
+        <Routes>
+          <Route path="/admin/users/:id" element={<AccountPage />} />
+        </Routes>
+      </AuthContext.Provider>
+    </MemoryRouter>,
+  );
+}
+
+/** Opens the roles dropdown the admin route shows. */
+async function openRolePicker(grantor: User = actor, target: User = managed) {
+  const view = renderManagedPage(grantor, target);
+
+  await view.findByText('Sam Super');
+  fireEvent.click(document.querySelector('.multi-select-trigger') as HTMLElement);
+
+  return view;
+}
+
+/** The role names the acting user may pick, locked rows excluded. */
+const grantableRoles = () =>
+  Array.from(document.querySelectorAll('.multi-select-option:not(.multi-select-option-locked)')).map(
+    (el) => el.textContent,
+  );
+
+/** The locked rows: roles the acting user may not change. */
+const lockedOptions = () =>
+  Array.from(document.querySelectorAll('.multi-select-option-locked')).map(
+    (el) => el.querySelector('input') as HTMLInputElement,
+  );
+
+describe('AccountPage — admin route', () => {
+  it('shows the account the route names', async () => {
+    const view = renderManagedPage();
+
+    expect(await view.findByText('Sam Super')).toBeTruthy();
+    expect(view.getByText('sam@example.com')).toBeTruthy();
+    expect(mocks.fetchUserById).toHaveBeenCalledWith('user-1');
+    expect(view.getByRole('button', { name: 'Back to users' })).toBeTruthy();
+  });
+
+  it('reports a missing account', async () => {
+    const view = renderManagedPage(actor, null);
+
+    expect(await view.findByText('This account could not be found.')).toBeTruthy();
+  });
+
+  it('offers a super user every role', async () => {
+    await openRolePicker({ ...actor, roles: ['SuperUser'] });
+
+    expect(grantableRoles()).toContain('SuperUser');
+    expect(lockedOptions()).toHaveLength(0);
+  });
+
+  it('keeps the super user role away from an admin', async () => {
+    await openRolePicker();
+
+    expect(grantableRoles()).not.toContain('SuperUser');
+    expect(grantableRoles()).toContain('Admin');
+    expect(grantableRoles()).toContain('OrganizationAdmin');
+  });
+
+  it('shows a held super user role as locked rather than dropping it', async () => {
+    const view = await openRolePicker();
+
+    const [superUser] = lockedOptions();
+    expect(superUser).toBeDefined();
+    expect(superUser.checked).toBe(true);
+    expect(superUser.disabled).toBe(true);
+    expect(view.getByText(/Roles above your own level are locked/)).toBeDefined();
+  });
+
+  it('saves the roles alongside the rest of the profile', async () => {
+    const view = await openRolePicker();
+
+    const adminOption = Array.from(document.querySelectorAll('.multi-select-option')).find(
+      (el) => el.textContent === 'Admin',
+    ) as HTMLElement;
+    fireEvent.click(adminOption);
+
+    fireEvent.click(view.getByRole('button', { name: 'Save changes' }));
+
+    await waitFor(() =>
+      expect(mocks.updateUser).toHaveBeenCalledWith(
+        // The locked role rides along; only the removable one is dropped.
+        expect.objectContaining({ id: 'user-1', roles: ['SuperUser'] }),
+      ),
+    );
+  });
+
+  it('never offers the role picker on your own account', async () => {
+    renderPage();
+
+    expect(document.querySelector('.multi-select-trigger')).toBeNull();
   });
 });
