@@ -33,7 +33,7 @@ import {
   type UpdateUserDto,
   type User,
 } from '../../api/api.users';
-import { StyledSelect, UserAvatar } from '../common';
+import { DatePicker, StyledSelect, UserAvatar } from '../common';
 import {
   fetchAllEntities,
   fetchUserMemberships,
@@ -705,13 +705,12 @@ function AccountPage() {
 
               <div className="account-field">
                 <label htmlFor="account-birthdate">Date of birth</label>
-                <input
+                <DatePicker
                   id="account-birthdate"
-                  type="date"
                   value={form.birthdate}
-                  onChange={(event) => updateField('birthdate', event.target.value)}
+                  onChange={(value) => updateField('birthdate', value)}
                   max={today}
-                  autoComplete="bday"
+                  clearable
                   disabled={readOnly}
                 />
               </div>

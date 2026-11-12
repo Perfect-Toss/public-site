@@ -123,7 +123,8 @@ describe('AccountPage', () => {
     expect(view.getByText('sam@example.com')).toBeTruthy();
     expect(inputValue(view, 'First name')).toBe('Sam');
     expect(inputValue(view, 'Last name')).toBe('Sprinter');
-    expect(inputValue(view, 'Date of birth')).toBe('1998-04-02');
+    // The date field shows the picked day rather than a raw input value.
+    expect(view.getByLabelText('Date of birth').textContent).toBe('Apr 2, 1998');
     // The height picker shows feet/inches, with the metric conversion beside it.
     expect(view.getByLabelText('Height').textContent).toBe('6′ 0″');
     expect(view.container.querySelector('.account-field small')?.textContent).toBe('183 cm');

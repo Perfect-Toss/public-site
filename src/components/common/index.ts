@@ -1,4 +1,9 @@
 export { AudioPlayer, type AudioPlayerProps } from './AudioPlayer';
+export {
+  DatePicker,
+  type DatePickerMode,
+  type DatePickerProps,
+} from './DatePicker';
 export { EntityLogoPicker, type EntityLogoPickerProps } from './EntityLogoPicker';
 export { EventCard, type EventCardProps } from './EventCard';
 export { MetadataItem, type MetadataItemProps } from './MetadataItem';

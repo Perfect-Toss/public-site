@@ -3,6 +3,7 @@ import '../../styles/admin-form.css';
 import './AdminMachinesPage.css';
 
 import type { CreateMachineRequest, UpdateMachineRequest } from '../../api/api.machines';
+import { DatePicker, StyledSelect } from '../common';
 import {
   faArrowLeft,
   faCheck,
@@ -13,7 +14,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { StyledSelect } from '../common';
 import { useMachineStore } from '../../stores/machineStore';
 import { useTabletStore } from '../../stores/tabletStore';
 
@@ -221,11 +221,12 @@ function MachineFormPage() {
           </div>
 
           <div className="form-group">
-            <label>Must-Have Date</label>
-            <input
-              type="date"
+            <label htmlFor="machine-must-have-date">Must-Have Date</label>
+            <DatePicker
+              id="machine-must-have-date"
               value={formData.mustHaveDate}
-              onChange={(e) => setFormData((prev) => ({ ...prev, mustHaveDate: e.target.value }))}
+              onChange={(value) => setFormData((prev) => ({ ...prev, mustHaveDate: value }))}
+              clearable
             />
           </div>
 

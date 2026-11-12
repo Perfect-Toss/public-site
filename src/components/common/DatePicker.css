@@ -1,0 +1,427 @@
+/* ─── DatePicker ─────────────────────────────────────────────────────────
+   Material-style date field + calendar popup. The field mirrors the shared
+   trigger look (StyledSelect / VirtualizedSelect) so a date reads as the same
+   kind of control as a select. The popup is portaled and fixed-positioned so
+   card/modal overflow can never clip it. */
+
+.date-picker {
+  position: relative;
+  width: 100%;
+}
+
+/* ─── Field ─────────────────────────────────────────────────────────────── */
+
+.dp-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  color: #1a1f24;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dp-trigger:hover:not(:disabled) {
+  border-color: #c4c4c4;
+}
+
+.dp-trigger:focus-visible,
+.dp-trigger--open {
+  outline: none;
+  border-color: #cfff04;
+  box-shadow: 0 0 0 2px rgba(207, 255, 4, 0.1);
+}
+
+.dp-trigger:disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.dp-trigger-icon {
+  flex: 0 0 auto;
+  color: #666;
+}
+
+.dp-trigger:disabled .dp-trigger-icon,
+.dp-trigger:disabled .dp-trigger-chevron {
+  color: #bbb;
+}
+
+.dp-trigger-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dp-trigger--empty .dp-trigger-label {
+  color: #999;
+}
+
+.dp-trigger-chevron {
+  flex: 0 0 auto;
+  color: #666;
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.dp-trigger--open .dp-trigger-chevron {
+  transform: rotate(180deg);
+}
+
+.dp-clear {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #666;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.dp-clear:hover {
+  background: #f0f0f0;
+  color: #1a1f24;
+}
+
+/* ─── Popup ─────────────────────────────────────────────────────────────── */
+
+.dp-panel {
+  position: fixed;
+  z-index: 1100;
+  box-sizing: border-box;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  padding: 8px 10px 4px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  color: #1a1f24;
+  font-size: 13px;
+}
+
+.dp-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.dp-title {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 4px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1f24;
+  cursor: pointer;
+}
+
+.dp-title:hover {
+  background: #f4f5f6;
+}
+
+.dp-nav {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #666;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.dp-nav:hover {
+  background: #f0f0f0;
+  color: #1a1f24;
+}
+
+.dp-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.dp-weekday {
+  padding: 4px 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9aa3ab;
+}
+
+.dp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.dp-day {
+  justify-self: center;
+  width: 100%;
+  max-width: 34px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: #1a1f24;
+  cursor: pointer;
+  transition: background-color 0.12s, border-color 0.12s;
+}
+
+.dp-day--blank {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.dp-day:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.dp-day:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(207, 255, 4, 0.55);
+}
+
+.dp-day--today {
+  border-color: #d0d5da;
+  font-weight: 700;
+}
+
+.dp-day--selected,
+.dp-day--selected:hover:not(:disabled) {
+  background: #cfff04;
+  border-color: #cfff04;
+  color: #1a1f24;
+  font-weight: 700;
+}
+
+.dp-day:disabled {
+  color: #c3c8cd;
+  cursor: not-allowed;
+}
+
+/* ─── Month / year grid ─────────────────────────────────────────────────── */
+
+.dp-month-grid,
+.dp-year-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px 0 10px;
+}
+
+.dp-month,
+.dp-year {
+  padding: 10px 4px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1f24;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.dp-month:hover,
+.dp-year:hover {
+  border-color: #cfff04;
+  background: rgba(207, 255, 4, 0.12);
+}
+
+.dp-month--selected,
+.dp-year--selected {
+  background: #cfff04;
+  border-color: #cfff04;
+  font-weight: 700;
+}
+
+/* ─── Time ──────────────────────────────────────────────────────────────── */
+
+.dp-time {
+  --dp-wheel-item: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 10px 2px 6px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.dp-time-label {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a939c;
+}
+
+/* The two wheels share one highlight band across the selected row. */
+.dp-wheels {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.dp-wheel-band {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: var(--dp-wheel-item);
+  transform: translateY(-50%);
+  background: rgba(207, 255, 4, 0.22);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.dp-wheel-col {
+  position: relative;
+  z-index: 1;
+  width: 44px;
+  height: calc(var(--dp-wheel-item) * 3);
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  border-radius: 8px;
+  outline: none;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 30%, #000 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 30%,
+    #000 70%,
+    transparent 100%
+  );
+}
+
+/* Each wheel draws its rows three times; only the middle copy is exposed. */
+.dp-wheel-copy {
+  display: block;
+}
+
+.dp-wheel-col::-webkit-scrollbar {
+  display: none;
+}
+
+.dp-wheel-col:focus-visible {
+  box-shadow: 0 0 0 2px rgba(207, 255, 4, 0.55);
+}
+
+.dp-wheel-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--dp-wheel-item);
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: #77818b;
+  cursor: pointer;
+  scroll-snap-align: center;
+}
+.dp-wheel-item:hover {
+  color: #1a1f24;
+}
+
+.dp-wheel-item--selected {
+  color: #1a1f24;
+  font-weight: 700;
+}
+
+.dp-time-colon {
+  position: relative;
+  z-index: 1;
+  margin-top: -2px;
+  color: #666;
+  font-weight: 700;
+}
+
+.dp-meridiem {
+  position: relative;
+  z-index: 1;
+  padding: 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #1a1f24;
+}
+
+/* ─── Footer ────────────────────────────────────────────────────────────── */
+
+.dp-footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 6px 0 4px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.dp-action {
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.dp-action:hover {
+  background: #f0f0f0;
+}
+
+.dp-action--primary {
+  margin-left: auto;
+  color: #6c7d00;
+}
+
+.dp-action--primary:hover {
+  background: rgba(207, 255, 4, 0.25);
+}

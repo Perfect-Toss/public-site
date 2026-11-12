@@ -14,7 +14,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { DayOfWeek, Event, EventScheduleType } from '../../api/api.events';
 import { Role } from '../../api/api.users';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { OrganizationPicker, StyledSelect, TagPicker, UserPicker } from '../common';
+import { DatePicker, OrganizationPicker, StyledSelect, TagPicker, UserPicker } from '../common';
 import {
   buildCreateEventRequest,
   buildUpdateEventRequest,
@@ -380,23 +380,27 @@ function EventFormPage() {
             <div className="event-form-row">
               <div className="form-group">
                 <label htmlFor="event-start">Starts {isScheduled && '*'}</label>
-                <input
+                <DatePicker
                   id="event-start"
-                  type="datetime-local"
+                  mode="datetime"
+                  minuteStep={15}
                   disabled={!isScheduled}
                   value={form.startDate}
-                  onChange={(e) => setField('startDate', e.target.value)}
+                  onChange={(value) => setField('startDate', value)}
                 />
               </div>
 
               <div className="form-group">
                 <label htmlFor="event-end">Ends (schedule end)</label>
-                <input
+                <DatePicker
                   id="event-end"
-                  type="datetime-local"
+                  mode="datetime"
+                  minuteStep={15}
                   disabled={!isScheduled}
                   value={form.endDate}
-                  onChange={(e) => setField('endDate', e.target.value)}
+                  onChange={(value) => setField('endDate', value)}
+                  placeholder="No end"
+                  clearable
                 />
               </div>
             </div>
