@@ -79,13 +79,17 @@ describe('UpcomingEventsSection', () => {
     expect(screen.getByText('Upcoming Events')).toBeTruthy();
   });
 
-  it('shows an organizer’s event too', async () => {
+  it('shows an organizer’s event with the organizer named', async () => {
     fetchAllEvents.mockResolvedValue([
-      { ...singleEvent('e2', 'Organizer clinic', 3, []), organizers: [{ id: 'a1' }] },
+      {
+        ...singleEvent('e2', 'Organizer clinic', 3, []),
+        organizers: [{ id: 'a1', firstName: 'Ada', lastName: 'Athlete' }],
+      },
     ]);
     renderSection();
 
     expect(await screen.findByText('Organizer clinic')).toBeTruthy();
+    expect(screen.getByText('Ada Athlete')).toBeTruthy();
   });
 
   it('stays hidden when the user is on no roster', async () => {
@@ -104,5 +108,22 @@ describe('UpcomingEventsSection', () => {
 
     expect(screen.queryByText('Upcoming Events')).toBeNull();
     expect(screen.queryByText('Far off clinic')).toBeNull();
+  });
+
+  it('shows the organization, venue, roster size and tags', async () => {
+    fetchAllEvents.mockResolvedValue([
+      {
+        ...singleEvent('e5', 'Tagged clinic', 1),
+        organization: { id: 'org-1', name: 'Perfect Toss' },
+        location: 'Court 3',
+        tags: [{ id: 'tag-1', name: 'Forehand' }],
+      },
+    ]);
+    renderSection();
+
+    expect(await screen.findByText('Perfect Toss')).toBeTruthy();
+    expect(screen.getByText('Court 3')).toBeTruthy();
+    expect(screen.getByText('1 athlete')).toBeTruthy();
+    expect(screen.getByText('Forehand')).toBeTruthy();
   });
 });

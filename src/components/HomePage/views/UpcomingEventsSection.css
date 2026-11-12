@@ -1,10 +1,5 @@
-/* Upcoming events — the current user's own events over the next two weeks. */
-
-.upcoming-events {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
+/* Upcoming events — the current user's own events over the next two weeks,
+   laid out as a horizontal strip like the organizations section. */
 
 /* The header action is a link here, not a button. */
 .upcoming-events-link {
@@ -12,92 +7,27 @@
   text-decoration: none;
 }
 
-.upcoming-day {
+.upcoming-events-scroll {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+  /* Cards take their own height, so one with fewer details is shorter. */
+  align-items: flex-start;
+  overflow-x: auto;
+  /* Room for the cards' hover scale and drop shadow (12px blur + 4px offset
+     + 3% scale), which the scroller would otherwise clip flat. The negative
+     side margins pull that room outside the section so the first card still
+     lines up with the heading. */
+  margin: 0 -20px;
+  padding: 10px 20px 20px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  /* Scrollable, but with no visible scrollbar. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.upcoming-day-label {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #6b7280;
+.upcoming-events-scroll::-webkit-scrollbar {
+  display: none;
 }
 
-.upcoming-day-events {
-  display: flex;
-  flex-direction: column;
-  /* Clips the first/last row's hover background to the rounded corners. */
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-}
 
-.upcoming-event {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  color: inherit;
-  text-decoration: none;
-  border-top: 1px solid #f0f0f0;
-}
-
-.upcoming-event:first-child {
-  border-top: none;
-}
-
-.upcoming-event:hover {
-  background-color: #fafafa;
-}
-
-.upcoming-event-time {
-  flex: 0 0 132px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #1a1f24;
-  white-space: nowrap;
-}
-
-.upcoming-event-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.upcoming-event-name {
-  overflow: hidden;
-  font-size: 15px;
-  font-weight: 600;
-  color: #1a1f24;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.upcoming-event-location {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.upcoming-event-location svg {
-  flex: 0 0 auto;
-}
-
-@media (max-width: 700px) {
-  .upcoming-event {
-    gap: 12px;
-    padding: 12px 14px;
-  }
-
-  .upcoming-event-time {
-    flex-basis: 104px;
-  }
-}
