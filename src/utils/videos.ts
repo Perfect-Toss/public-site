@@ -2,7 +2,6 @@ import type { Video, VideoAccessLevel } from '../api/api.videos';
 
 import type { Entity } from '../api/api.entities';
 import { Role } from './roles';
-import type { Tag } from '../api/api.tags';
 import type { User } from '../api/api.users';
 import { getDisplayName } from './user';
 import videoPlaceholder from '../assets/video-placeholder.svg';
@@ -66,10 +65,4 @@ export function formatEntityNames(entities?: Entity[] | null): string {
 export function formatUserNames(users?: User[] | null): string {
   if (!users || users.length === 0) return '—';
   return users.map(getDisplayName).join(', ');
-}
-
-export function formatTagNames(tags?: Tag[] | null): string {
-  if (!tags || tags.length === 0) return '—';
-  const names = tags.map((t) => t.name).filter(Boolean);
-  return names.length > 0 ? names.join(', ') : '—';
 }

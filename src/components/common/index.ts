@@ -10,6 +10,7 @@ export {
 export { SnackbarProvider } from './Snackbar';
 export { RoleMemberPicker, type RoleMemberPickerProps } from './RoleMemberPicker';
 export { StyledSelect, type StyledSelectProps } from './StyledSelect';
+export { Tag, TagList, type TagProps, type TagListProps, type TagSize } from './Tag';
 export { TagPicker, type TagPickerProps } from './TagPicker';
 export { TruncatedText, type TruncatedTextProps } from './TruncatedText';
 export { useSnackbar, type SnackbarKind } from './useSnackbar';

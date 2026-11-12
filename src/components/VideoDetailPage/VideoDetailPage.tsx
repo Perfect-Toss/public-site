@@ -49,7 +49,7 @@ import { getDisplayName } from '../../utils/user';
 import { isAdminUser } from '../../utils/roles';
 import { useAuth } from '../../contexts/useAuth';
 import { useViewAsTarget } from '../../stores/viewAsStore';
-import { MetadataItem, OrganizationPicker, StyledSelect, UserAvatar, UserInfo, VirtualizedSelect } from '../common';
+import { MetadataItem, OrganizationPicker, StyledSelect, TagList, UserAvatar, UserInfo, VirtualizedSelect } from '../common';
 import {
   formatAspectRatio,
   formatBoolean,
@@ -60,7 +60,6 @@ import {
 } from '../../utils/format';
 import {
   formatEntityNames,
-  formatTagNames,
   formatUserNames,
   highestAccessLevel,
   isVideoOrganizationStaff,
@@ -552,15 +551,7 @@ function VideoDetailPage() {
         </div>
 
         <div className="video-detail-info">
-          {video.tags && video.tags.length > 0 && (
-            <div className="video-detail-tags">
-              {video.tags.map((tag) => (
-                <span key={tag.id} className="video-detail-tag">
-                  {tag.name}
-                </span>
-              ))}
-            </div>
-          )}
+          <TagList tags={video.tags} />
         </div>
 
         {/* ── Access & Sharing ─────────────────────────────────── */}
@@ -743,7 +734,16 @@ function VideoDetailPage() {
               }
             />
             <MetadataItem label="Coaches" value={formatUserNames(video.coaches)} />
-            <MetadataItem label="Tags" value={formatTagNames(video.tags)} />
+            <MetadataItem
+              label="Tags"
+              value={
+                video.tags && video.tags.length > 0 ? (
+                  <TagList tags={video.tags} size="sm" />
+                ) : (
+                  '—'
+                )
+              }
+            />
             <MetadataItem label="Blob path" value={video.blobPath || '—'} />
             {/* ── Admin / audit data (kept at the bottom) ── */}
             <MetadataItem label="Created by" value={renderUserRef(video.createdByUser)} />

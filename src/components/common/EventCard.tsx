@@ -5,6 +5,7 @@ import { faBuilding, faClock, faLocationDot, faUserGroup } from '@fortawesome/fr
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IEventOccurrence } from '../../utils/events';
 import { Link } from 'react-router-dom';
+import { Tag } from './Tag';
 import { UserAvatar } from './UserAvatar';
 import { formatTimeRange } from '../../utils/events';
 import { getDisplayName } from '../../utils/user';
@@ -34,14 +35,7 @@ export function EventCard({ occurrence, dayLabel }: EventCardProps) {
           </span>
         </span>
 
-        {firstTag && (
-          <span className="event-card-tag">
-            {firstTag.colorHex && (
-              <span className="event-card-tag-dot" style={{ backgroundColor: firstTag.colorHex }} />
-            )}
-            {firstTag.name}
-          </span>
-        )}
+        {firstTag && <Tag name={firstTag.name} colorHex={firstTag.colorHex} size="sm" />}
       </span>
 
       <span className="event-card-name">{event.name || 'Untitled event'}</span>

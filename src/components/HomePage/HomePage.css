@@ -621,40 +621,6 @@
   margin: 0;
 }
 
-.review-tags {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.tag {
-  padding: 4px 12px;
-  background: #f0f0f0;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #666;
-}
-
-.tag:first-child {
-  background: rgba(255, 182, 193, 0.2);
-  border-color: rgba(255, 182, 193, 0.5);
-  color: #d63384;
-}
-
-.tag:nth-child(2) {
-  background: rgba(144, 238, 144, 0.2);
-  border-color: rgba(144, 238, 144, 0.5);
-  color: #198754;
-}
-
-.tag:nth-child(3) {
-  background: rgba(255, 215, 0, 0.2);
-  border-color: rgba(255, 215, 0, 0.5);
-  color: #ffc107;
-}
-
 .review-status {
   display: flex;
   align-items: center;

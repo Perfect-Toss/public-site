@@ -634,20 +634,6 @@
   gap: 5px;
 }
 
-.org-event-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.org-event-tag {
-  padding: 2px 8px;
-  border: 1px solid #e0e0e0;
-  border-radius: 999px;
-  font-size: 11px;
-  color: #666;
-}
-
 .org-instance-section + .org-instance-section {
   margin-top: 28px;
 }

@@ -99,6 +99,28 @@ export function tintColor(hex: string | null | undefined, strength: number): str
   return rgbToHex(mix(c.substring(0, 2)), mix(c.substring(2, 4)), mix(c.substring(4, 6)));
 }
 
+/** Lightness a too-pale colour is pulled down to when it has to carry text. */
+const INK_LIGHTNESS = 0.3;
+
+/**
+ * The colour to write text in over white: `hex` itself when it is dark enough,
+ * otherwise the same hue and saturation dropped to a readable lightness — a
+ * pastel stays recognisably pink rather than turning grey.
+ */
+export function inkColor(hex: string | null | undefined): string {
+  const c = (hex ?? '').replace('#', '');
+  if (c.length < 6) return '#000000';
+  if (!isLightColor(c)) return `#${c.toLowerCase()}`;
+
+  const [hue, saturation] = rgbToHsl(
+    parseInt(c.substring(0, 2), 16) / 255,
+    parseInt(c.substring(2, 4), 16) / 255,
+    parseInt(c.substring(4, 6), 16) / 255,
+  );
+  const [r, g, b] = hslToRgb(hue, saturation, INK_LIGHTNESS);
+  return rgbToHex(Math.round(r * 255), Math.round(g * 255), Math.round(b * 255));
+}
+
 /** sRGB relative luminance, matching Dart's `Color.getLuminance()`. */
 function relativeLuminance(r: number, g: number, b: number): number {
   const linearize = (v: number) => {
@@ -112,5 +134,43 @@ function relativeLuminance(r: number, g: number, b: number): number {
 function rgbToHex(r: number, g: number, b: number): string {
   const toHex = (v: number) => v.toString(16).padStart(2, '0');
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+/** Hue (0-1), saturation (0-1) and lightness (0-1) of an RGB colour. */
+function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lightness = (max + min) / 2;
+  if (max === min) return [0, 0, lightness];
+
+  const delta = max - min;
+  const saturation =
+    lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+
+  let hue: number;
+  if (max === r) hue = (g - b) / delta + (g < b ? 6 : 0);
+  else if (max === g) hue = (b - r) / delta + 2;
+  else hue = (r - g) / delta + 4;
+
+  return [hue / 6, saturation, lightness];
+}
+
+/** RGB channels (0-1) for a hue, saturation and lightness (all 0-1). */
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  if (s === 0) return [l, l, l];
+
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  const channel = (t: number) => {
+    let x = t;
+    if (x < 0) x += 1;
+    if (x > 1) x -= 1;
+    if (x < 1 / 6) return p + (q - p) * 6 * x;
+    if (x < 1 / 2) return q;
+    if (x < 2 / 3) return p + (q - p) * (2 / 3 - x) * 6;
+    return p;
+  };
+
+  return [channel(h + 1 / 3), channel(h), channel(h - 1 / 3)];
 }
 

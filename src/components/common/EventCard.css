@@ -74,27 +74,6 @@
   opacity: 0.55;
 }
 
-/* The event's first tag rides at the top-right of the schedule band. */
-.event-card-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: #f1f2f4;
-  color: #4b5563;
-  font-size: 10.5px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.event-card-tag-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex: 0 0 auto;
-}
-
 /* ─── What ────────────────────────────────────────────────────────────────── */
 
 .event-card-name {

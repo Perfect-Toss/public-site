@@ -19,7 +19,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import type { Event, EventInstance } from '../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { UserInfo } from '../common';
+import { Tag, UserInfo } from '../common';
 import {
   describeSchedule,
   eventOccurrencesInRange,
@@ -213,13 +213,7 @@ function EventDetailPage() {
                 </span>
               )}
               {(event.tags ?? []).map((tag) => (
-                <span
-                  key={tag.id}
-                  className="event-detail-tag"
-                  style={tag.colorHex ? { borderColor: tag.colorHex } : undefined}
-                >
-                  {tag.name}
-                </span>
+                <Tag key={tag.id} name={tag.name} colorHex={tag.colorHex} />
               ))}
             </div>
           </div>

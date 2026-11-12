@@ -7,6 +7,7 @@ import type { Event } from '../../../api/api.events';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
 import type { OrganizationPageContext } from '../OrganizationPage';
+import { TagList } from '../../common';
 import { fetchEvents } from '../../../api/api.events';
 import { formatDateTime } from '../../../utils/format';
 import { useCanManageEvents } from '../../../hooks/useCanManageEvents';
@@ -39,15 +40,7 @@ function EventRow({ event }: { event: Event }) {
           <FontAwesomeIcon icon={faUsers} />
           {(event.athletes ?? []).length}
         </span>
-        {(event.tags ?? []).length > 0 && (
-          <span className="org-event-tags">
-            {(event.tags ?? []).map((tag) => (
-              <span key={tag.id} className="org-event-tag" style={tag.colorHex ? { borderColor: tag.colorHex } : undefined}>
-                {tag.name}
-              </span>
-            ))}
-          </span>
-        )}
+        <TagList tags={event.tags} size="sm" />
       </div>
     </Link>
   );

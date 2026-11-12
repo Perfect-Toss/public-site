@@ -6,7 +6,7 @@ import type { Tag } from '../api/api.tags';
 import { colorFor } from './color';
 
 /** The color a tag is shown in — its own, or one derived from its name. */
-export function tagColor(tag: Tag): string {
+export function tagColor(tag: { name?: string | null; colorHex?: string | null }): string {
   // Tags with no stored color fall back to one derived from the name, the same
   // way the tag form derives a color while a new tag is being named.
   return tag.colorHex || colorFor(tag.name ?? '', { forceDark: true });

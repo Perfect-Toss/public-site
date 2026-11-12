@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteVideo, fetchVideos, type ReviewStatus, type Video } from '../../api/api.videos';
-import { UserInfo } from '../common';
+import { TagList, UserInfo } from '../common';
 import { useModalKeyboard } from '../../hooks/useModalKeyboard';
 import { CACHE_KEYS, readCache, writeCache } from '../../utils/pageCache';
 import { formatBytes, formatDateTime, formatDuration, formatEnum } from '../../utils/format';
@@ -108,16 +108,7 @@ function VideoCard({ video, onDelete }: { video: Video; onDelete?: (video: Video
         )}
 
         {video.tags && video.tags.length > 0 && (
-          <div className="video-card-tags">
-            {video.tags.slice(0, 3).map((tag) => (
-              <span key={tag.id} className="video-card-tag">
-                {tag.name}
-              </span>
-            ))}
-            {video.tags.length > 3 && (
-              <span className="video-card-tag">+{video.tags.length - 3}</span>
-            )}
-          </div>
+          <TagList className="video-card-tags" tags={video.tags} max={3} size="sm" />
         )}
 
         <div className="video-card-statuses">

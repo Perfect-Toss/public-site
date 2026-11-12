@@ -1,0 +1,72 @@
+/* ─── Tag ─────────────────────────────────────────────────────────────────
+   THE tag pill. White surface, the tag's colour in the dot, and a legible
+   version of that colour in the border and label — the raw colour on white
+   would disappear for a pale tag. Sizes: md (details, 12px) and sm (cards and
+   dense rows, 11px). */
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  border: 1px solid;
+  border-radius: 999px;
+  background: #fff;
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.tag-chip--md {
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+.tag-chip--sm {
+  padding: 1px 8px;
+  font-size: 11px;
+}
+
+.tag-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tag-chip-dot {
+  flex: 0 0 auto;
+  border-radius: 50%;
+  /* The ring keeps a near-white tag visible as a dot on the white pill. */
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+}
+
+.tag-chip--md .tag-chip-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.tag-chip--sm .tag-chip-dot {
+  width: 6px;
+  height: 6px;
+}
+
+/* The overflow counter wears the pill shape without standing for a tag. */
+.tag-chip--more {
+  border-color: #dcdfe4;
+  background: #f6f7f8;
+  color: #6b7280;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .tag-chip--md {
+    padding: 4px 11px;
+  }
+}

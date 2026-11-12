@@ -203,21 +203,6 @@
   color: #ccc;
 }
 
-.video-detail-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.video-detail-tag {
-  background: #f0f0f0;
-  color: #555;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 999px;
-}
-
 /* ─── Access & Sharing Section ───────────────────────────────────────────── */
 
 .video-access-section {
