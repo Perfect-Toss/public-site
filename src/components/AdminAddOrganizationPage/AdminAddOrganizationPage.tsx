@@ -1,6 +1,8 @@
 import '../../styles/page.css';
 import './AdminAddOrganizationPage.css';
 
+import { AddressFields, OrganizationPicker } from '../common';
+import { addressDraft, hasStreetAddress, toAddressRequest } from '../../utils/address';
 import {
   faArrowLeft,
   faCheck,
@@ -10,9 +12,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useState } from 'react';
 
+import type { AddressRequest } from '../../api/api.addresses';
 import type { CreateEntityRequest } from '../../api/api.entities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { OrganizationPicker } from '../common';
 import { useEntityStore } from '../../stores/entityStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,6 +23,7 @@ function AdminAddOrganizationPage() {
   const { entities: organizations, loadEntities, createEntity } = useEntityStore();
 
   const [form, setForm] = useState({ name: '', description: '', entityType: '', parentEntityId: '' });
+  const [address, setAddress] = useState<AddressRequest>(() => addressDraft());
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -33,11 +36,14 @@ function AdminAddOrganizationPage() {
     setSubmitting(true);
     setResult(null);
     try {
+      // The address is optional, so a blank draft is left out of the request.
+      const addressRequest = hasStreetAddress(address) ? toAddressRequest(address) : null;
       const dto: CreateEntityRequest = {
         name: form.name.trim(),
         description: form.description.trim() || undefined,
         entityType: form.entityType.trim() || undefined,
         parentEntityId: form.parentEntityId || undefined,
+        ...(addressRequest ? { address: addressRequest } : {}),
       };
       await createEntity(dto);
       navigate('/admin/organizations');
@@ -46,7 +52,7 @@ function AdminAddOrganizationPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [form, navigate, createEntity]);
+  }, [form, address, navigate, createEntity]);
 
   return (
     <div className="admin-add-org-page">
@@ -115,6 +121,8 @@ function AdminAddOrganizationPage() {
               rows={4}
             />
           </div>
+
+          <AddressFields idPrefix="org-address" value={address} onChange={setAddress} />
 
           <div className="form-actions">
             <button

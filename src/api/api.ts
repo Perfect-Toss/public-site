@@ -6,6 +6,7 @@
  * 
  *   import { login } from '../api/api.auth';
  *   import { fetchAllUsers, type User } from '../api/api.users';
+ *   import { fetchAddressById } from '../api/api.addresses';
  *   import { fetchEntities } from '../api/api.entities';
  *   import { fetchAllMachines } from '../api/api.machines';
  *   import { fetchAllTablets } from '../api/api.tablets';
@@ -17,6 +18,7 @@
  *   import { fetchTags } from '../api/api.tags';
  */
 
+export * from './api.addresses';
 export * from './api.admin';
 export * from './api.auth';
 export * from './api.eventLogs';

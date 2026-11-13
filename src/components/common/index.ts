@@ -1,3 +1,4 @@
+export { AddressFields, type AddressFieldsProps } from './AddressFields';
 export { AudioPlayer, type AudioPlayerProps } from './AudioPlayer';
 export {
   DatePicker,

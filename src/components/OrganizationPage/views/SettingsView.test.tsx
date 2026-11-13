@@ -31,6 +31,14 @@ vi.mock('@tanstack/react-virtual', () => ({
   }),
 }));
 
+// The region list comes from the API; the address fields must not touch the network.
+vi.mock('../../../api/api.meta', () => ({
+  fetchUsStates: vi.fn(async () => [
+    { code: 'MA', name: 'Massachusetts' },
+    { code: 'NY', name: 'New York' },
+  ]),
+}));
+
 const navigate = vi.fn();
 const onUpdated = vi.fn();
 /** Whether the acting user may manage this organization. */
@@ -329,5 +337,70 @@ describe('SettingsView logo', () => {
 
     expect(view.getByText('Replace logo')).toBeDefined();
     expect(view.getByText('Remove logo')).toBeDefined();
+  });
+});
+
+describe('SettingsView address', () => {
+  const stored: Entity = {
+    id: 'org-1',
+    name: 'Club',
+    address: {
+      id: 'addr-1',
+      line1: '123 Main St',
+      city: 'Boston',
+      region: 'MA',
+      postalCode: '02110',
+      countryCode: 'US',
+    },
+  };
+
+  const typeAddress = (id: string, value: string) =>
+    fireEvent.change(document.getElementById(id) as HTMLInputElement, { target: { value } });
+
+  it('reads the stored address on one line', () => {
+    mockOrganization = stored;
+    const view = renderSettings();
+
+    expect(view.getByText('123 Main St, Boston, MA 02110')).toBeDefined();
+  });
+
+  it('says so when the organization has no address', () => {
+    const view = renderSettings();
+
+    expect(view.getByText('No address provided')).toBeDefined();
+  });
+
+  it('sends the typed address, trimmed, with the rest of the changes', async () => {
+    const view = renderSettings();
+    startEditing(view);
+
+    typeAddress('org-address-line1', '  9 Elm St ');
+    typeAddress('org-address-city', ' Salem ');
+    typeAddress('org-address-postal-code', '01970');
+
+    fireEvent.click(view.getByText('Save Changes'));
+
+    await waitFor(() => expect(updateEntity).toHaveBeenCalledTimes(1));
+    expect(updateEntity.mock.calls[0][1]).toMatchObject({
+      address: {
+        line1: '9 Elm St',
+        city: 'Salem',
+        postalCode: '01970',
+        region: null,
+        countryCode: 'US',
+      },
+    });
+  });
+
+  it('leaves the stored address alone while the street is blank', async () => {
+    mockOrganization = stored;
+    const view = renderSettings();
+    startEditing(view);
+
+    typeAddress('org-address-line1', '   ');
+    fireEvent.click(view.getByText('Save Changes'));
+
+    await waitFor(() => expect(updateEntity).toHaveBeenCalledTimes(1));
+    expect(updateEntity.mock.calls[0][1]).not.toHaveProperty('address');
   });
 });

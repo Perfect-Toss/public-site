@@ -1,9 +1,11 @@
-import { EntityLogoPicker, OrganizationPicker, RoleMemberPicker } from '../../common';
+import { AddressFields, EntityLogoPicker, OrganizationPicker, RoleMemberPicker } from '../../common';
+import { addressDraft, formatAddress, hasStreetAddress, toAddressRequest } from '../../../utils/address';
 import { faEdit, faSave, faTimes, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { isImageFile, normalizeLogoImage } from '../../../utils/image';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 
+import type { AddressRequest } from '../../../api/api.addresses';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { OrganizationPageContext } from '../OrganizationPage';
 import { Role } from '../../../api/api.users';
@@ -35,6 +37,8 @@ function SettingsView() {
     parentEntityId: organization.parentEntityId ?? '',
   });
 
+  const [address, setAddress] = useState<AddressRequest>(() => addressDraft(organization.address));
+
   useEffect(() => {
     if (canEditParent) loadEntities();
   }, [canEditParent, loadEntities]);
@@ -61,15 +65,27 @@ function SettingsView() {
     setSaving(true);
     setSaveError(null);
     try {
+      const parentEntityId = canEditParent
+        ? form.parentEntityId || null
+        : organization.parentEntityId ?? null;
+      // A draft with no street line leaves the stored address untouched.
+      const savedAddress = hasStreetAddress(address) ? toAddressRequest(address) : null;
       const dto: UpdateEntityRequest = {
         ...form,
-        // Without the right to move it, the organization keeps the parent it has.
-        parentEntityId: canEditParent
-          ? form.parentEntityId || null
-          : organization.parentEntityId ?? null,
+        parentEntityId,
+        ...(savedAddress ? { address: savedAddress } : {}),
       };
       await updateEntity(organization.id, dto);
-      onUpdated({ ...organization, ...dto });
+      onUpdated({
+        ...organization,
+        name: form.name,
+        description: form.description,
+        entityType: form.entityType,
+        parentEntityId,
+        address: savedAddress
+          ? { ...savedAddress, id: organization.address?.id ?? '' }
+          : organization.address,
+      });
       setEditing(false);
     } catch {
       setSaveError('Failed to save. Please try again.');
@@ -187,6 +203,7 @@ function SettingsView() {
                 onChange={(e) => setForm((f) => ({ ...f, entityType: e.target.value }))}
               />
             </div>
+            <AddressFields idPrefix="org-address" value={address} onChange={setAddress} />
             {canEditParent && (
               <div className="form-field">
                 <label htmlFor="org-parent">Parent Organization</label>
@@ -231,6 +248,12 @@ function SettingsView() {
               <span className="info-label">Type</span>
               <span className={`info-value${!organization.entityType ? ' empty' : ''}`}>
                 {organization.entityType || '—'}
+              </span>
+            </div>
+            <div className="info-row">
+              <span className="info-label">Address</span>
+              <span className={`info-value${formatAddress(organization.address) ? '' : ' empty'}`}>
+                {formatAddress(organization.address) || 'No address provided'}
               </span>
             </div>
             {canEditParent && (

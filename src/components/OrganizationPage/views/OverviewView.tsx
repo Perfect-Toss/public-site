@@ -42,7 +42,12 @@ function OverviewView() {
     setSaveError(null);
     try {
       await updateEntity(organization.id, form);
-      onUpdated({ ...organization, ...form });
+      onUpdated({
+        ...organization,
+        name: form.name,
+        description: form.description,
+        entityType: form.entityType,
+      });
       setEditing(false);
     } catch {
       setSaveError('Failed to save changes. Please try again.');

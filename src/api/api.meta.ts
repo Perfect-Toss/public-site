@@ -6,6 +6,7 @@ import { api } from './index';
 import type { components } from './schema';
 
 export type MetaResponse = components['schemas']['MetaResponse'];
+export type UsState = components['schemas']['UsState'];
 
 /**
  * Get API meta information including version and user info
@@ -33,6 +34,20 @@ export async function pingApi(): Promise<string> {
   }
   
   return data ?? '';
+}
+
+/**
+ * Get the US states (and DC) accepted as an address region, ordered by name.
+ */
+export async function fetchUsStates(): Promise<UsState[]> {
+  const { data, error } = await api.GET('/api/v1/meta/states', {});
+
+  if (error) {
+    console.error('Failed to fetch US states:', error);
+    throw new Error('Failed to fetch US states');
+  }
+
+  return data || [];
 }
 
 /** @deprecated Use fetchMetaInfo instead */

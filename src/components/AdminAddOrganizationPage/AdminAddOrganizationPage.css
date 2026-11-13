@@ -38,6 +38,11 @@
   padding: 32px;
 }
 
+/* The address grid has no margin of its own; keep it a field apart here. */
+.add-org-form .address-fields {
+  margin-bottom: 20px;
+}
+
 .form-group {
   margin-bottom: 20px;
 }

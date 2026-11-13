@@ -1,0 +1,66 @@
+/* ─── AddressFields ───────────────────────────────────────────────────────
+   Five inputs on a two-column grid: the two street lines span the row, then
+   city / state / ZIP share the next ones. */
+
+.address-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.address-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.address-field-wide,
+.address-field-city,
+.address-field-region {
+  grid-column: span 2;
+}
+
+.address-field-postal {
+  grid-column: 1 / -1;
+}
+
+.address-field label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #666;
+}
+
+.address-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1a1f24;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.address-field input:focus {
+  border-color: #cfff04;
+  box-shadow: 0 0 0 2px rgba(207, 255, 4, 0.15);
+}
+
+@media (max-width: 560px) {
+  .address-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .address-field-wide,
+  .address-field-city,
+  .address-field-region,
+  .address-field-postal {
+    grid-column: 1 / -1;
+  }
+}

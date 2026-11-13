@@ -4,6 +4,145 @@
  */
 
 export interface paths {
+    "/api/v1/addresses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a specific address by its identifier. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the address. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Address"];
+                        "application/json": components["schemas"]["Address"];
+                        "text/json": components["schemas"]["Address"];
+                    };
+                };
+            };
+        };
+        /** Replaces the details of an existing address. */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the address. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description The new address details. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AddressRequest"];
+                    "text/json": components["schemas"]["AddressRequest"];
+                    "application/*+json": components["schemas"]["AddressRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Address"];
+                        "application/json": components["schemas"]["Address"];
+                        "text/json": components["schemas"]["Address"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Deletes an address that no entity references. */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The unique identifier of the address. */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates an address. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description The address details. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AddressRequest"];
+                    "text/json": components["schemas"]["AddressRequest"];
+                    "application/*+json": components["schemas"]["AddressRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["Address"];
+                        "application/json": components["schemas"]["Address"];
+                        "text/json": components["schemas"]["Address"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/cache/user-info": {
         parameters: {
             query?: never;
@@ -1987,6 +2126,44 @@ export interface paths {
                         "text/plain": string;
                         "application/json": string;
                         "text/json": string;
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/meta/states": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets the US states (and DC) accepted as an address region, ordered by name. */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["UsState"][];
+                        "application/json": components["schemas"]["UsState"][];
+                        "text/json": components["schemas"]["UsState"][];
                     };
                 };
             };
@@ -4529,6 +4706,70 @@ export interface components {
             /** @description Gets the MIME type of the inline drawing data. */
             drawingMimeType?: string | null;
         };
+        Address: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            createdBy?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            lastModifiedBy?: string | null;
+            /** Format: date-time */
+            lastModifiedAt?: string | null;
+            isDeleted?: boolean;
+            /** Format: date-time */
+            deletedAt?: string | null;
+            /** Format: uuid */
+            deletedBy?: string | null;
+            createdByUser?: components["schemas"]["UserInfo"];
+            lastModifiedByUser?: components["schemas"]["UserInfo"];
+            deletedByUser?: components["schemas"]["UserInfo"];
+            line1: string | null;
+            line2?: string | null;
+            city?: string | null;
+            region?: string | null;
+            postalCode?: string | null;
+            countryCode?: string | null;
+            /** Format: double */
+            latitude?: number | null;
+            /** Format: double */
+            longitude?: number | null;
+            timeZoneId?: string | null;
+        };
+        /** @description Request model for an address, either on its own or nested in an entity request. */
+        AddressRequest: {
+            /** @description Gets the street address. */
+            line1: string | null;
+            /** @description Gets the second address line (unit, suite, floor). */
+            line2?: string | null;
+            /** @description Gets the city. */
+            city?: string | null;
+            /**
+             * @description Gets the state, province, or region. For a US address a state name is stored as its
+             *     two-letter code.
+             */
+            region?: string | null;
+            /** @description Gets the postal code. */
+            postalCode?: string | null;
+            /** @description Gets the ISO 3166-1 alpha-2 country code (e.g. "US"). Defaults to "US" when omitted. */
+            countryCode?: string | null;
+            /**
+             * Format: double
+             * @description Gets the geocode latitude (-90 to 90).
+             */
+            latitude?: number | null;
+            /**
+             * Format: double
+             * @description Gets the geocode longitude (-180 to 180).
+             */
+            longitude?: number | null;
+            /**
+             * @description Gets the site's time zone. Send an IANA id (e.g. "America/New_York"); a Windows id is
+             *     converted to its IANA equivalent.
+             */
+            timeZoneId?: string | null;
+        };
         /** @description Request model for creating multiple athletes in a batch. */
         CreateAthletesDto: {
             /** @description Gets the list of athletes to create. */
@@ -4552,6 +4793,7 @@ export interface components {
              * @description Gets the optional parent entity identifier.
              */
             parentEntityId?: string | null;
+            address?: components["schemas"]["AddressRequest"];
         };
         /**
          * @description Request model for opening an event instance (a session at an event) by recording its first state,
@@ -4832,6 +5074,9 @@ export interface components {
             /** Format: int32 */
             logoVersion?: number;
             logoUrl?: string | null;
+            /** Format: uuid */
+            addressId?: string | null;
+            address?: components["schemas"]["Address"];
         };
         /** @description Represents an entity access entry. Entity access defaults to Review level. */
         EntityAccessEntry: {
@@ -4873,6 +5118,9 @@ export interface components {
             /** Format: int32 */
             logoVersion?: number;
             logoUrl?: string | null;
+            /** Format: uuid */
+            addressId?: string | null;
+            address?: components["schemas"]["Address"];
             users?: components["schemas"]["EntityMember"][] | null;
         };
         Event: {
@@ -5425,6 +5673,7 @@ export interface components {
              * @description Gets the updated parent entity identifier.
              */
             parentEntityId?: string | null;
+            address?: components["schemas"]["AddressRequest"];
         };
         /**
          * @description Request model for updating an existing event. The organization is immutable; the update
@@ -5669,15 +5918,28 @@ export interface components {
              * @description Gets the event the video was recorded at, or null when it is not tied to one.
              */
             eventId?: string | null;
-            /** @description Gets the optional list of associated entity identifiers. */
+            /**
+             * @description Gets the optional list of associated entity identifiers. Honoured until the video is
+             *     uploaded; a later change returns 409 - change access through the video access
+             *     endpoints instead. Null leaves the associations unchanged; an empty list clears them.
+             */
             associatedEntityIds?: string[] | null;
             /** @description Gets the optional list of tag identifiers. */
             tagIds?: string[] | null;
-            /** @description Gets the optional list of coach user identifiers assigned to this video. */
+            /**
+             * @description Gets the optional list of coach user identifiers assigned to this video. Honoured
+             *     until the video is uploaded; a later change returns 409 - change access through the
+             *     video access endpoints instead. Null leaves the coaches unchanged; an empty list
+             *     clears them.
+             */
             coachIds?: string[] | null;
         };
         /** @enum {string} */
         UploadStatus: "Unknown" | "NotUploaded" | "Pending" | "Uploaded";
+        UsState: {
+            code?: string | null;
+            name?: string | null;
+        };
         User: {
             /** Format: uuid */
             id: string;
