@@ -35,6 +35,7 @@ import {
   removeVideoUserAccess,
   requestDownloadToken,
   shareVideo,
+  videoAssociationsLocked,
   type DeviceOrientation,
   type ReviewStatus,
   type UploadStatus,
@@ -434,7 +435,6 @@ function VideoDetailPage() {
     // The API embeds the event itself; the id alone is the fallback.
     const event = video.event;
     const eventId = event?.id ?? video.eventId;
-
     return (
       <>
         <div className="video-detail-header">
@@ -588,6 +588,13 @@ function VideoDetailPage() {
               <FontAwesomeIcon icon={accessExpanded ? faChevronUp : faChevronDown} />
             </button>
           </div>
+
+          {videoAssociationsLocked(video) && (
+            <p className="access-note">
+              Coaches and entity associations are fixed now that the video is uploaded —
+              share it with an entity to give that entity access.
+            </p>
+          )}
 
           {accessExpanded && (
           accessLoading ? (

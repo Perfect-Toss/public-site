@@ -32,6 +32,20 @@ export type AddVideoReviewRequest = components['schemas']['AddVideoReviewRequest
 // ============================================================================
 
 /**
+ * Association lists (entities, coaches) can only be changed until the video's
+ * file is uploaded; the API answers a later change with 409, so from then on
+ * access is managed through the video access endpoints.
+ */
+export function videoAssociationsLocked(video: Pick<Video, 'uploadStatus'>): boolean {
+  return video.uploadStatus === 'Uploaded';
+}
+
+/** True when the request sets either association list (null leaves it unchanged). */
+export function changesVideoAssociations(videoData: UpdateVideoRequest): boolean {
+  return videoData.associatedEntityIds != null || videoData.coachIds != null;
+}
+
+/**
  * Get all video metadata records with paging
  */
 export async function fetchVideos(
@@ -84,9 +98,22 @@ export async function createVideo(videoData: CreateVideoRequest): Promise<Video 
 }
 
 /**
- * Update an existing video metadata record
+ * Update an existing video metadata record.
+ *
+ * Pass the video so the call refuses an association change once its file is
+ * uploaded, instead of taking a 409 from the API.
  */
-export async function updateVideo(id: string, videoData: UpdateVideoRequest): Promise<Video | null> {
+export async function updateVideo(
+  id: string,
+  videoData: UpdateVideoRequest,
+  video?: Pick<Video, 'uploadStatus'>,
+): Promise<Video | null> {
+  if (video && videoAssociationsLocked(video) && changesVideoAssociations(videoData)) {
+    throw new Error(
+      'Coaches and entity associations are fixed once the video is uploaded. Change access through the video access endpoints instead.',
+    );
+  }
+
   const { data, error } = await api.PUT('/api/v1/videos/{id}', {
     params: { path: { id } },
     body: videoData,
