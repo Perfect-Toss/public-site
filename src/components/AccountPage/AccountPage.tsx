@@ -11,14 +11,19 @@ import {
   faCircleInfo,
   faEye,
   faEyeDropper,
+  faEnvelope,
   faIdBadge,
+  faKey,
+  faMobileScreen,
   faPalette,
   faServer,
   faSitemap,
   faUser,
   faUserShield,
   faXmark,
+  type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons';
+import { faApple, faGoogle } from '@fortawesome/free-brands-svg-icons';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
@@ -40,6 +45,7 @@ import {
   type UserMembership,
 } from '../../api/api.entities';
 import { fetchMetaInfo, type MetaResponse } from '../../api/api.meta';
+import { fetchSignInMethods, type SignInMethodsResponse } from '../../api/api.auth';
 import { Role, assignableRoles, canAssignRole } from '../../utils/roles';
 import { isLightColor } from '../../utils/color';
 import { formatBoolean, formatDate } from '../../utils/format';
@@ -149,6 +155,19 @@ function toUpdateDto(id: string, form: IAccountForm, includeRoles: boolean): Upd
   return dto;
 }
 
+/** How each Firebase provider id is shown. Unknown ids fall back to the raw id. */
+const SIGN_IN_PROVIDERS: Record<string, { label: string; icon: IconDefinition }> = {
+  // Firebase reports both password and magic-link sign-in as `password`.
+  password: { label: 'Email', icon: faEnvelope },
+  'google.com': { label: 'Google', icon: faGoogle },
+  'apple.com': { label: 'Apple', icon: faApple },
+  phone: { label: 'Phone', icon: faMobileScreen },
+};
+
+function describeProvider(providerId: string): { label: string; icon: IconDefinition } {
+  return SIGN_IN_PROVIDERS[providerId] ?? { label: providerId, icon: faKey };
+}
+
 /** One organization the user belongs to, with the roles they hold on it. */
 interface IAccessEntry {
   id: string;
@@ -251,6 +270,9 @@ function AccountPage() {
   const [meta, setMeta] = useState<MetaResponse | null>(null);
   const [metaError, setMetaError] = useState(false);
 
+  const [signInMethods, setSignInMethods] = useState<SignInMethodsResponse | null>(null);
+  const [signInMethodsError, setSignInMethodsError] = useState(false);
+
   const form = draft ?? initialForm;
   const dirty = Boolean(draft && initialForm && !formsMatch(draft, initialForm));
 
@@ -323,6 +345,28 @@ function AccountPage() {
       active = false;
     };
   }, [userId, canReadMemberships]);
+
+  // Sign-in methods are read for the caller's own Firebase identity, so they
+  // only mean anything on `/account` outside a view-as session.
+  const showSignInMethods = !isAdminRoute && !readOnly;
+  useEffect(() => {
+    if (!showSignInMethods) return;
+
+    let active = true;
+    setSignInMethodsError(false);
+    fetchSignInMethods()
+      .then((methods) => {
+        if (active) setSignInMethods(methods);
+      })
+      .catch((error) => {
+        console.error('Failed to load sign-in methods:', error);
+        if (active) setSignInMethodsError(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [showSignInMethods]);
 
   // The API reports its own build, which is the only way to tell a stale API
   // from a stale site.
@@ -952,12 +996,6 @@ function AccountPage() {
               </div>
 
               <dl className="account-facts">
-                {!isAdminRoute && (
-                  <div className="account-fact">
-                    <dt>Sign-in</dt>
-                    <dd>Email magic link</dd>
-                  </div>
-                )}
                 <div className="account-fact">
                   <dt>Status</dt>
                   <dd
@@ -986,6 +1024,42 @@ function AccountPage() {
                 </div>
               </dl>
             </section>
+
+            {/* Sign-in methods (own account only) */}
+            {showSignInMethods && (
+              <section className="info-card account-card">
+                <div className="info-card-header">
+                  <span className="info-card-title">
+                    <FontAwesomeIcon icon={faKey} /> Sign-in methods
+                  </span>
+                </div>
+
+                {signInMethodsError ? (
+                  <p className="account-access-status error">Could not load sign-in methods.</p>
+                ) : !signInMethods ? (
+                  <p className="account-access-status">Loading sign-in methods&hellip;</p>
+                ) : !signInMethods.providers?.length ? (
+                  <p className="account-access-status">No sign-in methods are linked.</p>
+                ) : (
+                  <ul className="account-providers">
+                    {signInMethods.providers.map((providerId) => {
+                      const { label, icon } = describeProvider(providerId);
+                      return (
+                        <li key={providerId} className="account-provider">
+                          <span className="account-provider-name">
+                            <FontAwesomeIcon icon={icon} fixedWidth aria-hidden="true" />
+                            {label}
+                          </span>
+                          {providerId === signInMethods.signInProvider && (
+                            <span className="account-provider-current">Current session</span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
+            )}
 
             {/* Access */}
             <section className="info-card account-card">

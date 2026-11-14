@@ -50,6 +50,23 @@ export async function createSession(): Promise<User> {
   return data.user;
 }
 
+export type SignInMethodsResponse = components['schemas']['SignInMethodsResponse'];
+
+/**
+ * The sign-in methods linked to the signed-in Firebase identity. Always the
+ * caller's own — there is no way to read another account's methods.
+ */
+export async function fetchSignInMethods(): Promise<SignInMethodsResponse> {
+  const { data, error } = await api.GET('/api/v1/auth/sign-in-methods', {});
+
+  if (error || !data) {
+    console.error('Failed to fetch sign-in methods:', error);
+    throw new Error('Failed to fetch sign-in methods');
+  }
+
+  return data;
+}
+
 /**
  * Look up the account for an invite-only sign-in (magic link, password). The
  * API answers 401 when no account holds the identity's email, which is

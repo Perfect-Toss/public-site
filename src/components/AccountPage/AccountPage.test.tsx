@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   fetchAllEntities: vi.fn(),
   fetchUserMemberships: vi.fn(),
   fetchMetaInfo: vi.fn(),
+  fetchSignInMethods: vi.fn(),
 }));
 
 // The module's own role helpers stay real — only the requests are faked.
@@ -35,6 +36,10 @@ vi.mock('../../api/api.entities', () => ({
 
 vi.mock('../../api/api.meta', () => ({
   fetchMetaInfo: mocks.fetchMetaInfo,
+}));
+
+vi.mock('../../api/api.auth', () => ({
+  fetchSignInMethods: mocks.fetchSignInMethods,
 }));
 
 // Build metadata is injected by Vite, which is not running here.
@@ -109,6 +114,10 @@ beforeEach(() => {
   mocks.deleteUserThumbnail.mockResolvedValue(undefined);
   mocks.fetchAllEntities.mockResolvedValue([]);
   mocks.fetchUserMemberships.mockResolvedValue([]);
+  mocks.fetchSignInMethods.mockResolvedValue({
+    providers: ['password', 'google.com'],
+    signInProvider: 'google.com',
+  });
   mocks.fetchMetaInfo.mockResolvedValue({
     version: '2.4.1',
     lastUpdated: '2026-11-01T09:00:00Z',
@@ -116,6 +125,26 @@ beforeEach(() => {
 });
 
 describe('AccountPage', () => {
+  it('lists the linked sign-in methods and marks the current one', async () => {
+    const view = renderPage();
+
+    await waitFor(() => expect(view.getByText('Google')).toBeTruthy());
+    const rows = [...view.container.querySelectorAll('.account-provider')];
+    expect(rows.map((row) => row.querySelector('.account-provider-name')?.textContent)).toEqual([
+      'Email',
+      'Google',
+    ]);
+    expect(rows[1].querySelector('.account-provider-current')?.textContent).toBe('Current session');
+    expect(rows[0].querySelector('.account-provider-current')).toBeNull();
+  });
+
+  it('reports when the sign-in methods cannot be loaded', async () => {
+    mocks.fetchSignInMethods.mockRejectedValue(new Error('offline'));
+    const view = renderPage();
+
+    await waitFor(() => expect(view.getByText('Could not load sign-in methods.')).toBeTruthy());
+  });
+
   it('shows the profile fields a user can change', () => {
     const view = renderPage();
 
@@ -426,6 +455,14 @@ describe('AccountPage — admin route', () => {
     const view = renderManagedPage(actor, null);
 
     expect(await view.findByText('This account could not be found.')).toBeTruthy();
+  });
+
+  it('hides sign-in methods, which only describe the caller', async () => {
+    const view = renderManagedPage();
+
+    expect(await view.findByText('Sam Super')).toBeTruthy();
+    expect(view.queryByText('Sign-in methods')).toBeNull();
+    expect(mocks.fetchSignInMethods).not.toHaveBeenCalled();
   });
 
   it('reads the account memberships for its organization access', async () => {
