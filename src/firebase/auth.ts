@@ -61,6 +61,11 @@ export const describeSignInError = (error: unknown, method: 'provider' | 'passwo
     case 'auth/user-not-found':
     case 'auth/wrong-password':
       return 'Incorrect email or password.';
+    case 'auth/admin-restricted-operation':
+      // The Firebase project refuses to create new users from the client
+      // (Authentication → Settings → User actions → "Enable create (sign-up)"
+      // is off), so only an identity Firebase already knows can sign in.
+      return 'No account found for this email. Please contact support.';
     case 'auth/too-many-requests':
       return 'Too many attempts. Please wait a few minutes and try again.';
     case 'auth/user-disabled':
