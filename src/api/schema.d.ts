@@ -379,6 +379,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolves the local account for the identity in the presented Firebase ID token, which
+         *     the client obtained by signing in with Google, Apple or a password. The account is
+         *     created on the first sign-in, or linked when a row already holds the token's email;
+         *     the client calls this once per sign-in, before any other endpoint.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Profile details the client still has from the provider, if any. */
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateSessionRequest"];
+                    "text/json": components["schemas"]["CreateSessionRequest"];
+                    "application/*+json": components["schemas"]["CreateSessionRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SessionResponse"];
+                        "application/json": components["schemas"]["SessionResponse"];
+                        "text/json": components["schemas"]["SessionResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/token": {
         parameters: {
             query?: never;
@@ -414,6 +464,48 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/sign-in-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lists the sign-in methods linked to the caller's account (password, Google, Apple, ...).
+         *     The account record is read from Firebase with the caller's own ID token, so the API
+         *     stores no copy of it; nothing but the request's own identity is ever looked up.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SignInMethodsResponse"];
+                        "application/json": components["schemas"]["SignInMethodsResponse"];
+                        "text/json": components["schemas"]["SignInMethodsResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4933,6 +5025,16 @@ export interface components {
              */
             tabletId?: string | null;
         };
+        /**
+         * @description Optional profile details the client still has from the provider. Apple shares the user's
+         *     name only with the first authorization, so the client sends it here when it holds one.
+         */
+        CreateSessionRequest: {
+            /** @description Gets the given name, when the provider shared one. */
+            firstName?: string | null;
+            /** @description Gets the family name, when the provider shared one. */
+            lastName?: string | null;
+        };
         /** @description Request model for creating a new tablet. */
         CreateTabletRequest: {
             /** @description Gets the name of the tablet. */
@@ -5487,6 +5589,13 @@ export interface components {
              */
             sasUrl: string | null;
         };
+        /** @description The local account resolved for the signed-in identity, and how it was matched. */
+        SessionResponse: {
+            user?: components["schemas"]["User"];
+            outcome?: components["schemas"]["SessionUserOutcome"];
+        };
+        /** @enum {string} */
+        SessionUserOutcome: "Unknown" | "Existing" | "Linked" | "Created";
         /**
          * @description Request model for recording one more state of an event instance. The instance is addressed by its
          *     own id in the route: `/events/{eventId}/instances/{id}`.
@@ -5529,6 +5638,22 @@ export interface components {
              */
             entityId?: string | null;
             accessLevel?: components["schemas"]["VideoAccessLevel"];
+        };
+        /**
+         * @description The sign-in methods linked to the caller's account, read from Firebase on each request
+         *     rather than stored locally.
+         */
+        SignInMethodsResponse: {
+            /**
+             * @description Provider ids as Firebase reports them: `password`, `google.com`, `apple.com`,
+             *     `phone`, or a custom provider id.
+             */
+            providers?: string[] | null;
+            /**
+             * @description The provider this session signed in with (from the ID token), or null when the token does
+             *     not say.
+             */
+            signInProvider?: string | null;
         };
         /** @description One session in an offline sync batch. */
         SyncEventInstanceItem: {

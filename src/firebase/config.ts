@@ -36,4 +36,9 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
+// Apple only puts the email in the token when it is requested. Users who choose
+// "Hide My Email" are turned away (see AuthProvider).
+appleProvider.addScope('email');
+appleProvider.addScope('name');
+
 export default app;

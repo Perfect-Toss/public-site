@@ -71,7 +71,7 @@ function Login() {
           }
         }
       } else {
-        // Otherwise check for redirect result (Google/Apple)
+        // Otherwise check for a redirect result (Google/Apple, when a popup was blocked)
         const { user, error: authError } = await handleRedirectResult();
         
         if (authError) {
@@ -103,31 +103,27 @@ function Login() {
     setAuthError(null); // consume so it doesn't re-trigger
   }, [authError, setAuthError]);
 
-  const handleContinueWithApple = async () => {
+  const continueWith = async (signIn: typeof signInWithGoogle) => {
     setLoading(true);
     setError('');
-    const { error: authError } = await signInWithApple();
-    
+    const { user, error: authError } = await signIn();
+
+    if (user) {
+      // Signed in — AuthProvider resolves the account and routes on from here,
+      // or reports a failure through the auth store.
+      return;
+    }
     if (authError) {
       setError(authError);
-      console.error('Apple Sign-In Error:', authError);
-      setLoading(false);
     }
-    // If no error, the page will redirect
+    // No user and no error: the popup was dismissed (or the browser blocked it
+    // and is now redirecting).
+    setLoading(false);
   };
 
-  const handleContinueWithGoogle = async () => {
-    setLoading(true);
-    setError('');
-    const { error: authError } = await signInWithGoogle();
-    
-    if (authError) {
-      setError(authError);
-      console.error('Google Sign-In Error:', authError);
-      setLoading(false);
-    }
-    // If no error, the page will redirect
-  };
+  const handleContinueWithApple = () => continueWith(signInWithApple);
+
+  const handleContinueWithGoogle = () => continueWith(signInWithGoogle);
 
   const handleEmailContinue = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

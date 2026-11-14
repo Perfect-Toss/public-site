@@ -26,6 +26,7 @@ import EventsView from './components/OrganizationPage/views/EventsView'
 import HomePage from './components/HomePage'
 import HomeView from './components/HomePage/views/HomeView'
 import Login from './components/Login'
+import PasswordLogin from './components/Login/PasswordLogin'
 import MachineFormPage from './components/AdminMachinesPage/MachineFormPage'
 import MembersView from './components/OrganizationPage/views/MembersView'
 import OrganizationPage from './components/OrganizationPage'
@@ -101,6 +102,12 @@ function AppContent() {
       <Route path="/login" element={
         <LoginRoute>
           <Login />
+        </LoginRoute>
+      } />
+      {/* Not linked from anywhere — reached only by URL. */}
+      <Route path="/login/password" element={
+        <LoginRoute>
+          <PasswordLogin />
         </LoginRoute>
       } />
       

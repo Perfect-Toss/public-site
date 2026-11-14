@@ -1,5 +1,7 @@
+import { FirebaseError } from 'firebase/app';
 import {
   ActionCodeSettings,
+  AuthProvider,
   Unsubscribe,
   User,
   createUserWithEmailAndPassword,
@@ -11,6 +13,7 @@ import {
   sendSignInLinkToEmail,
   signInWithEmailAndPassword,
   signInWithEmailLink,
+  signInWithPopup,
   signInWithRedirect,
   signOut
 } from 'firebase/auth';
@@ -34,29 +37,64 @@ const actionCodeSettings: ActionCodeSettings = {
   handleCodeInApp: true,
 };
 
-// Sign in with Google (using redirect to avoid popup blockers)
-export const signInWithGoogle = async (): Promise<AuthResult> => {
-  try {
-    await signInWithRedirect(auth, googleProvider);
-    // The page will redirect, so we don't return anything here
-    return { user: null, error: null };
-  } catch (error) {
-    console.error('Error signing in with Google:', error);
-    return { user: null, error: (error as Error).message };
+// Popup errors that mean the user backed out; nothing to report.
+const CANCELLED_POPUP_CODES = new Set([
+  'auth/popup-closed-by-user',
+  'auth/cancelled-popup-request',
+  'auth/user-cancelled',
+]);
+
+/** Turn a Firebase sign-in error into a message for the login page. */
+export const describeSignInError = (error: unknown, method: 'provider' | 'password' = 'provider'): string | null => {
+  const code = error instanceof FirebaseError ? error.code : null;
+  if (code && CANCELLED_POPUP_CODES.has(code)) return null;
+  switch (code) {
+    case 'auth/account-exists-with-different-credential':
+      return 'An account already exists with this email using a different sign-in method. Please sign in that way first.';
+    case 'auth/invalid-credential':
+      // For Google/Apple this is the provider rejecting Firebase's own
+      // configuration (e.g. a wrong client secret), not anything the user typed.
+      return method === 'password'
+        ? 'Incorrect email or password.'
+        : 'Sign-in with this provider is not working right now. Please try another method or contact support.';
+    case 'auth/invalid-email':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return 'Incorrect email or password.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please wait a few minutes and try again.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Please contact support.';
+    case 'auth/unauthorized-domain':
+      return 'Sign-in is not enabled for this site. Please contact support.';
+    case 'auth/network-request-failed':
+      return 'Network error. Check your connection and try again.';
+    default:
+      return (error as Error)?.message ?? 'Sign-in failed. Please try again.';
   }
 };
 
-// Sign in with Apple (using redirect to avoid popup blockers)
-export const signInWithApple = async (): Promise<AuthResult> => {
+// Popup sign-in. The auth domain (firebaseapp.com) differs from the site's
+// domain, and browsers partition storage across sites, so a redirect sign-in
+// returns with no result. A popup avoids that; a redirect is only the fallback
+// when the browser blocks the popup.
+const signInWithProvider = async (provider: AuthProvider, label: string): Promise<AuthResult> => {
   try {
-    await signInWithRedirect(auth, appleProvider);
-    // The page will redirect, so we don't return anything here
-    return { user: null, error: null };
+    const result = await signInWithPopup(auth, provider);
+    return { user: result.user, error: null };
   } catch (error) {
-    console.error('Error signing in with Apple:', error);
-    return { user: null, error: (error as Error).message };
+    if (error instanceof FirebaseError && error.code === 'auth/popup-blocked') {
+      await signInWithRedirect(auth, provider);
+      return { user: null, error: null };
+    }
+    console.error(`Error signing in with ${label}:`, error);
+    return { user: null, error: describeSignInError(error) };
   }
 };
+
+export const signInWithGoogle = (): Promise<AuthResult> => signInWithProvider(googleProvider, 'Google');
+
+export const signInWithApple = (): Promise<AuthResult> => signInWithProvider(appleProvider, 'Apple');
 
 // Get redirect result (call this on page load)
 export const handleRedirectResult = async (): Promise<AuthResult> => {
@@ -68,7 +106,7 @@ export const handleRedirectResult = async (): Promise<AuthResult> => {
     return { user: null, error: null };
   } catch (error) {
     console.error('Error handling redirect result:', error);
-    return { user: null, error: (error as Error).message };
+    return { user: null, error: describeSignInError(error) };
   }
 };
 
@@ -136,7 +174,7 @@ export const signInWithEmail = async (email: string, password: string): Promise<
     return { user: result.user, error: null };
   } catch (error) {
     console.error('Error signing in with email:', error);
-    return { user: null, error: (error as Error).message };
+    return { user: null, error: describeSignInError(error, 'password') };
   }
 };
 
