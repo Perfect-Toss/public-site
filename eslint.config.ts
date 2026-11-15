@@ -20,7 +20,7 @@ export default [
         sourceType: 'module',
       },
     },
-    settings: { react: { version: '18.3' } },
+    settings: { react: { version: '19.3' } },
     plugins: {
       react,
       'react-hooks': reactHooks,
@@ -31,7 +31,10 @@ export default [
       ...js.configs.recommended.rules,
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
-      ...reactHooks.configs.recommended.rules,
+      // Only the classic hooks rules. react-hooks v7's `recommended` also turns on the React
+      // Compiler rules (set-state-in-effect, refs, …); adopting those is a separate refactor.
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       'react/jsx-no-target-blank': 'off',
       'react-refresh/only-export-components': [
         'warn',

@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render } from '@testing-library/react';
 import { UserAvatar } from './UserAvatar';
 import { colorFor, tintColor } from '../../utils/color';
 
-// jsdom normalises inline colours to `rgb()`.
+// jsdom normalises inline colours to `rgb()`, and box-shadow to `<color> 0px 0px 0px <n>px`.
 const asRgb = (hex: string) =>
   `rgb(${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)})`;
 
@@ -26,7 +26,7 @@ describe('UserAvatar', () => {
     const photo = container.querySelector('.user-avatar-img') as HTMLElement;
 
     // The colour is a ring AROUND the avatar…
-    expect(root.style.boxShadow).toContain('#E05353');
+    expect(root.style.boxShadow).toContain(asRgb('#E05353'));
     // …and the image itself is untouched.
     expect(root.style.width).toBe('40px');
     expect(photo.style.width).toBe('40px');
@@ -39,18 +39,18 @@ describe('UserAvatar', () => {
       ) as HTMLElement).style.boxShadow;
 
     // A 3px ring looked like a heavy border on a small avatar.
-    expect(shadow(24)).toContain('0 0 0 2px');
-    expect(shadow(32)).toContain('0 0 0 2px');
-    expect(shadow(72)).toContain('0 0 0 3px');
+    expect(shadow(24)).toContain('0px 0px 0px 2px');
+    expect(shadow(32)).toContain('0px 0px 0px 2px');
+    expect(shadow(72)).toContain('0px 0px 0px 3px');
     // The large avatar keeps the full ring.
-    expect(shadow(88)).toContain('0 0 0 4px');
+    expect(shadow(88)).toContain('0px 0px 0px 4px');
   });
 
   it('rings a photo in the name-derived colour when the user has no color', () => {
     const { container } = render(<UserAvatar user={withPhoto} size={40} />);
 
     const root = container.querySelector('.user-avatar') as HTMLElement;
-    expect(root.style.boxShadow).toBe(`0 0 0 2px ${colorFor('Ada Lovelace')}`);
+    expect(root.style.boxShadow).toBe(`${asRgb(colorFor('Ada Lovelace'))} 0px 0px 0px 2px`);
     expect((container.querySelector('.user-avatar-img') as HTMLElement).style.width).toBe('40px');
   });
 
@@ -63,7 +63,7 @@ describe('UserAvatar', () => {
     const ringColor = colorFor('Karen Cooper');
 
     // Same ring as a user with a chosen colour…
-    expect(root.style.boxShadow).toBe(`0 0 0 2px ${ringColor}`);
+    expect(root.style.boxShadow).toBe(`${asRgb(ringColor)} 0px 0px 0px 2px`);
     // …and a solid, much paler version of that colour behind the initials.
     expect(disc.style.backgroundColor).toBe(asRgb(tintColor(ringColor, 0.12)));
   });
@@ -106,7 +106,7 @@ describe('UserAvatar', () => {
     const disc = container.querySelector('.user-avatar-initials') as HTMLElement;
     expect(container.querySelector('.user-avatar-img')).toBeNull();
     // The colour is the ring, exactly as it is around a photo…
-    expect(root.style.boxShadow).toContain('#E05353');
+    expect(root.style.boxShadow).toContain(asRgb('#E05353'));
     // …so the initials sit on their own disc instead of being filled with it.
     expect(disc.textContent).toBe('AL');
     expect(disc.style.width).toBe('40px');

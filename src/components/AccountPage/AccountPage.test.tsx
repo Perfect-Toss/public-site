@@ -245,7 +245,7 @@ describe('AccountPage', () => {
     const plain = renderPage({ ...athlete, thumbnailUrl: 'https://img/me.png' });
     expect(photo(plain).style.width).toBe('88px');
     // Without a chosen colour the ring still carries the name-derived colour.
-    expect(avatar(plain).style.boxShadow).toContain('0 0 0 4px');
+    expect(avatar(plain).style.boxShadow).toContain('0px 0px 0px 4px');
     cleanup();
 
     // A colour draws a ring AROUND the photo — the photo itself is unchanged.
@@ -256,7 +256,8 @@ describe('AccountPage', () => {
     });
     expect(photo(ringed).style.width).toBe('88px');
     expect(avatar(ringed).style.width).toBe('88px');
-    expect(avatar(ringed).style.boxShadow).toContain('#E05353');
+    // #E05353, as jsdom serialises it.
+    expect(avatar(ringed).style.boxShadow).toContain('rgb(224, 83, 83)');
   });
 
   it('clears the avatar color when a photo is uploaded', async () => {
