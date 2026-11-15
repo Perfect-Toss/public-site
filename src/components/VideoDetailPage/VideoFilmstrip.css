@@ -15,10 +15,12 @@
   background: #2a2f36; /* visible bar behind the sprite */
 }
 
-/* Thin scrub bar shown when no filmstrip is available (older uploads). */
+/* Thin scrub bar shown when no filmstrip is available (older uploads). A
+   capsule, so it matches the review markers drawn on it and its round ends
+   cradle a dot sitting at either end. */
 .video-filmstrip--thin {
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
 }
 
 /* Rounded clip for the sprite only. */
@@ -69,7 +71,7 @@
 }
 
 .video-filmstrip--thin .vf-buffer-range {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 /* Review-marker layer, in flow at the bottom of the bar (the bar's min-height
@@ -89,10 +91,11 @@
   position: absolute;
   top: -3px;
   bottom: -3px;
-  width: 1px;
+  width: 2px;
   transform: translateX(-50%);
-  border-radius: 1px;
+  border-radius: 2px;
   background: #cfff04;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
   pointer-events: none;
   z-index: 5;
   transition: width 0.15s ease;
@@ -100,5 +103,5 @@
 
 /* Grow the line slightly while the pointer is over the bar. */
 .video-filmstrip:hover .vf-playhead {
-  width: 2px;
+  width: 3px;
 }

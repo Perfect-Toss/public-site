@@ -35,7 +35,6 @@ import {
   removeVideoUserAccess,
   requestDownloadToken,
   shareVideo,
-  videoAssociationsLocked,
   type DeviceOrientation,
   type ReviewStatus,
   type UploadStatus,
@@ -193,6 +192,17 @@ function VideoDetailPage() {
     } finally {
       setTokenLoading(false);
     }
+  }, [id]);
+
+  /**
+   * Mint a fresh playback link for the player when its SAS expires. Handed to
+   * the player rather than stored in `videoUrl`, which keys the player — a new
+   * key would remount it and lose the position, buffer and review state.
+   */
+  const refreshVideoUrl = useCallback(async () => {
+    if (!id) return null;
+    const token = await requestDownloadToken(id);
+    return token?.sasUrl ?? null;
   }, [id]);
 
   const loadAccess = useCallback(async () => {
@@ -493,6 +503,7 @@ function VideoDetailPage() {
               key={videoUrl}
               ref={videoRef}
               videoUrl={videoUrl}
+              refreshVideoUrl={refreshVideoUrl}
               poster={poster}
               filmstripUrl={video.filmstripUrl}
               reviews={reviews}
@@ -504,6 +515,7 @@ function VideoDetailPage() {
               canReview={canReview}
               onAdded={() => void reload()}
               topBar={
+                <>
                 <div className="video-cvp-info">
                   {video.owner && (
                     <span className="video-cvp-info-owner">
@@ -522,6 +534,9 @@ function VideoDetailPage() {
                     </span>
                   </div>
                 </div>
+                {/* Tags overlay the top-right corner, across from the owner. */}
+                <TagList tags={video.tags} className="video-cvp-tags" />
+                </>
               }
             />
           ) : notUploaded ? (
@@ -550,9 +565,13 @@ function VideoDetailPage() {
 
         </div>
 
-        <div className="video-detail-info">
-          <TagList tags={video.tags} />
-        </div>
+        {/* With a player the tags live in its top-right overlay; without one
+            (not uploaded / no playback link) they stay below the stage. */}
+        {!videoUrl && (
+          <div className="video-detail-info">
+            <TagList tags={video.tags} />
+          </div>
+        )}
 
         {/* ── Access & Sharing ─────────────────────────────────── */}
         {canEdit && (
@@ -589,12 +608,6 @@ function VideoDetailPage() {
             </button>
           </div>
 
-          {videoAssociationsLocked(video) && (
-            <p className="access-note">
-              Coaches and entity associations are fixed now that the video is uploaded —
-              share it with an entity to give that entity access.
-            </p>
-          )}
 
           {accessExpanded && (
           accessLoading ? (

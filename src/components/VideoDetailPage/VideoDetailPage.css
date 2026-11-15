@@ -13,7 +13,8 @@
      padding) and pull up so there's no initial gap above the header. The
      padding variables come from .main-content, so this stays in step with
      every breakpoint without a media query of its own. */
-  margin: calc(-1 * var(--content-pad-y, 40px)) calc(-1 * var(--content-pad-x, 40px)) 20px;
+  /* No bottom gap: the player sits flush under the header. */
+  margin: calc(-1 * var(--content-pad-y, 40px)) calc(-1 * var(--content-pad-x, 40px)) 0;
   position: sticky;
   /* Stick below the mobile top bar (0 when the shell is desktop). */
   top: var(--mobile-topbar-h, 0px);
@@ -102,22 +103,21 @@
 
 .video-detail-stage {
   position: relative;
-  margin-bottom: 20px;
-  /* Fill the viewport below the sticky header, with a bottom gap that matches
-     the space between the header and the video (65px header + 20px top gap +
-     video + 20px bottom gap = 100vh). dvh keeps that honest in mobile
-     browsers whose toolbars collapse on scroll. */
-  height: calc(100vh - 65px - 40px);
-  height: calc(100dvh - 65px - 40px);
+  /* Full-bleed like the header: cancel .main-content's side padding so the
+     player spans the whole content area, then leave the usual gap before the
+     sections below it. */
+  margin: 0 calc(-1 * var(--content-pad-x, 40px)) 20px;
+  /* Fill the viewport below the sticky 65px header. dvh keeps that honest in
+     mobile browsers whose toolbars collapse on scroll. */
+  height: calc(100vh - 65px);
+  height: calc(100dvh - 65px);
   min-height: 320px;
 }
 
 .video-detail-player {
   height: 100%;
   background: #000;
-  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .video-detail-video {
@@ -166,6 +166,16 @@
   color: #fff;
   font-size: 13px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+/* Tags pinned to the overlay's top-right; long lists wrap leftward rather than
+   running into the owner info. */
+.video-cvp-tags {
+  margin-left: auto;
+  align-self: flex-start;
+  justify-content: flex-end;
+  max-width: 50%;
+  padding-left: 16px;
 }
 
 .video-cvp-info-meta {

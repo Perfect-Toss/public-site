@@ -52,54 +52,68 @@
   border: none;
   padding: 0;
   position: absolute;
+  box-sizing: border-box;
 }
 
-/* Marker dot — same centering as the anchor control's .vr-anchor-dot. */
+/* Marker dot — centered on its time. `--edge-shift` (set inline) nudges dots
+   at either end of the bar inward so they never hang off it. A thin dark
+   outline separates the reviewer color from any frame or bar behind it. */
 .video-timeline-marker {
+  --marker-x: calc(-50% + var(--edge-shift, 0px));
   width: 12px;
   height: 12px;
   border-radius: 50%;
   /* Fallback; the per-reviewer color is applied inline. */
   background: #cfff04;
-  border: 2px solid #1a1f24;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
-  transform: translate(-50%, -50%);
-  transition: transform 0.15s ease;
+  box-shadow:
+    0 0 0 1.5px rgba(10, 12, 15, 0.6),
+    0 1px 3px rgba(0, 0, 0, 0.45);
+  transform: translate(var(--marker-x), -50%);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
   /* Keep snapshot/general dots on top of segment bars and the progress fill. */
   z-index: 3;
 }
 
+/* Hover/selected: the same rings as the segment capsules below, so both
+   marker kinds respond identically. */
 .video-timeline-marker:hover {
-  transform: translate(-50%, -50%) scale(1.3);
+  box-shadow:
+    0 0 0 1.5px rgba(10, 12, 15, 0.6),
+    0 0 0 3px rgba(255, 255, 255, 0.6);
 }
 
-/* Selected dot: same 3px ring as .video-timeline-segment.active, with no scale
-   (scaling would stretch the dark border and white ring past the segment's). */
 .video-timeline-marker.active {
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 3px #fff;
+  box-shadow:
+    0 0 0 1.5px rgba(10, 12, 15, 0.6),
+    0 0 0 3px #fff;
 }
 
-/* Segment (ranged) bar — identical visual language to the point dots above:
-   same height, solid reviewer-color fill, same dark border + subtle ring, as a
-   rounded capsule. Hover/active are shown with a stronger ring (no brightness
-   filter) so the fill color always matches the dot markers exactly. */
+/* Segment (ranged) capsule — the same visual language as the dots: same
+   height, solid reviewer color, same outline. Hover/active strengthen the ring
+   (no brightness filter) so the fill always matches the dots exactly. */
 .video-timeline-segment {
   height: 12px;
-  border: 2px solid #1a1f24;
   border-radius: 999px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 0 0 1.5px rgba(10, 12, 15, 0.6),
+    0 1px 3px rgba(0, 0, 0, 0.45);
   transform: translateY(-50%);
   transition: box-shadow 0.15s ease;
   z-index: 2;
 }
 
 .video-timeline-segment:hover {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 0 0 1.5px rgba(10, 12, 15, 0.6),
+    0 0 0 3px rgba(255, 255, 255, 0.6);
 }
 
 .video-timeline-segment.active {
-  box-shadow: 0 0 0 3px #fff;
+  box-shadow:
+    0 0 0 1.5px rgba(10, 12, 15, 0.6),
+    0 0 0 3px #fff;
 }
 
 /* ─── Hover preview popup on markers ─────────────────────────────────────── */

@@ -322,6 +322,17 @@ export function VideoTimeline({
     return { ...item, lane };
   });
 
+  /**
+   * Horizontal nudge (px) that keeps a dot fully inside the bar. Dots are
+   * centered on their time, so one at (or near) either end would otherwise hang
+   * half off the bar. Only dots within a radius of an edge move, and only as far
+   * as needed, so every other marker still lines up exactly with the playhead.
+   */
+  const edgeShift = (seconds: number): number => {
+    const x = Math.min(1, Math.max(0, seconds / safeDuration)) * assumedWidth;
+    return Math.max(0, MARKER_RADIUS - x) - Math.max(0, x - (assumedWidth - MARKER_RADIUS));
+  };
+
   const laneCount = Math.max(1, laneLast.length);
   const trackHeight = laneCount * LANE_PITCH;
   /** Vertical center (px from the top) of a lane; lane 0 is at the bottom. */
@@ -382,6 +393,7 @@ export function VideoTimeline({
               style={{
                 left: pct(anchor.start),
                 top: centerY,
+                ['--edge-shift' as string]: `${edgeShift(anchor.start)}px`,
                 width: DOT_SIZE,
                 height: DOT_SIZE,
                 background: item.color,

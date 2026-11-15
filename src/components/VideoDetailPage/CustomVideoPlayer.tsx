@@ -39,6 +39,7 @@ import {
   setReviewAudioOutput,
 } from './reviewContent';
 import { buildVideoAnchors, formatPosition } from './videoTime';
+import { useVideoZoom, ZOOM_STEP } from './useVideoZoom';
 
 export interface CustomVideoPlayerProps {
   videoUrl: string;
@@ -65,6 +66,27 @@ export interface CustomVideoPlayerProps {
   canReview?: boolean;
   /** Called after an inline review is added (parent refreshes the review list). */
   onAdded?: () => void | Promise<void>;
+  /**
+   * Mint a fresh playback URL. `videoUrl` is a time-limited SAS link: once it
+   * expires, every further range request (buffering ahead, seeking, resuming)
+   * fails. The player swaps in a new link in place, keeping its position.
+   */
+  refreshVideoUrl?: () => Promise<string | null>;
+}
+
+/** Refresh a link this long before its SAS expiry, so in-flight requests don't race it. */
+const SAS_EXPIRY_MARGIN_MS = 60_000;
+
+/** Whether a SAS link's `se` (signed expiry) has passed, or is about to. Unknown → false. */
+function sasExpired(url: string): boolean {
+  try {
+    const se = new URL(url).searchParams.get('se');
+    if (!se) return false;
+    const expiry = Date.parse(se);
+    return Number.isFinite(expiry) && Date.now() >= expiry - SAS_EXPIRY_MARGIN_MS;
+  } catch {
+    return false;
+  }
 }
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -98,6 +120,9 @@ const SHORTCUTS: { keys: string; label: string }[] = [
   { keys: 'Ctrl + ← / →', label: 'Back / forward 1s' },
   { keys: 'Shift + ← / →', label: 'Back / forward 5s' },
   { keys: '↑ / ↓', label: 'Previous / next review' },
+  { keys: 'Pinch / Ctrl + scroll', label: 'Zoom the video' },
+  { keys: '+ / − / 0', label: 'Zoom in / out / reset' },
+  { keys: 'Drag', label: 'Pan while zoomed' },
   { keys: 'M', label: 'Mute / unmute' },
   { keys: 'F', label: 'Fullscreen' },
   { keys: 'A', label: 'Add review' },
@@ -123,11 +148,68 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
       videoId,
       canReview = false,
       onAdded,
+      refreshVideoUrl,
     },
     ref,
   ) {
     const containerRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
+    /** Clipped box the picture fills; zoom scales the video inside it only. */
+    const stageRef = useRef<HTMLDivElement>(null);
+    const videoZoom = useVideoZoom(stageRef, containerRef);
+    const { zoomBy: zoomVideoBy, reset: resetZoom } = videoZoom;
+
+    // ── Source (with SAS renewal) ───────────────────────────────────────
+    /** The link actually playing: starts as `videoUrl`, replaced when it expires. */
+    const [src, setSrc] = useState(videoUrl);
+    const srcRef = useRef(videoUrl);
+    const refreshRef = useRef(refreshVideoUrl);
+    /** Position/play state to restore once the renewed link's metadata loads. */
+    const restoreRef = useRef<{ time: number; play: boolean } | null>(null);
+    /** A renewal in flight, shared so concurrent triggers don't mint twice. */
+    const renewingRef = useRef<Promise<void> | null>(null);
+    /** One renewal per failure: reset once a source loads, so a dead link can't loop. */
+    const retriedRef = useRef(false);
+    /** Mirrors `isPlaying` for the (stable) event listeners. */
+    const playingRef = useRef(false);
+
+    useEffect(() => {
+      refreshRef.current = refreshVideoUrl;
+    }, [refreshVideoUrl]);
+
+    useEffect(() => {
+      srcRef.current = src;
+    }, [src]);
+
+    /** Swap in a fresh link, then resume at the same spot (and keep playing if asked). */
+    const renewSource = useCallback((play: boolean): Promise<void> => {
+      const video = videoRef.current;
+      const refresh = refreshRef.current;
+      if (!video || !refresh) return Promise.resolve();
+      if (renewingRef.current) {
+        if (play && restoreRef.current) restoreRef.current.play = true;
+        return renewingRef.current;
+      }
+      restoreRef.current = { time: video.currentTime || 0, play };
+      const renewal = (async () => {
+        try {
+          const fresh = await refresh();
+          if (fresh) {
+            srcRef.current = fresh;
+            setSrc(fresh);
+          } else {
+            restoreRef.current = null;
+          }
+        } catch (err) {
+          console.error('Failed to renew the playback link:', err);
+          restoreRef.current = null;
+        } finally {
+          renewingRef.current = null;
+        }
+      })();
+      renewingRef.current = renewal;
+      return renewal;
+    }, []);
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -151,6 +233,11 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
     const [addAnchor, setAddAnchor] = useState<ReviewAnchor>({ kind: 'none' });
     /** Latest reviews, readable from effects without re-running them on reload. */
     const reviewsRef = useRef(reviews);
+    /**
+     * Centered play/pause flash shown after a user toggle. `key` restarts the
+     * CSS animation when the same icon is shown twice in a row.
+     */
+    const [flash, setFlash] = useState<{ playing: boolean; key: number } | null>(null);
 
     const setVideoRef = useCallback(
       (node: HTMLVideoElement | null) => {
@@ -188,6 +275,8 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
       const video = videoRef.current;
       if (!video) return;
       const onTime = () => {
+        // Mid-renewal the element briefly reports 0; keep the old position shown.
+        if (restoreRef.current) return;
         const t = video.currentTime || 0;
         setCurrentTime(t);
         // Wrap back to the segment start while the video is looping over it.
@@ -198,15 +287,50 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
         }
       };
       const onLoaded = () => setDuration(video.duration || 0);
+      // A renewed link finished loading its metadata: put the playhead back.
+      const onMetadata = () => {
+        onLoaded();
+        const restore = restoreRef.current;
+        if (!restore) return;
+        restoreRef.current = null;
+        const time = Number.isFinite(video.duration)
+          ? Math.min(restore.time, video.duration)
+          : restore.time;
+        video.currentTime = time;
+        setCurrentTime(time);
+        if (restore.play) video.play().catch(() => {});
+      };
+      // The source is good again, so a later failure may renew once more.
+      const onCanPlay = () => {
+        retriedRef.current = false;
+      };
+      // Requests against an expired SAS fail (403), which surfaces as a media
+      // error: renew the link once and resume where playback was.
+      const onError = () => {
+        if (retriedRef.current) return;
+        retriedRef.current = true;
+        void renewSource(playingRef.current);
+      };
+      // A stall on an expired link would otherwise wait forever without erroring.
+      const onWaiting = () => {
+        if (sasExpired(srcRef.current)) void renewSource(true);
+      };
       // Track the downloaded ranges as the video streams in (and after seeks
       // start a new range), skipping renders when nothing changed.
       const onBuffer = () => {
         const next = readBuffered(video);
         setBuffered((prev) => (sameRanges(prev, next) ? prev : next));
       };
-      const onPlay = () => setIsPlaying(true);
-      const onPause = () => setIsPlaying(false);
+      const onPlay = () => {
+        playingRef.current = true;
+        setIsPlaying(true);
+      };
+      const onPause = () => {
+        playingRef.current = false;
+        setIsPlaying(false);
+      };
       const onEnded = () => {
+        playingRef.current = false;
         setIsPlaying(false);
         // A looping segment that reached the real end of the video: replay it.
         const loop = loopRangeRef.current;
@@ -221,8 +345,11 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
         setMuted(video.muted);
       };
       video.addEventListener('timeupdate', onTime);
-      video.addEventListener('loadedmetadata', onLoaded);
+      video.addEventListener('loadedmetadata', onMetadata);
       video.addEventListener('durationchange', onLoaded);
+      video.addEventListener('canplay', onCanPlay);
+      video.addEventListener('error', onError);
+      video.addEventListener('waiting', onWaiting);
       video.addEventListener('play', onPlay);
       video.addEventListener('pause', onPause);
       video.addEventListener('ended', onEnded);
@@ -253,21 +380,37 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
         window.clearInterval(poll);
         for (const type of bufferEvents) video.removeEventListener(type, onBuffer);
         video.removeEventListener('timeupdate', onTime);
-        video.removeEventListener('loadedmetadata', onLoaded);
+        video.removeEventListener('loadedmetadata', onMetadata);
         video.removeEventListener('durationchange', onLoaded);
+        video.removeEventListener('canplay', onCanPlay);
+        video.removeEventListener('error', onError);
+        video.removeEventListener('waiting', onWaiting);
         video.removeEventListener('play', onPlay);
         video.removeEventListener('pause', onPause);
         video.removeEventListener('ended', onEnded);
         video.removeEventListener('volumechange', onVolume);
       };
-    }, [videoUrl]);
+    }, [videoUrl, renewSource]);
 
     const togglePlay = useCallback(() => {
       const video = videoRef.current;
       if (!video) return;
-      if (video.paused) void video.play();
-      else video.pause();
-    }, []);
+      const willPlay = video.paused;
+      if (willPlay) {
+        // A dead (errored) or expired link can't play: renew it and play once
+        // it has loaded, instead of a play() that silently does nothing.
+        if (video.error || sasExpired(srcRef.current)) {
+          void renewSource(true);
+        } else {
+          video.play().catch(() => {
+            if (video.error) void renewSource(true);
+          });
+        }
+      } else {
+        video.pause();
+      }
+      setFlash((prev) => ({ playing: willPlay, key: (prev?.key ?? 0) + 1 }));
+    }, [renewSource]);
 
     // ── Inline compose overlay ─────────────────────────────────────
     const openComposer = useCallback(() => {
@@ -330,10 +473,17 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
         const video = videoRef.current;
         if (!video || !Number.isFinite(seconds)) return;
         const target = Math.min(safeDuration, Math.max(0, seconds));
+        if (video.error) {
+          // Dead link: renew it and land on the scrubbed spot once it loads.
+          void renewSource(playingRef.current);
+          if (restoreRef.current) restoreRef.current.time = target;
+          setCurrentTime(target);
+          return;
+        }
         video.currentTime = target;
         setCurrentTime(video.currentTime || target);
       },
-      [safeDuration],
+      [safeDuration, renewSource],
     );
 
     // ── Keyboard editing shortcuts ────────────────────────────────────
@@ -531,6 +681,22 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
           case 'F':
             toggleFullscreen();
             break;
+          // Zoom the video, not the page (also takes over Ctrl/⌘ + / − / 0
+          // while the player has focus).
+          case '+':
+          case '=':
+            e.preventDefault();
+            zoomVideoBy(ZOOM_STEP);
+            break;
+          case '-':
+          case '_':
+            e.preventDefault();
+            zoomVideoBy(1 / ZOOM_STEP);
+            break;
+          case '0':
+            e.preventDefault();
+            resetZoom();
+            break;
           case 'a':
           case 'A':
             if (!canReview) break;
@@ -554,6 +720,8 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
         canReview,
         openComposer,
         closeAddReview,
+        zoomVideoBy,
+        resetZoom,
       ],
     );
 
@@ -576,15 +744,51 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
         onKeyDown={handlePlayerKey}
         onClick={() => containerRef.current?.focus()}
       >
-        <video
-          ref={setVideoRef}
-          src={videoUrl}
-          poster={poster}
-          playsInline
-          preload="auto"
-          className="cvp-video"
-          onClick={togglePlay}
-        />
+        <div
+          ref={stageRef}
+          className={`cvp-stage${videoZoom.zoomed ? ' cvp-stage--zoomed' : ''}`}
+          style={videoZoom.stageStyle}
+          {...videoZoom.stageHandlers}
+        >
+          <video
+            ref={setVideoRef}
+            src={src}
+            poster={poster}
+            playsInline
+            preload="auto"
+            className="cvp-video"
+            style={videoZoom.pictureStyle}
+            onClick={() => {
+              // A pan or pinch ends in a click: that must not toggle playback.
+              if (videoZoom.wasDrag()) return;
+              togglePlay();
+            }}
+          />
+          {videoZoom.zoomed && (
+            <button
+              type="button"
+              className="cvp-zoom-badge"
+              onClick={(e) => {
+                e.stopPropagation();
+                videoZoom.reset();
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              title="Reset zoom (0)"
+            >
+              {videoZoom.zoom.scale.toFixed(1)}× · Reset
+            </button>
+          )}
+          {flash && (
+            <div
+              key={flash.key}
+              className="cvp-play-flash"
+              aria-hidden="true"
+              onAnimationEnd={() => setFlash(null)}
+            >
+              <FontAwesomeIcon icon={flash.playing ? faPlay : faPause} />
+            </div>
+          )}
+        </div>
 
         {topBar && !composingActive && (
           <div className="cvp-topbar" onClick={(e) => e.stopPropagation()}>
