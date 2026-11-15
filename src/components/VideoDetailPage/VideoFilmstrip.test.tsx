@@ -143,6 +143,43 @@ describe('VideoFilmstrip scrub contract', () => {
     });
   });
 
+  it('draws the downloaded ranges on the bar while the video streams in', () => {
+    const { container } = render(
+      <VideoFilmstrip
+        durationFallback={DURATION}
+        currentTime={0}
+        buffered={[
+          { start: 0, end: 2.5 },
+          { start: 5, end: 7.5 },
+        ]}
+        onSeek={() => {}}
+      />,
+    );
+    const ranges = [...container.querySelectorAll('.vf-buffer-range')].map((el) =>
+      el.getAttribute('style'),
+    );
+    expect(ranges).toHaveLength(2);
+    expect(ranges[0]).toContain('left: 0%');
+    expect(ranges[0]).toContain('width: 25%');
+    expect(ranges[1]).toContain('left: 50%');
+    expect(ranges[1]).toContain('width: 25%');
+  });
+
+  it('keeps the bar full once the whole video is downloaded', () => {
+    const { container } = render(
+      <VideoFilmstrip
+        durationFallback={DURATION}
+        currentTime={0}
+        buffered={[{ start: 0, end: DURATION }]}
+        onSeek={() => {}}
+      />,
+    );
+    const ranges = container.querySelectorAll('.vf-buffer-range');
+    expect(ranges).toHaveLength(1);
+    expect(ranges[0].getAttribute('style')).toContain('left: 0%');
+    expect(ranges[0].getAttribute('style')).toContain('width: 100%');
+  });
+
   it('draws review markers inside the bar, and a press on one still scrubs and clicks', () => {
     const seeks: number[] = [];
     const clicks: string[] = [];

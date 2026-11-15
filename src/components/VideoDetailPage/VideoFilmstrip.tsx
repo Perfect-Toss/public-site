@@ -10,6 +10,12 @@ import {
   type ReactNode,
 } from 'react';
 
+/** A downloaded span of the video, in seconds (from `HTMLMediaElement.buffered`). */
+export interface BufferedRange {
+  start: number;
+  end: number;
+}
+
 export interface VideoFilmstripProps {
   /** The tablet-generated filmstrip sprite (single row of frames). Null/absent → thin-bar fallback. */
   filmstripUrl?: string | null;
@@ -17,6 +23,11 @@ export interface VideoFilmstripProps {
   durationFallback: number;
   /** Current playhead (seconds) — drives the playhead marker over the strip. */
   currentTime: number;
+  /**
+   * Ranges the browser has downloaded so far. Drawn as a load indicator that
+   * fills as the video streams in and stays full once it is all loaded.
+   */
+  buffered?: BufferedRange[];
   /** Seek the player to a time (hover/drag scrubbing). */
   onSeek: (seconds: number) => void;
   /**
@@ -36,6 +47,18 @@ const MAX_STRIP_HEIGHT = 64;
 const THIN_BAR_HEIGHT = 6;
 /** Horizontal movement (px) before a press counts as a drag rather than a click. */
 const DRAG_THRESHOLD = 3;
+
+/** Buffered ranges as clamped 0–1 fractions of the bar, dropping empty ones. */
+function bufferedSegments(
+  ranges: BufferedRange[],
+  duration: number,
+): { left: number; right: number }[] {
+  if (!(duration > 0)) return [];
+  const clamp = (v: number) => Math.min(1, Math.max(0, v / duration));
+  return ranges
+    .map((r) => ({ left: clamp(r.start), right: clamp(r.end) }))
+    .filter((s) => s.right > s.left);
+}
 
 /**
  * Filmstrip scrub bar. Displays the tablet-generated sprite (a single row of
@@ -60,6 +83,7 @@ export function VideoFilmstrip({
   filmstripUrl,
   durationFallback,
   currentTime,
+  buffered = [],
   onSeek,
   isPlaying = false,
   children,
@@ -160,6 +184,9 @@ export function VideoFilmstrip({
     durationFallback > 0 ? Math.min(1, Math.max(0, currentTime / durationFallback)) : 0;
   const playheadLeft = `${progress * 100}%`;
 
+  // Load progress: the downloaded spans on the same 1:1 time mapping.
+  const loadedSegments = bufferedSegments(buffered, durationFallback);
+
   return (
     <div
       ref={rootRef}
@@ -179,6 +206,19 @@ export function VideoFilmstrip({
         {/* The tablet-generated sprite — whole strip scaled to the bar width. */}
         {hasSprite && filmstripUrl && (
           <div className="vf-sprite" style={{ backgroundImage: `url(${filmstripUrl})` }} />
+        )}
+
+        {/* How much of the video has streamed in so far. */}
+        {durationFallback > 0 && (
+          <div className="vf-buffer" aria-hidden="true">
+            {loadedSegments.map((s) => (
+              <div
+                key={`${s.left}-${s.right}`}
+                className="vf-buffer-range"
+                style={{ left: `${s.left * 100}%`, width: `${(s.right - s.left) * 100}%` }}
+              />
+            ))}
+          </div>
         )}
       </div>
 

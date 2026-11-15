@@ -38,6 +38,40 @@
   background-repeat: no-repeat;
 }
 
+/* Load progress. On the filmstrip: a thin stripe along the top edge (the review
+   markers own the bottom), dark track with the downloaded spans lit. */
+.vf-buffer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.vf-buffer-range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  transition:
+    left 0.2s linear,
+    width 0.2s linear;
+}
+
+/* Thin bar: the downloaded spans fill the bar itself, like a buffer bar. */
+.video-filmstrip--thin .vf-buffer {
+  height: auto;
+  bottom: 0;
+  background: none;
+}
+
+.video-filmstrip--thin .vf-buffer-range {
+  background: rgba(255, 255, 255, 0.35);
+}
+
 /* Review-marker layer, in flow at the bottom of the bar (the bar's min-height
    is the strip; its real height is whichever is taller — strip or lanes). The
    bar itself keeps handling scrubbing; only the markers opt into pointers. */

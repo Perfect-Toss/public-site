@@ -30,7 +30,7 @@ import { formatClock } from '../../utils/format';
 import { AnchorPicker, type ReviewAnchor } from './ReviewAnchorPicker';
 import { VideoDrawingOverlay } from './VideoDrawingOverlay';
 import { VideoReviewComposer } from './VideoReviewComposer';
-import { VideoFilmstrip } from './VideoFilmstrip';
+import { VideoFilmstrip, type BufferedRange } from './VideoFilmstrip';
 import { VideoTimeline } from './VideoTimeline';
 import {
   pauseAllReviewAudio,
@@ -68,6 +68,29 @@ export interface CustomVideoPlayerProps {
 }
 
 const PLAYBACK_RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+/** Snapshot of the element's downloaded time ranges. */
+function readBuffered(video: HTMLVideoElement): BufferedRange[] {
+  const ranges: BufferedRange[] = [];
+  const b = video.buffered;
+  if (!b) return ranges;
+  for (let i = 0; i < b.length; i++) ranges.push({ start: b.start(i), end: b.end(i) });
+  return ranges;
+}
+
+/** One downloaded range spanning the whole video: nothing left to watch for. */
+function isFullyBuffered(video: HTMLVideoElement): boolean {
+  const d = video.duration;
+  const b = video.buffered;
+  if (!b || b.length !== 1 || !Number.isFinite(d) || d <= 0) return false;
+  return b.start(0) <= 0.1 && b.end(0) >= d - 0.1;
+}
+
+function sameRanges(a: BufferedRange[], b: BufferedRange[]): boolean {
+  return (
+    a.length === b.length && a.every((r, i) => r.start === b[i].start && r.end === b[i].end)
+  );
+}
 
 const SHORTCUTS: { keys: string; label: string }[] = [
   { keys: 'Space', label: 'Play / pause' },
@@ -109,6 +132,8 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    /** Time ranges (seconds) the browser has downloaded so far. */
+    const [buffered, setBuffered] = useState<BufferedRange[]>([]);
     const [volume, setVolume] = useState(1);
     const [muted, setMuted] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -173,6 +198,12 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
         }
       };
       const onLoaded = () => setDuration(video.duration || 0);
+      // Track the downloaded ranges as the video streams in (and after seeks
+      // start a new range), skipping renders when nothing changed.
+      const onBuffer = () => {
+        const next = readBuffered(video);
+        setBuffered((prev) => (sameRanges(prev, next) ? prev : next));
+      };
       const onPlay = () => setIsPlaying(true);
       const onPause = () => setIsPlaying(false);
       const onEnded = () => {
@@ -196,9 +227,31 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
       video.addEventListener('pause', onPause);
       video.addEventListener('ended', onEnded);
       video.addEventListener('volumechange', onVolume);
+      const bufferEvents = [
+        'progress',
+        'loadeddata',
+        'canplay',
+        'canplaythrough',
+        'suspend',
+        'waiting',
+        'seeked',
+        'timeupdate',
+        'emptied',
+      ];
+      for (const type of bufferEvents) video.addEventListener(type, onBuffer);
+      // `progress` follows network activity, not `buffered` itself: the ranges
+      // can keep growing after the last event (notably while preloading before
+      // play, when nothing else fires). Poll until the whole video is in.
+      const poll = window.setInterval(() => {
+        onBuffer();
+        if (isFullyBuffered(video)) window.clearInterval(poll);
+      }, 500);
       onLoaded();
       onVolume();
+      onBuffer();
       return () => {
+        window.clearInterval(poll);
+        for (const type of bufferEvents) video.removeEventListener(type, onBuffer);
         video.removeEventListener('timeupdate', onTime);
         video.removeEventListener('loadedmetadata', onLoaded);
         video.removeEventListener('durationchange', onLoaded);
@@ -528,7 +581,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
           src={videoUrl}
           poster={poster}
           playsInline
-          preload="metadata"
+          preload="auto"
           className="cvp-video"
           onClick={togglePlay}
         />
@@ -598,6 +651,7 @@ export const CustomVideoPlayer = forwardRef<HTMLVideoElement, CustomVideoPlayerP
             filmstripUrl={filmstripUrl}
             durationFallback={safeDuration}
             currentTime={currentTime}
+            buffered={buffered}
             onSeek={seekTo}
             isPlaying={isPlaying}
           >
