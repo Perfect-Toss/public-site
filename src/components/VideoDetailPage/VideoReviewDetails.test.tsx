@@ -36,6 +36,15 @@ function renderDetails(props: Parameters<typeof VideoReviewDetails>[0]) {
  * never look different depending on where it appears.
  */
 describe('VideoReviewDetails', () => {
+  it('shows the assigned reviewer instead of the creator when set', () => {
+    const { container } = renderDetails({
+      review: review({ reviewer: { id: 'u2', firstName: 'Ana', lastName: 'Ruiz' } }),
+    });
+
+    expect(container.textContent).toContain('Ana Ruiz');
+    expect(container.textContent).not.toContain('Sam Lee');
+  });
+
   it('shows the reviewer, the position and the comment', () => {
     const { container } = renderDetails({ review: review() });
 

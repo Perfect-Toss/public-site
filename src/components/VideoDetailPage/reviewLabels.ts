@@ -11,6 +11,14 @@ export function positionText(review: VideoReview): string {
     : formatPosition(ts);
 }
 
+/**
+ * The person a review is attributed to: the assigned reviewer when there is one,
+ * otherwise whoever created the item.
+ */
+export function reviewAuthor(review?: VideoReview | null): VideoReview['reviewer'] {
+  return review?.reviewer ?? review?.createdByUser;
+}
+
 /** Rebuild a data: URL from base64 + MIME type. */
 export function toDataUrl(
   data?: string | null,

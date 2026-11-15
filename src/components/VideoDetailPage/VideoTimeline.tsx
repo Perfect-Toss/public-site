@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import type { VideoReview } from '../../api/api.videos';
 import { colorFor } from '../../utils/color';
 import { getDisplayName } from '../../utils/user';
+import { reviewAuthor } from './reviewLabels';
 import { VideoReviewDetails } from './VideoReviewDetails';
 import { buildVideoAnchors, formatPosition, type VideoAnchor } from './videoTime';
 
@@ -241,7 +242,7 @@ export function VideoTimeline({
 
   const reviewerColor = new Map<string, string>();
   for (const review of reviews) {
-    const user = review.createdByUser as ReviewUserRef | undefined;
+    const user = reviewAuthor(review) as ReviewUserRef | undefined;
     const key = reviewerKey(user);
     if (!key || isUnsetColor(user?.colorHex)) continue;
     if (!reviewerColor.has(key)) reviewerColor.set(key, user!.colorHex!);
@@ -249,7 +250,7 @@ export function VideoTimeline({
 
   /** Resolve the author's color: the unified per-person color, else name-derived. */
   const reviewColor = (review?: VideoReview | null): string => {
-    const user = review?.createdByUser as ReviewUserRef | undefined;
+    const user = reviewAuthor(review) as ReviewUserRef | undefined;
     const key = reviewerKey(user);
     return (key && reviewerColor.get(key)) || colorFor(getDisplayName(user ?? {}));
   };

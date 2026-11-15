@@ -6,7 +6,7 @@ import { useEffect, type ReactNode } from 'react';
 import type { VideoReview } from '../../api/api.videos';
 import { formatClock } from '../../utils/format';
 import { UserInfo } from '../common';
-import { positionText } from './reviewLabels';
+import { positionText, reviewAuthor } from './reviewLabels';
 import {
   primeReviewAudio,
   seekReviewAudio,
@@ -55,7 +55,7 @@ export function VideoReviewDetails({
   return (
     <div className="vr-details">
       <div className="vr-details-head">
-        <UserInfo user={review.createdByUser ?? {}} size={size} />
+        <UserInfo user={reviewAuthor(review) ?? {}} size={size} />
         {pos && (
           <span className="vr-details-pos">
             <FontAwesomeIcon icon={faClock} />
