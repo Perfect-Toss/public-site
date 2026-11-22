@@ -1,4 +1,3 @@
-import { FirebaseError } from 'firebase/app';
 import {
   ActionCodeSettings,
   AuthProvider,
@@ -18,6 +17,9 @@ import {
   signOut
 } from 'firebase/auth';
 import { appleProvider, auth, googleProvider } from './config';
+import { reportError, reportEvent, type TelemetryAttributes } from '../telemetry';
+
+import { FirebaseError } from 'firebase/app';
 
 interface AuthResult {
   user: User | null;
@@ -79,21 +81,68 @@ export const describeSignInError = (error: unknown, method: 'provider' | 'passwo
   }
 };
 
+/**
+ * Firebase setup and session state for a sign-in failure. The error itself
+ * (code, Firebase customData such as the email, stack) and the browser's state
+ * are added by reportError.
+ */
+const authTelemetry = (step: string, startedAt?: number, extra: TelemetryAttributes = {}): TelemetryAttributes => ({
+  'auth.step': step,
+  'auth.duration_ms': startedAt === undefined ? undefined : Math.round(performance.now() - startedAt),
+  'firebase.auth_domain': auth.config.authDomain,
+  'firebase.project_id': auth.app.options.projectId,
+  'firebase.sdk': auth.config.sdkClientVersion,
+  // A user already signed in (e.g. linking a second provider) changes what Firebase does.
+  'auth.current_uid': auth.currentUser?.uid,
+  'auth.current_email': auth.currentUser?.email,
+  ...extra,
+});
+
 // Popup sign-in. The auth domain (firebaseapp.com) differs from the site's
 // domain, and browsers partition storage across sites, so a redirect sign-in
 // returns with no result. A popup avoids that; a redirect is only the fallback
 // when the browser blocks the popup.
 const signInWithProvider = async (provider: AuthProvider, label: string): Promise<AuthResult> => {
+  const startedAt = performance.now();
+  const providerAttributes = { 'auth.provider': provider.providerId };
   try {
     const result = await signInWithPopup(auth, provider);
     return { user: result.user, error: null };
   } catch (error) {
-    if (error instanceof FirebaseError && error.code === 'auth/popup-blocked') {
-      await signInWithRedirect(auth, provider);
+    const code = error instanceof FirebaseError ? error.code : undefined;
+    if (code === 'auth/popup-blocked') {
+      reportEvent('Sign-in popup blocked; falling back to redirect', {
+        ...providerAttributes,
+        ...authTelemetry('popup', startedAt),
+      }, 'warn');
+      try {
+        await signInWithRedirect(auth, provider);
+      } catch (redirectError) {
+        console.error(`Error starting ${label} redirect sign-in:`, redirectError);
+        const userMessage = describeSignInError(redirectError);
+        reportError(`${label} redirect sign-in could not start`, redirectError, {
+          ...providerAttributes,
+          ...authTelemetry('redirect', startedAt, { 'auth.user_message': userMessage }),
+        });
+        return { user: null, error: userMessage };
+      }
+      return { user: null, error: null };
+    }
+    if (code && CANCELLED_POPUP_CODES.has(code)) {
+      // Not a failure, but a burst of these for one provider points at a broken popup.
+      reportEvent(`${label} sign-in cancelled`, {
+        ...providerAttributes,
+        ...authTelemetry('popup', startedAt, { 'error.code': code }),
+      });
       return { user: null, error: null };
     }
     console.error(`Error signing in with ${label}:`, error);
-    return { user: null, error: describeSignInError(error) };
+    const userMessage = describeSignInError(error);
+    reportError(`${label} sign-in failed`, error, {
+      ...providerAttributes,
+      ...authTelemetry('popup', startedAt, { 'auth.user_message': userMessage }),
+    });
+    return { user: null, error: userMessage };
   }
 };
 
@@ -111,7 +160,10 @@ export const handleRedirectResult = async (): Promise<AuthResult> => {
     return { user: null, error: null };
   } catch (error) {
     console.error('Error handling redirect result:', error);
-    return { user: null, error: describeSignInError(error) };
+    const userMessage = describeSignInError(error);
+    // The provider is not known here: a failed result carries no credential.
+    reportError('Redirect sign-in failed', error, authTelemetry('redirect-result', undefined, { 'auth.user_message': userMessage }));
+    return { user: null, error: userMessage };
   }
 };
 
@@ -124,6 +176,11 @@ export const sendMagicLink = async (email: string): Promise<SuccessResult> => {
     return { success: true, error: null };
   } catch (error) {
     console.error('Error sending magic link:', error);
+    reportError('Sending magic link failed', error, authTelemetry('send-link', undefined, {
+      'auth.provider': 'emailLink',
+      'auth.email': email,
+      'auth.continue_url': actionCodeSettings.url,
+    }));
     return { success: false, error: (error as Error).message };
   }
 };
@@ -135,6 +192,13 @@ export const checkIsSignInWithEmailLink = (): boolean => {
 
 // Complete sign-in with email link
 export const completeMagicLinkSignIn = async (email: string | null = null): Promise<AuthResult> => {
+  const storedEmail = window.localStorage.getItem('emailForSignIn');
+  const linkAttributes: TelemetryAttributes = {
+    'auth.provider': 'emailLink',
+    'auth.email': email ?? storedEmail,
+    // Typed in at the prompt: the link was opened in a different browser than the one that asked for it.
+    'auth.email_source': email ? 'prompt' : storedEmail ? 'local-storage' : 'none',
+  };
   try {
     console.log('Starting magic link sign-in completion...');
     console.log('Current URL:', window.location.href);
@@ -150,7 +214,8 @@ export const completeMagicLinkSignIn = async (email: string | null = null): Prom
     
     if (!userEmail) {
       console.error('No email available for sign-in');
-      return { 
+      reportEvent('Magic link opened with no email to complete it', authTelemetry('complete-link', undefined, linkAttributes), 'warn');
+      return {
         user: null, 
         error: 'Please provide your email to complete sign-in' 
       };
@@ -167,6 +232,8 @@ export const completeMagicLinkSignIn = async (email: string | null = null): Prom
     return { user: result.user, error: null };
   } catch (error) {
     console.error('Error completing magic link sign-in:', error);
+    // auth/invalid-action-code: the link was already used, expired, or is not the latest one sent.
+    reportError('Magic link sign-in failed', error, authTelemetry('complete-link', undefined, linkAttributes));
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return { user: null, error: errorMessage };
   }
@@ -179,7 +246,13 @@ export const signInWithEmail = async (email: string, password: string): Promise<
     return { user: result.user, error: null };
   } catch (error) {
     console.error('Error signing in with email:', error);
-    return { user: null, error: describeSignInError(error, 'password') };
+    const userMessage = describeSignInError(error, 'password');
+    reportError('Password sign-in failed', error, authTelemetry('password', undefined, {
+      'auth.provider': 'password',
+      'auth.email': email,
+      'auth.user_message': userMessage,
+    }));
+    return { user: null, error: userMessage };
   }
 };
 
@@ -192,6 +265,10 @@ export const signUpWithEmail = async (email: string, password: string): Promise<
     return { user: result.user, error: null };
   } catch (error) {
     console.error('Error signing up with email:', error);
+    reportError('Password sign-up failed', error, authTelemetry('sign-up', undefined, {
+      'auth.provider': 'password',
+      'auth.email': email,
+    }));
     return { user: null, error: (error as Error).message };
   }
 };
@@ -203,6 +280,10 @@ export const resetPassword = async (email: string): Promise<SuccessResult> => {
     return { success: true, error: null };
   } catch (error) {
     console.error('Error resetting password:', error);
+    reportError('Password reset failed', error, authTelemetry('password-reset', undefined, {
+      'auth.provider': 'password',
+      'auth.email': email,
+    }));
     return { success: false, error: (error as Error).message };
   }
 };
@@ -221,6 +302,7 @@ export const logout = async (): Promise<SuccessResult> => {
     return { success: true, error: null };
   } catch (error) {
     console.error('Error signing out:', error);
+    reportError('Sign-out failed', error, authTelemetry('sign-out'));
     return { success: false, error: (error as Error).message };
   }
 };

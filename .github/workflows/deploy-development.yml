@@ -9,6 +9,7 @@ name: Deploy to Development
 #   AZURE_STATIC_WEB_APPS_API_TOKEN  = development Static Web App deployment token
 #   VITE_API_BASE_URL               = development API URL
 #   VITE_FIREBASE_*                 = development Firebase project config
+#   VITE_APPLICATIONINSIGHTS_CONNECTION_STRING = development Application Insights connection string (same resource as the API)
 # Keep nothing app-specific at repository level: a repository-level fallback would silently
 # fill in another environment's values when an environment secret is missing.
 
@@ -48,6 +49,8 @@ jobs:
             VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
             # API Configuration
             VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+            # Telemetry
+            VITE_APPLICATIONINSIGHTS_CONNECTION_STRING: ${{ secrets.VITE_APPLICATIONINSIGHTS_CONNECTION_STRING }}
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -82,6 +85,7 @@ jobs:
                   for name in \
                     AZURE_STATIC_WEB_APPS_API_TOKEN \
                     VITE_API_BASE_URL \
+                    VITE_APPLICATIONINSIGHTS_CONNECTION_STRING \
                     VITE_FIREBASE_API_KEY \
                     VITE_FIREBASE_APP_ID \
                     VITE_FIREBASE_AUTH_DOMAIN \

@@ -1,5 +1,4 @@
 import { ReactNode, useEffect, useRef } from 'react';
-import type { User as FirebaseUser } from 'firebase/auth';
 
 import { onAuthStateChange, logout as firebaseLogout, getIdToken } from '../firebase/auth';
 import { setAuthTokenProvider, setMutationsBlocked } from '../api/client';
@@ -13,6 +12,7 @@ import {
 } from '../stores/viewAsStore';
 import { AuthContext, type AuthContextType } from './useAuth';
 import { canCreateEvent } from '../utils/roles';
+import { reportError, reportEvent, setTelemetryUser, type TelemetryAttributes } from '../telemetry';
 
 /** Apple's "Hide My Email" relay addresses. */
 const APPLE_PRIVATE_RELAY_DOMAIN = '@privaterelay.appleid.com';
@@ -41,8 +41,7 @@ const NO_ACCOUNT_MESSAGE = 'No account found for this email. Please contact supp
  * account. Every other method (magic link, password) is invite-only: the
  * account must already exist, so it is only looked up.
  */
-async function resolveApiUser(fbUser: FirebaseUser): Promise<User | null> {
-  const { signInProvider } = await fbUser.getIdTokenResult();
+async function resolveApiUser(signInProvider: string | null): Promise<User | null> {
   if (signInProvider && SELF_REGISTERING_PROVIDERS.has(signInProvider)) {
     return createSession();
   }
@@ -118,6 +117,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       onUnauthorized: () => {
         if (resolvingRef.current) return;
         console.warn('[AuthProvider] Session rejected by the API — signing out');
+        reportEvent('Session rejected by the API; signing out', { 'auth.step': 'session-expired' }, 'warn');
         setAuth(null, null);
         setAuthError('Your session has expired. Please sign in again.');
         void firebaseLogout();
@@ -144,11 +144,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
         uid: fbUser?.uid,
       });
 
+      setTelemetryUser(fbUser?.uid ?? null);
+
       if (fbUser) {
+        const { creationTime, lastSignInTime } = fbUser.metadata;
+        const telemetry: TelemetryAttributes = {
+          'auth.uid': fbUser.uid,
+          'auth.email': fbUser.email,
+          'auth.email_verified': fbUser.emailVerified,
+          'auth.display_name_present': Boolean(fbUser.displayName),
+          // Every provider linked to the Firebase user, with that provider's own id
+          // (e.g. Apple's stable user id), not necessarily the one just used.
+          'auth.linked_providers':
+            fbUser.providerData.map((p) => `${p.providerId}:${p.uid}${p.email ? ` <${p.email}>` : ''}`).join(', ') ||
+            undefined,
+          'auth.account_created': creationTime,
+          'auth.last_sign_in': lastSignInTime,
+          // Firebase created the user in this sign-in.
+          'auth.new_firebase_user': Boolean(creationTime && creationTime === lastSignInTime),
+        };
+        // Where a failure happened: token, session or view-as.
+        let step = 'identity-check';
+
         const rejection = rejectIdentity(fbUser);
         if (rejection) {
           // Checked before the session call, so no account is created for it.
           console.warn('[AuthProvider] Sign-in rejected — no shareable email');
+          reportEvent(
+            'Sign-in rejected: no shareable email',
+            {
+              ...telemetry,
+              'auth.step': step,
+              'auth.email_kind': fbUser.email ? 'apple-private-relay' : 'missing',
+              'auth.user_message': rejection,
+            },
+            'warn',
+          );
           await firebaseLogout();
           useViewAsStore.getState().clear();
           setAuthRef.current(null, null);
@@ -160,7 +191,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
           resolvingRef.current = true;
           let apiUser: User | null;
           try {
-            apiUser = await resolveApiUser(fbUser);
+            step = 'token';
+            const { signInProvider, authTime, claims } = await fbUser.getIdTokenResult();
+            telemetry['auth.provider'] = signInProvider;
+            telemetry['auth.auth_time'] = authTime;
+            // What the API will see: it reads the email and its verification from the token.
+            telemetry['auth.token_email'] = typeof claims.email === 'string' ? claims.email : undefined;
+            telemetry['auth.token_email_verified'] =
+              typeof claims.email_verified === 'boolean' ? claims.email_verified : undefined;
+            step = 'session';
+            telemetry['auth.session_endpoint'] =
+              signInProvider && SELF_REGISTERING_PROVIDERS.has(signInProvider) ? 'create-session' : 'invited-user';
+            apiUser = await resolveApiUser(signInProvider);
           } finally {
             resolvingRef.current = false;
           }
@@ -168,6 +210,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (apiUser === null) {
             // Invite-only sign-in for an email with no API account.
             console.error('[AuthProvider] No API user found — signing out');
+            reportEvent(
+              'Sign-in rejected: no account for this identity',
+              { ...telemetry, 'auth.step': step, 'auth.user_message': NO_ACCOUNT_MESSAGE },
+              'warn',
+            );
             await firebaseLogout();
             useViewAsStore.getState().clear();
             setAuthRef.current(null, null);
@@ -177,20 +224,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
           // Resolve view-as before the shell mounts, so it never paints the
           // signed-in account first.
+          step = 'view-as';
           if (!(await applyViewAs(apiUser))) useViewAsStore.getState().clear();
           // Both Firebase and API auth succeeded — atomically set both.
           setAuthRef.current(fbUser, apiUser);
         } catch (err) {
           // API call failed — keep state consistent by signing out of Firebase.
           console.error('[AuthProvider] Failed to resolve the API account — signing out:', err);
+          const userMessage =
+            err instanceof AccountLinkedElsewhereError
+              ? err.message
+              : 'Could not verify your account. Please try again.';
+          // ApiRequestError adds the status, the server's message and the
+          // correlation id that matches the API's own logs for the call.
+          reportError('Sign-in failed: could not resolve the API account', err, {
+            ...telemetry,
+            'auth.step': step,
+            'auth.user_message': userMessage,
+          });
           await firebaseLogout();
           useViewAsStore.getState().clear();
           setAuthRef.current(null, null);
-          setAuthErrorRef.current(
-            err instanceof AccountLinkedElsewhereError
-              ? err.message
-              : 'Could not verify your account. Please try again.',
-          );
+          setAuthErrorRef.current(userMessage);
         }
       } else {
         useViewAsStore.getState().clear();

@@ -51,6 +51,7 @@ different value per environment. Full list and instructions: [GitHub Secrets Set
    - `AZURE_STATIC_WEB_APPS_API_TOKEN` - **production** Static Web App token
    - `VITE_API_BASE_URL` - production API URL
    - `VITE_FIREBASE_*` - production Firebase project config (7 values)
+   - `VITE_APPLICATIONINSIGHTS_CONNECTION_STRING` - production Application Insights (same as the API)
 
 #### Development Secrets
 
@@ -59,6 +60,7 @@ different value per environment. Full list and instructions: [GitHub Secrets Set
    - `AZURE_STATIC_WEB_APPS_API_TOKEN` - **development** Static Web App token
    - `VITE_API_BASE_URL` - development API URL
    - `VITE_FIREBASE_*` - development Firebase project config (7 values)
+   - `VITE_APPLICATIONINSIGHTS_CONNECTION_STRING` - development Application Insights (same as the API)
 
 ### Step 3: Remove Repository-Level Config
 

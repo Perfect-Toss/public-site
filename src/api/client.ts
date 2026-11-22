@@ -1,8 +1,9 @@
 import createClient from 'openapi-fetch';
 import type { paths } from './schema';
+import { newUuid } from '../utils/uuid';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://dev-api.perfect-toss.com';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://dev-api.perfect-toss.com';
 
 // Create a type-safe API client.
 // NOTE: openapi-fetch sets "Content-Type: application/json" automatically for
@@ -12,6 +13,73 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://dev-api.perfe
 export const apiClient = createClient<paths>({
   baseUrl: API_BASE_URL,
 });
+
+/**
+ * Every API request carries a fresh id in this header. The API's Serilog
+ * correlation enricher stamps it on every log line for the request (the
+ * `CorrelationId` custom dimension in App Insights), so a failure reported by
+ * the browser can be matched to the API's own logs.
+ */
+export const CORRELATION_HEADER = 'x-correlation-id';
+
+const correlationIds = new WeakMap<Response, string>();
+
+/** The correlation id the request behind this response was sent with. */
+export function correlationIdOf(response: Response | undefined): string | undefined {
+  return response ? correlationIds.get(response) : undefined;
+}
+
+// Registered first: onRequest middleware runs in order and onResponse in
+// reverse, so this tags the request before anything else sees it and records
+// the final response (including a replay after a 401).
+apiClient.use({
+  onRequest({ request }) {
+    if (!request.headers.has(CORRELATION_HEADER)) {
+      request.headers.set(CORRELATION_HEADER, newUuid());
+    }
+    return request;
+  },
+  onResponse({ request, response }) {
+    const id = request.headers.get(CORRELATION_HEADER);
+    if (id) correlationIds.set(response, id);
+    return response;
+  },
+});
+
+/** A failed API call: the status, what the server said, and the id its logs are filed under. */
+export class ApiRequestError extends Error {
+  readonly status: number;
+  readonly statusText: string;
+  readonly method: string;
+  readonly path: string;
+  readonly correlationId: string | undefined;
+  readonly serverMessage: string | undefined;
+
+  constructor(message: string, response: Response, body?: unknown, method = 'GET') {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = response.status;
+    this.statusText = response.statusText;
+    this.method = method;
+    this.correlationId = correlationIdOf(response);
+    this.serverMessage = serverMessageOf(body);
+    try {
+      this.path = new URL(response.url).pathname;
+    } catch {
+      this.path = response.url;
+    }
+  }
+}
+
+/** The text of an API error body: the API's `{ message, errors }`, or ASP.NET problem details. */
+function serverMessageOf(body: unknown): string | undefined {
+  if (!body || typeof body !== 'object') return typeof body === 'string' && body ? body : undefined;
+  const value = body as { message?: unknown; title?: unknown; detail?: unknown; errors?: unknown };
+  const parts = [value.message ?? value.detail ?? value.title]
+    .concat(Array.isArray(value.errors) ? value.errors : value.errors ? [JSON.stringify(value.errors)] : [])
+    .filter((part) => part !== undefined && part !== null && part !== '');
+  return parts.length ? parts.map(String).join(' | ') : undefined;
+}
 
 /**
  * Source of the Authorization header for every request, plus the reaction to a

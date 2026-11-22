@@ -3,6 +3,7 @@
  */
 
 import { api } from './index';
+import { ApiRequestError, correlationIdOf } from './client';
 import type { components } from './schema';
 import type { User } from './api.users';
 
@@ -24,9 +25,14 @@ export type SessionResponse = components['schemas']['SessionResponse'];
 
 /** The email is already linked to a different sign-in identity (HTTP 409). */
 export class AccountLinkedElsewhereError extends Error {
-  constructor() {
+  readonly status = 409;
+  /** The id the API's logs for the rejected call are filed under. */
+  readonly correlationId: string | undefined;
+
+  constructor(response?: Response) {
     super('This email is already linked to a different sign-in. Please sign in the way you did before, or contact support.');
     this.name = 'AccountLinkedElsewhereError';
+    this.correlationId = correlationIdOf(response);
   }
 }
 
@@ -39,12 +45,17 @@ export async function createSession(): Promise<User> {
   const { data, error, response } = await api.POST('/api/v1/auth/session', { body: {} });
 
   if (response.status === 409) {
-    throw new AccountLinkedElsewhereError();
+    throw new AccountLinkedElsewhereError(response);
   }
 
   if (error || !data?.user) {
     console.error('Failed to create session:', error);
-    throw new Error('Failed to create session');
+    throw new ApiRequestError(
+      error ? 'Failed to create session' : 'Session response had no user',
+      response,
+      error,
+      'POST',
+    );
   }
 
   return data.user;
@@ -81,7 +92,7 @@ export async function fetchInvitedUser(): Promise<User | null> {
 
   if (error) {
     console.error('Failed to fetch current user:', error);
-    throw new Error('Failed to fetch current user');
+    throw new ApiRequestError('Failed to fetch current user', response, error);
   }
 
   return data ?? null;

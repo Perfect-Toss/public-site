@@ -10,6 +10,7 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_APP_ID?: string;
   readonly VITE_FIREBASE_MEASUREMENT_ID?: string;
   readonly VITE_ENVIRONMENT?: string;
+  readonly VITE_APPLICATIONINSIGHTS_CONNECTION_STRING?: string;
   readonly VITE_GIT_SHA?: string;
 }
 

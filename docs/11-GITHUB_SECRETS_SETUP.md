@@ -19,6 +19,7 @@ under the **same name** — and **never at repository level**:
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | production Firebase | development Firebase |
 | `VITE_FIREBASE_APP_ID` | production Firebase | development Firebase |
 | `VITE_FIREBASE_MEASUREMENT_ID` (optional) | production Firebase | development Firebase |
+| `VITE_APPLICATIONINSIGHTS_CONNECTION_STRING` | production App Insights | development App Insights |
 
 Why not repository level: environment secrets override repository secrets, but a repository-level
 secret is used whenever the environment's copy is missing. That fallback is invisible — it would
@@ -73,6 +74,17 @@ Get these values from your Firebase Console: [https://console.firebase.google.co
 | Secret Name | Example Value | Description |
 |------------|---------------|-------------|
 | `VITE_API_BASE_URL` | `https://api.perfect-toss.com` | Your backend API URL (different per environment) |
+
+### 4. Telemetry
+
+| Secret Name | Example Value | Description |
+|------------|---------------|-------------|
+| `VITE_APPLICATIONINSIGHTS_CONNECTION_STRING` | `InstrumentationKey=…;IngestionEndpoint=https://…/;…` | Connection string of the Application Insights resource the environment's **API** reports to |
+
+Use the same resource as the API, so a browser request and the API request it triggered show up
+as one operation. The value ends up in the public JavaScript bundle; that is expected for browser
+telemetry (it only allows sending data, not reading it). Without it the site sends no telemetry,
+which is the case for local dev unless you add it to your `.env`. See `src/telemetry/`.
 
 ## Step-by-Step Instructions
 
